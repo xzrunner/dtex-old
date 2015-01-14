@@ -13,6 +13,8 @@
 #define MAX_TEX_COUNT 128
 #define MAX_FBO_COUNT 8
 
+#define MAX_TEXTURE_SIZE 4096
+
 struct dtex_buffer {
 	GLuint tex_pool[MAX_TEX_COUNT];
 	int next_tex, end_tex;
@@ -26,7 +28,7 @@ static inline int
 _get_max_texture_size() {
 	int max;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
-	return max;
+	return MIN(max, MAX_TEXTURE_SIZE);
 }
 
 static inline int 
