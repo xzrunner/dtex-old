@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_facade_h
 #define dynamic_texture_facade_h
 
@@ -55,3 +60,7 @@ void dtexf_del_texture(int tex);
 void dtexf_test_pvr(const char* path);
 
 #endif // dynamic_texture_facade_h
+
+#ifdef __cplusplus
+}
+#endif

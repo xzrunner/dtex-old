@@ -7,7 +7,6 @@
 #include "platform.h"
 
 #include <LzmaDec.h>
-#include <7zAlloc.h>
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -441,6 +440,8 @@ _check_block_count(struct FileHandle* file) {
 
 #define LZMA_PROPS_SIZE 5
 
+static void *SzAlloc(void *p, size_t size) { p = p; return MyAlloc(size); }
+static void SzFree(void *p, void *address) { p = p; MyFree(address); }
 static ISzAlloc g_Alloc = { SzAlloc, SzFree };
 
 static inline int
