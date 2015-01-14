@@ -497,11 +497,11 @@ _unpack_file(struct dtex_loader* dtex, struct FileHandle* file, void (*unpack_fu
 	}
 }
 
-static inline struct dtex_package* 
+static inline struct dtex_package**
 _find_package(struct dtex_loader* dtex, const char* name) {
 	for (int i = 0; i < dtex->pkg_size; ++i) {
-		struct dtex_package* pkg = dtex->packages[i];
-		if (strcmp(name, pkg->name) == 0) {
+		struct dtex_package** pkg = &dtex->packages[i];
+		if (strcmp(name, (*pkg)->name) == 0) {
 			return pkg;
 		}
 	}
@@ -534,9 +534,14 @@ dtexloader_preload_package(struct dtex_loader* dtex, const char* name, const cha
 		fault("Can't open name: %s file: %s\n", name, path);
 	}
 
-	struct dtex_package* pkg = _find_package(dtex, name);
-	if (pkg == NULL) {
+	struct dtex_package* pkg = NULL;
+	struct dtex_package** pkg_find = _find_package(dtex, name);
+	if (pkg_find == NULL) {
 		pkg = _new_package(dtex, name);
+	} else if (*pkg_find == NULL) {
+		pkg = *pkg_find = _new_package(dtex, name);
+	} else {
+		pkg = *pkg_find;
 	}
 
 	int old_tex_size = pkg->tex_size;
