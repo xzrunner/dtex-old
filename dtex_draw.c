@@ -267,17 +267,15 @@ void dtex_debug_draw(unsigned int texid) {
 
 	float vb[16];
 
-	vb[0] = 0, vb[1] = 0;
 	vb[2] = 0, vb[3] = 0;
-
-	vb[4] = 0, vb[5] = 1;
 	vb[6] = 0, vb[7] = 1;
-
-	vb[8] = 1, vb[9] = 1;
 	vb[10] = 1, vb[11] = 1;
-
-	vb[12] = 1, vb[13] = 0;
 	vb[14] = 1, vb[15] = 0;
+
+	vb[0] = -1, vb[1] = -1;
+	vb[4] = -1, vb[5] = 1;
+	vb[8] = 1, vb[9] = 1;
+	vb[12] = 1, vb[13] = -1;
 
 	shader_draw(vb, texid);	
 }
