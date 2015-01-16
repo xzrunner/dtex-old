@@ -22,6 +22,8 @@ void dtexf_release();
 
 // loading
 void dtexf_load_pkg(const char* name, const char* path);
+// todo sort sprite list for C3
+struct ej_sprite* dtexf_create_sprite(const char* path);
 
 // C3
 struct ej_package* dtexf_c3_load_pkg(const char* name, const char* path, float scale);

@@ -626,9 +626,9 @@ dtexloader_load_tex_file(const char* path) {
 		ret->id = tex;
 		ret->id_alpha = 0;
 		return ret;
+	} else {
+		return NULL;
 	}
-
-	return NULL;
 }
 
 void 

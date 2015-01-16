@@ -385,6 +385,38 @@ dtexc3_preload_pkg_end(struct dtex_c3* dtex, struct dtex_loader* loader, struct 
     dtex->preload_size = 0;
 }
 
+struct dp_position* 
+dtexc3_load_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_buffer* buf, struct dtex_texture** dst) {
+	// todo sort
+
+	// todo select dst texture
+	struct dtex_texture* dst_tex = dtex->textures[0];
+	*dst = dst_tex;
+
+	// insert
+	struct dp_position* pos = dtexpacker_add(dst_tex->packer, tex->width, tex->height);
+	if (!pos) {
+		return NULL;
+	}
+
+	// draw
+	// draw old tex to new 
+	float tx_min = 0, tx_max = 1,
+		  ty_min = 0, ty_max = 1;
+	float vx_min = (float)pos->r.xmin / dst_tex->width * 2 - 1,
+		  vx_max = (float)pos->r.xmax / dst_tex->width * 2 - 1,
+		  vy_min = (float)pos->r.ymin / dst_tex->height * 2 - 1,
+		  vy_max = (float)pos->r.ymax / dst_tex->height * 2 - 1;
+	float vb[16];
+	vb[0] = vx_min; vb[1] = vy_min; vb[2] = tx_min; vb[3] = ty_min;
+	vb[4] = vx_min; vb[5] = vy_max; vb[6] = tx_min; vb[7] = ty_max;
+	vb[8] = vx_max; vb[9] = vy_max; vb[10] = tx_max; vb[11] = ty_max;
+	vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
+	dtex_draw_to_texture(buf, tex, vb, dst_tex);
+
+	return pos;
+}
+
 void 
 dtexc3_preload_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_buffer* buf) {
 	// todo sort
