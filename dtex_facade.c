@@ -174,7 +174,6 @@ dtexf_create_sprite(const char* path) {
 	spr->mat[5] = 0;
 
 	return spr;
->>>>>>> [ADDED] support for creating sprite from single image file
 }
 
 struct ej_package* 
