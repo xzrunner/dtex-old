@@ -527,7 +527,7 @@ _new_package(struct dtex_loader* dtex, const char* name) {
 }
 
 struct dtex_package* 
-dtexloader_preload_package(struct dtex_loader* dtex, const char* name, const char* path) {
+dtexloader_preload_pkg(struct dtex_loader* dtex, const char* name, const char* path) {
 	// open file
 	struct FileHandle* file = pf_fileopen(path, "rb");
 	if (file == NULL) {
@@ -577,7 +577,7 @@ _unload_package(struct dtex_package* pkg) {
 }
 
 struct dtex_raw_tex* 
-dtexloader_load_texture(struct dtex_loader* dtex, struct dtex_package* pkg, int tex_idx) {
+dtexloader_load_tex_from_pkg(struct dtex_loader* dtex, struct dtex_package* pkg, int tex_idx) {
 	static struct dtex_package* last_pack = NULL;
 	assert(pkg != NULL && tex_idx < pkg->tex_size && tex_idx >= 0);
 	struct dtex_raw_tex* tex = &pkg->textures[tex_idx];
@@ -600,13 +600,44 @@ dtexloader_load_texture(struct dtex_loader* dtex, struct dtex_package* pkg, int 
 	return tex;	
 }
 
+struct dtex_raw_tex* 
+dtexloader_load_tex_file(const char* path) {
+	if (strstr(path, ".png")) {
+		int w, h, c, f;
+		uint8_t* p = dtex_png_read(path, &w, &h, &c, &f);
+		
+		GLuint tex = 0;
+		glGenTextures(1, &tex);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+		
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, p);
+
+		free(p);
+
+		struct dtex_raw_tex* ret = (struct dtex_raw_tex*)malloc(sizeof(struct dtex_raw_tex));
+		ret->format = TEXTURE8;
+		ret->width = w;
+		ret->height = h;
+		ret->id = tex;
+		ret->id_alpha = 0;
+		return ret;
+	}
+
+	return NULL;
+}
+
 void 
-dtexloader_unload_texture(struct dtex_raw_tex* tex) {
+dtexloader_unload_tex(struct dtex_raw_tex* tex) {
 	_release_texture(tex);
 }
 
 struct dtex_package* 
-dtexloader_get_package(struct dtex_loader* dtex, int idx) {
+dtexloader_get_pkg(struct dtex_loader* dtex, int idx) {
 	if (idx < 0 || idx >= dtex->pkg_size) {
 		return NULL;
 	} else {

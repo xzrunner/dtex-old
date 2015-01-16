@@ -26,6 +26,8 @@ void dtexf_load_pkg(const char* name, const char* path);
 // C3
 struct ej_package* dtexf_c3_load_pkg(const char* name, const char* path, float scale);
 void dtexf_c3_load_pkg_finish();
+void dtexf_c3_load_img(const char* path);
+void dtexf_c3_load_img_finish();
 
 // C2
 void dtexf_c2_load_begin();

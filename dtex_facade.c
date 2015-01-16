@@ -97,7 +97,7 @@ dtexf_release() {
 
 void
 dtexf_load_pkg(const char* name, const char* path) {
-	dtexloader_preload_package(LOADER, name, path);
+	dtexloader_preload_pkg(LOADER, name, path);
 }
 
 struct ej_package* 
@@ -105,9 +105,24 @@ dtexf_c3_load_pkg(const char* name, const char* path, float scale) {
 	if (C3 == NULL) {
 		return NULL;
 	}
-	struct dtex_package* pkg = dtexloader_preload_package(LOADER, name, path);
-	dtexc3_preload(C3, pkg, scale);
+	struct dtex_package* pkg = dtexloader_preload_pkg(LOADER, name, path);
+	dtexc3_preload_pkg(C3, pkg, scale);
 	return pkg->ej_pkg;
+}
+
+void 
+dtexf_c3_load_img(const char* path) {
+	if (C3 == NULL) {
+		return NULL;
+	}
+
+	struct dtex_raw_tex* tex = dtexloader_load_tex_file(path);
+	dtexc3_preload_tex(C3, tex, BUF);
+}
+
+void 
+dtexf_c3_load_img_finish() {
+
 }
 
 void 
@@ -116,11 +131,11 @@ dtexf_c3_load_pkg_finish() {
 		return;
 	}
 
-	dtexc3_preload_end(C3, LOADER, BUF);
+	dtexc3_preload_pkg_end(C3, LOADER, BUF);
 
 	// relocate
 	for (int i = 0; ; ++i) {
-		struct dtex_package* pkg = dtexloader_get_package(LOADER, i);
+		struct dtex_package* pkg = dtexloader_get_pkg(LOADER, i);
 		if (pkg == NULL) {
 			break;
 		} else {
@@ -211,7 +226,7 @@ dtexf_c1_draw_anim(struct ej_package* pkg, struct animation* ani, int action,
 
 void 
 dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path) {
-	struct dtex_package* pkg = dtexc3_query_package(C3, pkg_name);
+	struct dtex_package* pkg = dtexc3_query_pkg(C3, pkg_name);
 	struct dtex_rect* rect = dtexc3_query_rect(C3, pkg_name);
 	int spr_id = sprite_id(pkg->ej_pkg, spr_name);
 	dtex_async_load_spr(LOADER, pkg->ej_pkg, rect, spr_id, path);

@@ -35,11 +35,12 @@ struct dtex_loader;
 struct dtex_loader* dtexloader_create();
 void dtexloader_release(struct dtex_loader*);
 
-struct dtex_package* dtexloader_preload_package(struct dtex_loader*, const char* name, const char* path);
-struct dtex_raw_tex* dtexloader_load_texture(struct dtex_loader*, struct dtex_package*, int idx);
-void dtexloader_unload_texture(struct dtex_raw_tex*);
+struct dtex_package* dtexloader_preload_pkg(struct dtex_loader*, const char* name, const char* path);
+struct dtex_raw_tex* dtexloader_load_tex_from_pkg(struct dtex_loader*, struct dtex_package*, int idx);
+struct dtex_raw_tex* dtexloader_load_tex_file(const char* path);
+void dtexloader_unload_tex(struct dtex_raw_tex*);
 
-struct dtex_package* dtexloader_get_package(struct dtex_loader*, int idx);
+struct dtex_package* dtexloader_get_pkg(struct dtex_loader*, int idx);
 
 void dtexloader_load_spr2task(struct dtex_loader*, struct ej_package*, struct dtex_rect*, int id, const char* path);
 void dtexloader_do_task(struct dtex_loader*, void (*on_load_func)());
