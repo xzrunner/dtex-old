@@ -448,8 +448,30 @@ dtex_pvr_decode(uint8_t* dst, const uint8_t* src, int width, int height) {
 					c.b = (ca.b * w[0] + cb.b * w[1]) >> 7;
 					c.a = (ca.a * w[2] + cb.a * w[3]) >> 7;
 
+//  					if (c.r != 0 || c.g != 0 || c.b != 0 || c.a != 0) {
+// 						if (y > 256) {
+// 							c.r = 255;
+// 							c.g = 0;
+// 							c.b = 0;
+// 							c.a = 255;
+// 							int zz = 0;
+// 						}
+//  					}
+
+// 					if (y > 256) {
+// 						c.r = 0;
+// 						c.g = 0;
+// 						c.b = 0;
+// 						c.a = 255;
+// 						int zz = 0;
+// 					}
+
+// 					if (c.a != 0) {
+// 						int zz = 0;
+// 					}
+
 					int ptr = (py+y*4) * width + (px+x*4);
-					memcpy(&dst[ptr], &c, sizeof(c));
+					memcpy(&dst[ptr], &c.r, sizeof(c));
 
 					mod >>= 2;
 					factor++;					

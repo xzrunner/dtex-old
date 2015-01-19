@@ -187,21 +187,6 @@ dtexf_c3_load_pkg(const char* name, const char* path, float scale) {
 }
 
 void 
-dtexf_c3_load_img(const char* path) {
-	if (C3 == NULL) {
-		return NULL;
-	}
-
-	struct dtex_raw_tex* tex = dtexloader_load_tex_file(path);
-	dtexc3_preload_tex(C3, tex, BUF);
-}
-
-void 
-dtexf_c3_load_img_finish() {
-
-}
-
-void 
 dtexf_c3_load_pkg_finish() {
 	if (C3 == NULL) {
 		return;
@@ -412,29 +397,76 @@ dtexf_del_texture(int tex) {
 	glDeleteTextures(1, &id);
 }
 
+#define PVRTEX3_HEADERSIZE 52
+
+struct PVRTexHeader {
+	uint32_t headerLength;
+	uint32_t height;
+	uint32_t width;
+	uint32_t numMipmaps;
+	uint32_t flags;
+	uint32_t dataLength;
+	uint32_t bpp;
+	uint32_t bitmaskRed;
+	uint32_t bitmaskGreen;
+	uint32_t bitmaskBlue;
+	uint32_t bitmaskAlpha;
+	uint32_t pvrTag;
+	uint32_t numSurfs;
+};
+
+struct PVRTexHeaderV3 {
+	uint32_t  u32Version;     ///< Version of the file header, used to identify it.
+	uint32_t  u32Flags;     ///< Various format flags.
+	uint64_t  u64PixelFormat;   ///< The pixel format, 8cc value storing the 4 channel identifiers and their respective sizes.
+	uint32_t  u32ColourSpace;   ///< The Colour Space of the texture, currently either linear RGB or sRGB.
+	uint32_t  u32ChannelType;   ///< Variable type that the channel is stored in. Supports signed/unsigned int/short/byte or float for now.
+	uint32_t  u32Height;      ///< Height of the texture.
+	uint32_t  u32Width;     ///< Width of the texture.
+	uint32_t  u32Depth;     ///< Depth of the texture. (Z-slices)
+	uint32_t  u32NumSurfaces;   ///< Number of members in a Texture Array.
+	uint32_t  u32NumFaces;    ///< Number of faces in a Cube Map. Maybe be a value other than 6.
+	uint32_t  u32MIPMapCount;   ///< Number of MIP Maps in the texture - NB: Includes top level.
+	uint32_t  u32MetaDataSize;  ///< Size of the accompanying meta data.  
+};
+
+typedef unsigned int    PVRTuint32;
+// V3 Header Identifiers.
+const PVRTuint32 PVRTEX3_IDENT      = 0x03525650; // 'P''V''R'3
+
 void 
 dtexf_test_pvr(const char* path) {
 	struct FileHandle* file = pf_fileopen(path, "rb");
 	if (file == NULL) {
 		fault("Can't open pvr file: %s\n", path);
 	}
-	pf_fileseek_from_head(file, 52);
 
-	size_t sz = 2048 * 2048 / 2;
+	uint32_t width, height;
+	uint32_t type;
+	pf_fileread(file, &type, sizeof(uint32_t));
+	pf_fileseek_from_head(file, 0);
+	if (type != PVRTEX3_IDENT) {
+		pf_fileseek_from_head(file, sizeof(uint32_t));
+	} else {
+		pf_fileseek_from_head(file, sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint64_t)+sizeof(uint32_t)+sizeof(uint32_t));			
+	}
+	pf_fileread(file, &height, sizeof(uint32_t));
+	pf_fileread(file, &width, sizeof(uint32_t));
+
+	pf_fileseek_from_head(file, PVRTEX3_HEADERSIZE);
+
+	size_t sz = width * height / 2;
 	uint8_t* buf_compressed = (uint8_t*)malloc(sz);
 	if (pf_fileread(file, buf_compressed, sz) != 1) {
 		fault("Invalid uncompress data source\n");
 	}
-
-	uint8_t* buf_uncompressed = (uint8_t*)malloc(2048 * 2048 * 4);
-	dtex_pvr_decode(buf_uncompressed, buf_compressed, 2048, 2048);
-
-	uint8_t* new_compressed = (uint8_t*)malloc(sz);
-	dtex_pvr_encode(new_compressed, buf_uncompressed, 2048, 2048);
-
 	pf_fileclose(file);	
 
-	// draw
+	uint8_t* buf_uncompressed = (uint8_t*)malloc(width * height * 4);
+	memset(buf_uncompressed, 0x00, width * height * 4);
+	dtex_pvr_decode(buf_uncompressed, buf_compressed, width, height);
+	free(buf_compressed);
+
 	GLuint tex = 0;
 	glGenTextures(1, &tex);
 	glActiveTexture(GL_TEXTURE0);
@@ -445,10 +477,26 @@ dtexf_test_pvr(const char* path) {
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
 #ifdef __APPLE__
-    glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, 2048, 2048, 0, sz, new_compressed);
+	uint8_t* new_compressed = (uint8_t*)malloc(sz);
+	dtex_pvr_encode(new_compressed, buf_uncompressed, width * height);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, width * height, 0, sz, new_compressed);
+	free(new_compressed);
+#else
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_uncompressed);
 #endif
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR){
 		printf("Error uploading compressed texture level: 0. glError: 0x%04X", err);
 	}
+	free(buf_uncompressed);
+
+	struct dtex_raw_tex src_tex;
+	src_tex.format = TEXTURE8;
+	src_tex.width = width;
+	src_tex.height = height;
+	src_tex.id = tex;
+	src_tex.id_alpha = 0;
+
+	struct dtex_texture* dst_tex = NULL;
+	dtexc3_load_tex(C3, &src_tex, BUF, &dst_tex);
 }
