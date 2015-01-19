@@ -265,6 +265,9 @@ dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct d
 void dtex_debug_draw(unsigned int texid) {
 	//assert(glIsTexture(texid));
 
+	shader_program(PROGRAM_SPRITE);
+	shader_color(0xffffffff, 0);
+
 	float vb[16];
 
 	vb[2] = 0, vb[3] = 0;
