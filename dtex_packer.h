@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_packer_h
 #define dynamic_texture_packer_h
 
@@ -17,3 +22,7 @@ void dtexpacker_release(struct dtex_packer* packer);
 struct dp_position* dtexpacker_add(struct dtex_packer* packer, int width, int height);
 
 #endif // dynamic_texture_packer_h
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_utility_h
 #define dynamic_texture_utility_h
 
@@ -21,3 +26,7 @@ void dtex_relocate_pic_part(int16_t part_src[8], struct dtex_inv_size* src_sz, s
 void dtex_get_pic_src_rect(int16_t* src, struct dtex_rect* rect);
 
 #endif // dynamic_texture_utility_h
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_cache1_h
 #define dynamic_texture_cache1_h
 
@@ -19,3 +24,7 @@ bool dtexc1_draw_anim(struct dtex_c1*, struct ej_package* pkg, struct animation*
 void dtexc1_debug_draw(struct dtex_c1*);
 
 #endif // dynamic_texture_cache1_h
+
+#ifdef __cplusplus
+}
+#endif

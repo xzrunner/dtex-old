@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_draw_h
 #define dynamic_texture_draw_h
 
@@ -29,3 +34,7 @@ void dtex_debug_draw(unsigned int texid);
 void dtex_flush_shader();
 
 #endif // dynamic_texture_draw_h
+
+#ifdef __cplusplus
+}
+#endif

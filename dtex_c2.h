@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_cache2_h
 #define dynamic_texture_cache2_h
 
@@ -28,3 +33,7 @@ void dtexc2_change_key(struct dtex_c2*, int src_texid, struct dtex_rect* src_rec
 void dtexc2_debug_draw(struct dtex_c2*);
 
 #endif // dynamic_texture_cache2_h
+
+#ifdef __cplusplus
+}
+#endif

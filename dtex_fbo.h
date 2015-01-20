@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_fbo_h
 #define dynamic_texture_fbo_h
 
@@ -14,3 +19,7 @@ void dtex_fbo_bind(struct dtex_fbo*);
 void dtex_fbo_unbind();
 
 #endif // dynamic_texture_fbo_h
+
+#ifdef __cplusplus
+}
+#endif

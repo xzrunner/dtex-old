@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_buffer_h
 #define dynamic_texture_buffer_h
 
@@ -18,3 +23,7 @@ struct dtex_fbo* dtexbuf_fetch_fbo(struct dtex_buffer*);
 void dtexbuf_return_fbo(struct dtex_buffer*, struct dtex_fbo*);
 
 #endif // dynamic_texture_buffer_h
+
+#ifdef __cplusplus
+}
+#endif

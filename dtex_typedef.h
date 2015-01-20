@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_typedef_h
 #define dynamic_texture_typedef_h
 
@@ -32,3 +37,7 @@ struct dtex_pos {
 };
 
 #endif // dynamic_texture_typedef_h
+
+#ifdef __cplusplus
+}
+#endif

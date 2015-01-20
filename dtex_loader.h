@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_loader_h
 #define dynamic_texture_loader_h
 
@@ -50,3 +55,7 @@ struct dtex_rrp* dtexloader_query_rrp(struct dtex_loader*, struct ej_package*);
 struct dtex_pts* dtexloader_query_pts(struct dtex_loader*, struct ej_package*);
 
 #endif // dynamic_texture_loader_h
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef dynamic_texture_cache3_h
 #define dynamic_texture_cache3_h
 
@@ -23,3 +28,7 @@ struct dtex_rect* dtexc3_query_rect(struct dtex_c3*, const char* name);
 void dtexc3_debug_draw(struct dtex_c3*);
 
 #endif // dynamic_texture_cache3_h
+
+#ifdef __cplusplus
+}
+#endif
