@@ -281,7 +281,8 @@ _set_rect_vb(struct preload_node* pn, struct dtex_node* n, bool rotate) {
 	dst_sz.inv_w = 1.0f / n->dst_tex->width;
 	dst_sz.inv_h = 1.0f / n->dst_tex->height;
 
-	dtex_relocate_pic_part(pn->part->src, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate, n->trans_vb, n->dst_vb);
+	int rotate_times = rotate ? 1 : 0;
+	dtex_relocate_pic_part(pn->part->src, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb, n->dst_vb);
 }
 
 static inline void

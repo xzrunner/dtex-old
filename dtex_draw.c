@@ -248,10 +248,16 @@ dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct d
 
 		struct dtex_rect dst_rect;
 		if (rotate) {
-  			dst_rect.xmin = pos->r.xmax - (part->src.y + part->src.h);
-  			dst_rect.ymin = pos->r.ymin + part->src.x;
+// 			// anticlockwise
+//   		dst_rect.xmin = pos->r.xmax - (part->src.y + part->src.h);
+//   		dst_rect.ymin = pos->r.ymin + part->src.x;
+
+			// clockwise
+			dst_rect.xmin = pos->r.xmin + part->src.y;
+			dst_rect.ymin = pos->r.ymax - (part->src.x + part->src.w);
+
 			dst_rect.xmax = dst_rect.xmin + part->src.h;
- 			dst_rect.ymax = dst_rect.ymin + part->src.w;
+			dst_rect.ymax = dst_rect.ymin + part->src.w;
 		} else {
 			dst_rect.xmin = pos->r.xmin + part->src.x;
 			dst_rect.xmax = dst_rect.xmin + part->src.w;
@@ -261,10 +267,13 @@ dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct d
 
 		float trans_vb[16];
 		float dst_vb[16];
-
-		bool rot = (rotate && !part->is_rotated) || (!rotate && part->is_rotated);
-		dtex_relocate_pic_part(NULL, &src_sz, &src_rect, &dst_sz, &dst_rect, rot, trans_vb, dst_vb);
-
+		int rotate_times = 0;
+		if (rotate && !part->is_rotated) {
+			rotate_times = -1;
+		} else if (!rotate && part->is_rotated) {
+			rotate_times = 1;
+		}
+		dtex_relocate_pic_part(NULL, &src_sz, &src_rect, &dst_sz, &dst_rect, rotate_times, trans_vb, dst_vb);
 		_draw(trans_vb, src);
 	}
 

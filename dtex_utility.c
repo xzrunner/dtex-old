@@ -114,7 +114,7 @@ dtex_relocate_c2_key(struct dtex_c2* c2, struct ej_package* pkg, int id, struct 
 }
 
 void dtex_relocate_pic_part(int16_t part_src[8], struct dtex_inv_size* src_sz, struct dtex_rect* src_rect, 
-	struct dtex_inv_size* dst_sz, struct dtex_rect* dst_rect, bool rotate, float trans_vb[16], float dst_vb[8]) {
+	struct dtex_inv_size* dst_sz, struct dtex_rect* dst_rect, int rotate, float trans_vb[16], float dst_vb[8]) {
 	float src_xmin = src_rect->xmin * src_sz->inv_w,
 	      src_xmax = src_rect->xmax * src_sz->inv_w,
 	      src_ymin = src_rect->ymin * src_sz->inv_h,
@@ -138,20 +138,10 @@ void dtex_relocate_pic_part(int16_t part_src[8], struct dtex_inv_size* src_sz, s
 		trans_vb[12]= vd_xmax; 	trans_vb[13]= vd_ymin;
 		trans_vb[14]= src_xmax; trans_vb[15]= src_ymin;
 
-		if (part_src && part_src[0] == -5) {
-			int zz = 0;
-		}
-
-// 		dst_vb[0] = dst_xmin; dst_vb[1] = dst_ymin;
-// 		dst_vb[4] = dst_xmax; dst_vb[5] = dst_ymax;
-// 		dst_vb[2] = dst_xmin; dst_vb[3] = dst_ymax;
-// 		dst_vb[6] = dst_xmax; dst_vb[7] = dst_ymin;
-
 		dst_vb[0] = dst_xmin; dst_vb[1] = dst_ymax;
 		dst_vb[4] = dst_xmax; dst_vb[5] = dst_ymin;
 		dst_vb[2] = dst_xmin; dst_vb[3] = dst_ymin;
 		dst_vb[6] = dst_xmax; dst_vb[7] = dst_ymax;
-
     } else {
 		float cx = 0, cy = 0;
 		for (int i = 0; i < 4; ++i) {
@@ -199,21 +189,33 @@ void dtex_relocate_pic_part(int16_t part_src[8], struct dtex_inv_size* src_sz, s
 	    }
     }
 
-    if (rotate) {
+	if (rotate == 1) {
 		float x, y;
-
 		x = trans_vb[2]; y = trans_vb[3];
 		trans_vb[2] = trans_vb[6];  trans_vb[3] = trans_vb[7];
 		trans_vb[6] = trans_vb[10]; trans_vb[7] = trans_vb[11];
 		trans_vb[10]= trans_vb[14]; trans_vb[11]= trans_vb[15];
-		trans_vb[14]= x;            trans_vb[15]= y;
+		trans_vb[14]= x;            trans_vb[15]= y;	
 
-// 		x = dst_vb[6]; y = dst_vb[7];
-// 		dst_vb[6] = dst_vb[4]; dst_vb[7] = dst_vb[5];
-// 		dst_vb[4] = dst_vb[2]; dst_vb[5] = dst_vb[3];
-// 		dst_vb[2] = dst_vb[0]; dst_vb[3] = dst_vb[1];
-// 		dst_vb[0] = x;         dst_vb[1] = y;
-    }
+		x = dst_vb[6]; y = dst_vb[7];
+		dst_vb[6] = dst_vb[4]; dst_vb[7] = dst_vb[5];
+		dst_vb[4] = dst_vb[2]; dst_vb[5] = dst_vb[3];
+		dst_vb[2] = dst_vb[0]; dst_vb[3] = dst_vb[1];
+		dst_vb[0] = x;         dst_vb[1] = y;
+	} else if (rotate == -1) {
+		float x, y;
+		x = trans_vb[2]; y = trans_vb[3];
+		trans_vb[2] = trans_vb[14];  trans_vb[3] = trans_vb[15];
+		trans_vb[14] = trans_vb[10]; trans_vb[15] = trans_vb[11];
+		trans_vb[10]= trans_vb[6]; trans_vb[11]= trans_vb[7];
+		trans_vb[6]= x;            trans_vb[7]= y;	
+
+		x = dst_vb[6]; y = dst_vb[7];
+		dst_vb[6] = dst_vb[0]; dst_vb[7] = dst_vb[1];
+		dst_vb[0] = dst_vb[2]; dst_vb[1] = dst_vb[3];
+		dst_vb[2] = dst_vb[4]; dst_vb[3] = dst_vb[5];
+		dst_vb[4] = x;         dst_vb[5] = y;
+	}
 
     // todo padding    
 }
