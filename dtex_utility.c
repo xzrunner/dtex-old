@@ -137,10 +137,21 @@ void dtex_relocate_pic_part(int16_t part_src[8], struct dtex_inv_size* src_sz, s
 		trans_vb[10]= src_xmax; trans_vb[11]= src_ymax;
 		trans_vb[12]= vd_xmax; 	trans_vb[13]= vd_ymin;
 		trans_vb[14]= src_xmax; trans_vb[15]= src_ymin;
-		dst_vb[0] = dst_xmin; dst_vb[1] = dst_ymin;
-		dst_vb[4] = dst_xmax; dst_vb[5] = dst_ymax;
-		dst_vb[2] = dst_xmin; dst_vb[3] = dst_ymax;
-		dst_vb[6] = dst_xmax; dst_vb[7] = dst_ymin;
+
+		if (part_src && part_src[0] == -5) {
+			int zz = 0;
+		}
+
+// 		dst_vb[0] = dst_xmin; dst_vb[1] = dst_ymin;
+// 		dst_vb[4] = dst_xmax; dst_vb[5] = dst_ymax;
+// 		dst_vb[2] = dst_xmin; dst_vb[3] = dst_ymax;
+// 		dst_vb[6] = dst_xmax; dst_vb[7] = dst_ymin;
+
+		dst_vb[0] = dst_xmin; dst_vb[1] = dst_ymax;
+		dst_vb[4] = dst_xmax; dst_vb[5] = dst_ymin;
+		dst_vb[2] = dst_xmin; dst_vb[3] = dst_ymin;
+		dst_vb[6] = dst_xmax; dst_vb[7] = dst_ymax;
+
     } else {
 		float cx = 0, cy = 0;
 		for (int i = 0; i < 4; ++i) {
@@ -197,11 +208,11 @@ void dtex_relocate_pic_part(int16_t part_src[8], struct dtex_inv_size* src_sz, s
 		trans_vb[10]= trans_vb[14]; trans_vb[11]= trans_vb[15];
 		trans_vb[14]= x;            trans_vb[15]= y;
 
-		x = dst_vb[6]; y = dst_vb[7];
-		dst_vb[6] = dst_vb[4]; dst_vb[7] = dst_vb[5];
-		dst_vb[4] = dst_vb[2]; dst_vb[5] = dst_vb[3];
-		dst_vb[2] = dst_vb[0]; dst_vb[3] = dst_vb[1];
-		dst_vb[0] = x;         dst_vb[1] = y;
+// 		x = dst_vb[6]; y = dst_vb[7];
+// 		dst_vb[6] = dst_vb[4]; dst_vb[7] = dst_vb[5];
+// 		dst_vb[4] = dst_vb[2]; dst_vb[5] = dst_vb[3];
+// 		dst_vb[2] = dst_vb[0]; dst_vb[3] = dst_vb[1];
+// 		dst_vb[0] = x;         dst_vb[1] = y;
     }
 
     // todo padding    

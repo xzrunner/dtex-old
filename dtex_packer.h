@@ -10,7 +10,7 @@ extern "C"
 
 struct dp_position {
 	struct dtex_rect r;
-	int16_t is_rotated;
+	bool is_rotated;
 
 	void* ud;
 };

@@ -220,7 +220,7 @@ void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, con
 
 void 
 dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dr_picture* pic, 
-	struct dtex_texture* dst, struct dp_position* pos) {
+	struct dtex_texture* dst, struct dp_position* pos, bool rotate) {
 
 	assert(pic);
 
@@ -243,18 +243,27 @@ dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct d
 		struct dtex_rect src_rect;
 		src_rect.xmin = part->dst.x;
 		src_rect.xmax = part->dst.x + part->dst.w;
-		src_rect.ymin = part->dst.y + part->dst.h;		
-		src_rect.ymax = part->dst.y;
+		src_rect.ymin = part->dst.y;		
+		src_rect.ymax = part->dst.y + part->dst.h;
 
 		struct dtex_rect dst_rect;
-		dst_rect.xmin = pos->r.xmin + part->src.x;
-		dst_rect.xmax = pos->r.xmin + part->src.x + part->src.w;
-		dst_rect.ymin = pos->r.ymin + part->src.y;
-		dst_rect.ymax = pos->r.ymin + part->src.y + part->src.h;
+		if (rotate) {
+  			dst_rect.xmin = pos->r.xmax - (part->src.y + part->src.h);
+  			dst_rect.ymin = pos->r.ymin + part->src.x;
+			dst_rect.xmax = dst_rect.xmin + part->src.h;
+ 			dst_rect.ymax = dst_rect.ymin + part->src.w;
+		} else {
+			dst_rect.xmin = pos->r.xmin + part->src.x;
+			dst_rect.xmax = dst_rect.xmin + part->src.w;
+			dst_rect.ymin = pos->r.ymin + part->src.y;
+			dst_rect.ymax = dst_rect.ymin + part->src.h;
+		}
 
 		float trans_vb[16];
 		float dst_vb[16];
-		dtex_relocate_pic_part(NULL, &src_sz, &src_rect, &dst_sz, &dst_rect, part->is_rotated, trans_vb, dst_vb);
+
+		bool rot = (rotate && !part->is_rotated) || (!rotate && part->is_rotated);
+		dtex_relocate_pic_part(NULL, &src_sz, &src_rect, &dst_sz, &dst_rect, rot, trans_vb, dst_vb);
 
 		_draw(trans_vb, src);
 	}

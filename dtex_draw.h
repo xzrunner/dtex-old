@@ -7,6 +7,7 @@ extern "C"
 #define dynamic_texture_draw_h
 
 #include <stdint.h>
+#include <stdbool.h>
 
 struct dtex_raw_tex;
 struct dtex_texture;
@@ -26,7 +27,7 @@ void dtex_draw_pts(struct dtex_texture* src_tex, struct dp_position* src_pos, st
 void dtex_draw_to_texture(struct dtex_buffer*, struct dtex_raw_tex* src, const float vb[16], struct dtex_texture* dst);
 // todo 一个pic的part可能位于不同的tex中
 void dtex_draw_rrp_to_tex(struct dtex_buffer*, struct dtex_raw_tex* src, struct dr_picture* pic, 
-	struct dtex_texture* dst, struct dp_position* pos);
+	struct dtex_texture* dst, struct dp_position* pos, bool rotate);
 
 void dtex_debug_draw(unsigned int texid);
 //void dtex_debug_draw(struct dtex_texture*);

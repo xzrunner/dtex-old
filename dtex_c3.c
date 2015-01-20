@@ -30,7 +30,7 @@ struct dtex_node {
 	// dest info
 	struct dtex_texture* dst_tex;
 	struct dtex_rect dst_rect;
-	int16_t is_rotated;
+	bool is_rotated;
 };
 
 struct hash_node {
@@ -224,7 +224,7 @@ _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node,
 	hn->n.dst_rect = pos->r;
 	if ((pos->is_rotated && w >= h) ||
 		(!pos->is_rotated && h >= w)) {
-		hn->n.is_rotated = 1;
+		hn->n.is_rotated = true;
 	}
 	pos->ud = &hn->n;
 

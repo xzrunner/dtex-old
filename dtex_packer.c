@@ -231,7 +231,7 @@ _insert(struct dtex_packer* packer, struct dp_node* dst, int w, int h) {
 		} else if (w <= dh && h <= dw) {
 			struct dp_node* n = _split_node(packer, dst, h, w);
 			if (n) {
-				n->pos.is_rotated = 1;
+				n->pos.is_rotated = true;
 			}
 			return n;
 		} else {
