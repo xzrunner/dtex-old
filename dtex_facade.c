@@ -136,13 +136,13 @@ dtexf_create_sprite(const char* path) {
 	pp->texid = 0;
 
 	pp->src[0] = pos->r.xmin;
-	pp->src[1] = pos->r.ymin;
+	pp->src[1] = pos->r.ymax;
 	pp->src[2] = pos->r.xmax;
-	pp->src[3] = pos->r.ymin;
+	pp->src[3] = pos->r.ymax;
 	pp->src[4] = pos->r.xmax;
-	pp->src[5] = pos->r.ymax;
+	pp->src[5] = pos->r.ymin;
 	pp->src[6] = pos->r.xmin;
-	pp->src[7] = pos->r.ymax;
+	pp->src[7] = pos->r.ymin;
 
 	int32_t hw = (pos->r.xmax - pos->r.xmin) * 8,
 		    hh = (pos->r.ymax - pos->r.ymin) * 8;
@@ -387,7 +387,7 @@ dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id,
 void 
 dtexf_debug_draw() {
 //	dtexc1_debug_draw(C1);
-	// dtexc2_debug_draw(C2);
+	//dtexc2_debug_draw(C2);
 	dtexc3_debug_draw(C3);
 }
 
