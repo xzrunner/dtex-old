@@ -2,6 +2,7 @@
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
 #include "dtex_png.h"
+#include "dtex_pvr.h"
 
 #include "package.h"
 #include "fault.h"
@@ -235,7 +236,13 @@ _pvr_texture_create(uint8_t* data, size_t sz, int internal_format, int width, in
 	uint8_t* ptr = data;
 	for (int i = 0; ptr - data < sz; ++i) {
 		int ori_sz = ptr[0] | ptr[1] << 8 | ptr[2] << 16 | ptr[3] << 24;
+#ifdef __APPLE__
     	glCompressedTexImage2D(GL_TEXTURE_2D, i, internal_format, width, height, 0, ori_sz, ptr+4);
+#else
+		uint8_t* uncompressed = dtex_pvr_decode(ptr+4, width, height);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, uncompressed);		
+		free(uncompressed);
+#endif
     	ptr += 4 + ori_sz;
 	}
 	return texid;
