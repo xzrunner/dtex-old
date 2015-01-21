@@ -9,7 +9,7 @@ extern "C"
 #include <stdint.h>
 #include <stdbool.h>
 
-#define EXPORT_RRP
+//#define EXPORT_RRP
 
 struct dr_rect {
 	int32_t texid;

@@ -8,7 +8,7 @@ extern "C"
 
 #include <stdint.h>
 
-#define EXPORT_PTS
+//#define EXPORT_PTS
 
 struct pts_strip {
 	int16_t pos_size;
