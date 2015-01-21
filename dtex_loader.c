@@ -1,12 +1,14 @@
 #include "dtex_loader.h"
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
+#include "dtex_png.h"
 
 #include "package.h"
 #include "fault.h"
 #include "platform.h"
 
-#include <LzmaDec.h>
+#include "LzmaDec.h"
+#include "Alloc.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -511,7 +513,7 @@ _find_package(struct dtex_loader* dtex, const char* name) {
 static inline struct dtex_package*
 _new_package(struct dtex_loader* dtex, const char* name) {
 	struct dtex_package* pkg = (struct dtex_package*)malloc(sizeof(struct dtex_package));
-	pkg->name = _strdup(name);
+	pkg->name = strdup(name);
 	pkg->filepath = NULL;
 	pkg->tex_size = 0;
 	pkg->tex_scale = 1;
@@ -555,7 +557,7 @@ dtexloader_preload_pkg(struct dtex_loader* dtex, const char* name, const char* p
 
 	// if load epp
 	if (pkg->tex_size > old_tex_size && pkg->filepath == NULL) {
-		pkg->filepath = _strdup(path);
+		pkg->filepath = strdup(path);
 	}
 
 	return pkg;

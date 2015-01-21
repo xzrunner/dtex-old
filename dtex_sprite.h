@@ -5,6 +5,9 @@ extern "C"
 
 #ifndef dynamic_texture_sprite_h
 #define dynamic_texture_sprite_h
+    
+struct dtex_texture;
+struct dp_position;
 
 struct ej_sprite* dtex_sprite_create(struct dtex_texture*, struct dp_position*);
 

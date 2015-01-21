@@ -6,6 +6,8 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+
+#ifdef USE_LIBPNG
 #include <libpng/png.h>
 
 static int _offset = 0;
@@ -140,3 +142,12 @@ dtex_png_read(const char* filepath, int* width, int* height, int* channels, int*
 
 	free(buf);
 }
+
+#else
+
+uint8_t* 
+dtex_png_read(const char* filepath, int* width, int* height, int* channels, int* format) {
+	return NULL;
+}
+
+#endif // USE_LIBPNG

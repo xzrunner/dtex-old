@@ -19,7 +19,7 @@
 #include "sprite.h"
 #include "fault.h"
 
-#include <cJSON.h>
+#include "cJSON.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -330,8 +330,8 @@ dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id,
 void 
 dtexf_debug_draw() {
 //	dtexc1_debug_draw(C1);
-	//dtexc2_debug_draw(C2);
-	dtexc3_debug_draw(C3);
+	dtexc2_debug_draw(C2);
+//	dtexc3_debug_draw(C3);
 }
 
 void 
@@ -360,7 +360,8 @@ dtexf_test_pvr(const char* path) {
 
 #ifdef __APPLE__
 	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
-    glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, width * height, 0, sz, new_compressed);
+    size_t sz = width * height / 2;
+    glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, width, height, 0, sz, new_compressed);
 	free(new_compressed);
 #else
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_uncompressed);

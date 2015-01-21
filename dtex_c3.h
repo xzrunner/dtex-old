@@ -10,6 +10,8 @@ struct dtex_c3;
 struct dtex_package;
 struct dtex_loader;
 struct dtex_buffer;
+struct dtex_texture;
+struct dtex_raw_tex;
 
 struct dtex_c3* dtexc3_create();
 void dtexc3_release(struct dtex_c3*, struct dtex_buffer*);
