@@ -1,5 +1,9 @@
 #include "dtex_pvr.h"
 
+#include "fault.h"
+#include "platform.h"
+
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
@@ -412,13 +416,19 @@ _cal_color_ab(const struct pvrtc_packet* packets, const unsigned char (*factor)[
 	}	
 }
 
-void 
-dtex_pvr_decode(uint8_t* dst, const uint8_t* src, int width, int height) {
+uint8_t* 
+dtex_pvr_decode(const uint8_t* buf, int width, int height) {
 	assert(width == height);
+
+	uint8_t* dst = (uint8_t*)malloc(width * height * 4);
+	if (dst == NULL) {
+		fault("Fail to malloc (dtex_pvr_decode)");
+	}
+	memset(dst, 0x00, width * height * 4);
 
 	const int blocks = width >> 2;
 	const int block_mask = blocks - 1;
-	const struct pvrtc_packet* packets = (const struct pvrtc_packet*)src;
+	const struct pvrtc_packet* packets = (const struct pvrtc_packet*)buf;
 
 	for (int y = 0; y < blocks; ++y) {
 		for (int x = 0; x < blocks; ++x) {
@@ -457,6 +467,8 @@ dtex_pvr_decode(uint8_t* dst, const uint8_t* src, int width, int height) {
 			}
 		}
 	}
+
+	return dst;
 }
 
 #define isp2(x)	((x) > 0 && ((x) & ((x) - 1)) == 0)
@@ -500,10 +512,16 @@ _rotate_right(unsigned int value, unsigned int shift) {
     return (value >> shift) | (value << (sizeof(value) * 8 - shift));	
 }
 
-void 
-dtex_pvr_encode(uint8_t* dst, const uint8_t* src, int width, int height) {
-	assert(width == height);
-	assert(isp2(width));
+uint8_t* 
+dtex_pvr_encode(const uint8_t* buf, int width, int height) {
+	assert(width == height && isp2(width));
+
+	size_t sz = width * height / 2;
+	uint8_t* dst = (uint8_t*)malloc(sz);
+	if (dst == NULL) {
+		fault("Fail to malloc (dtex_pvr_decode)");
+	}
+	memset(dst, 0x00, sz);	
 
 	const int size = width;
 	const int blocks = size >> 2;
@@ -514,7 +532,7 @@ dtex_pvr_encode(uint8_t* dst, const uint8_t* src, int width, int height) {
 	for (int y = 0; y < blocks; ++y) {
 		for (int x = 0; x < blocks; ++x) {
 			struct col_bounding_box cbb;
-			_cal_bounding_box(&cbb, src, width, x, y);
+			_cal_bounding_box(&cbb, buf, width, x, y);
 			struct pvrtc_packet* packet = packets + GetMortonNumber(x, y);
 			packet->usePunchthroughAlpha = 0;
 			SetColorA(packet, &cbb.min);
@@ -525,7 +543,7 @@ dtex_pvr_encode(uint8_t* dst, const uint8_t* src, int width, int height) {
 	for(int y = 0; y < blocks; ++y) {
 		for(int x = 0; x < blocks; ++x) {
 			const unsigned char (*factor)[4] = BILINEAR_FACTORS;
-			const struct color_rgba_char* data = (const struct color_rgba_char*)(src + y * 4 * size + x * 4);
+			const struct color_rgba_char* data = (const struct color_rgba_char*)(buf + y * 4 * size + x * 4);
 
 			uint32_t modulationData = 0;
 			for(int py = 0; py < 4; ++py) {
@@ -578,4 +596,111 @@ dtex_pvr_encode(uint8_t* dst, const uint8_t* src, int width, int height) {
 			packet->modulationData = modulationData;
 		}
 	}
+
+	return dst;
+}
+
+#define PVRTEX3_HEADERSIZE 52
+
+struct PVRTexHeader {
+	uint32_t headerLength;
+	uint32_t height;
+	uint32_t width;
+	uint32_t numMipmaps;
+	uint32_t flags;
+	uint32_t dataLength;
+	uint32_t bpp;
+	uint32_t bitmaskRed;
+	uint32_t bitmaskGreen;
+	uint32_t bitmaskBlue;
+	uint32_t bitmaskAlpha;
+	uint32_t pvrTag;
+	uint32_t numSurfs;
+};
+
+struct PVRTexHeaderV3 {
+	uint32_t  u32Version;     ///< Version of the file header, used to identify it.
+	uint32_t  u32Flags;     ///< Various format flags.
+	uint64_t  u64PixelFormat;   ///< The pixel format, 8cc value storing the 4 channel identifiers and their respective sizes.
+	uint32_t  u32ColourSpace;   ///< The Colour Space of the texture, currently either linear RGB or sRGB.
+	uint32_t  u32ChannelType;   ///< Variable type that the channel is stored in. Supports signed/unsigned int/short/byte or float for now.
+	uint32_t  u32Height;      ///< Height of the texture.
+	uint32_t  u32Width;     ///< Width of the texture.
+	uint32_t  u32Depth;     ///< Depth of the texture. (Z-slices)
+	uint32_t  u32NumSurfaces;   ///< Number of members in a Texture Array.
+	uint32_t  u32NumFaces;    ///< Number of faces in a Cube Map. Maybe be a value other than 6.
+	uint32_t  u32MIPMapCount;   ///< Number of MIP Maps in the texture - NB: Includes top level.
+	uint32_t  u32MetaDataSize;  ///< Size of the accompanying meta data.  
+};
+
+typedef unsigned int    PVRTuint32;
+// V3 Header Identifiers.
+const PVRTuint32 PVRTEX3_IDENT      = 0x03525650; // 'P''V''R'3
+
+uint8_t* 
+dtex_pvr_read_file(const char* filepath, uint32_t* width, uint32_t* height) {
+	struct FileHandle* file = pf_fileopen(filepath, "rb");
+	if (file == NULL) {
+		assert(0);
+		fault("Can't open pvr file: %s\n", filepath);
+	}
+
+	uint32_t type;
+	pf_fileread(file, &type, sizeof(uint32_t));
+	pf_fileseek_from_head(file, 0);
+
+	// test
+	struct PVRTexHeader header;
+	pf_fileread(file, &header, PVRTEX3_HEADERSIZE);
+
+	if (type != PVRTEX3_IDENT) {
+		pf_fileseek_from_head(file, sizeof(uint32_t));
+	} else {
+		pf_fileseek_from_head(file, sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint64_t)+sizeof(uint32_t)+sizeof(uint32_t));			
+	}
+	pf_fileread(file, height, sizeof(uint32_t));
+	pf_fileread(file, width, sizeof(uint32_t));
+
+	pf_fileseek_from_head(file, PVRTEX3_HEADERSIZE);
+
+	size_t sz = *width * *height / 2;
+	uint8_t* buf = (uint8_t*)malloc(sz);
+	if (buf == NULL) {
+		fault("Fail to malloc (dtex_pvr_read_file)");
+	}
+	if (pf_fileread(file, buf, sz) != 1) {
+		fault("Invalid uncompress data source\n");
+	}
+	pf_fileclose(file);	
+
+	return buf;
+}
+
+void 
+dtex_pvr_write_file(const char* filepath, const uint8_t* buf, uint32_t width, uint32_t height) {
+	struct FileHandle* file = pf_fileopen(filepath, "wb");
+	if (file == NULL) {
+		assert(0);
+		fault("Can't open pvr file: %s\n", filepath);
+	}
+
+	size_t sz = width * height * 0.5f;
+
+	struct PVRTexHeader header;
+	memset(&header, 0, sizeof(header));
+	header.headerLength = PVRTEX3_HEADERSIZE;
+	header.width = width;
+	header.height = height;
+	header.flags = 32793;
+	header.dataLength = sz;
+	header.bpp = 4;
+	header.bitmaskAlpha = 1;
+	header.pvrTag = 559044176;
+	header.numSurfs = 1;
+
+	pf_filewrite(file, &header, PVRTEX3_HEADERSIZE);
+
+	pf_filewrite(file, (void*)buf, sz);
+
+	pf_fileclose(file);
 }

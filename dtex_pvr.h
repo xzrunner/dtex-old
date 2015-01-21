@@ -9,8 +9,11 @@ extern "C"
 #include <stdint.h>
 
 // only support rgba 4bpp now
-void dtex_pvr_decode(uint8_t* dst, const uint8_t* src, int width, int height);
-void dtex_pvr_encode(uint8_t* dst, const uint8_t* src, int width, int height);
+uint8_t* dtex_pvr_decode(const uint8_t* buf, int width, int height);
+uint8_t* dtex_pvr_encode(const uint8_t* buf, int width, int height);
+
+uint8_t* dtex_pvr_read_file(const char* filepath, uint32_t* width, uint32_t* height);
+void dtex_pvr_write_file(const char* filepath, const uint8_t* buf, uint32_t width, uint32_t height);
 
 #endif // dynamic_texture_pvr_h
 

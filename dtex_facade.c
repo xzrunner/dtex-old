@@ -115,65 +115,7 @@ dtexf_create_sprite(const char* path) {
 	dtexloader_unload_tex(src_tex);
 	free(src_tex);
 
-	size_t pkg_sz = sizeof(struct ej_package) + sizeof(struct texture);
-	size_t pic_sz = sizeof(struct picture) + sizeof(struct picture_part);
-	struct ej_sprite* spr = (struct ej_sprite*)malloc(sizeof(*spr) + pkg_sz + pic_sz);
-	struct ej_package* pkg = (struct ej_package*)(spr + 1);
-	struct picture* pic = (struct picture*)((uint8_t*)pkg + pkg_sz);
-
-	// fill pkg
-	pkg->name = NULL;
-	pkg->ep = NULL;
-	pkg->texture_n = 1;
-	pkg->tex->id = dst_tex->tex;
-	pkg->tex->id_alpha = 0;
-	pkg->tex->width = 1.0f / dst_tex->width;
-	pkg->tex->height = 1.0f / dst_tex->height;
-
-	// fill pic
-	pic->n = -1;
-	struct picture_part* pp = pic->part;
-	pp->texid = 0;
-
-	pp->src[0] = pos->r.xmin;
-	pp->src[1] = pos->r.ymax;
-	pp->src[2] = pos->r.xmax;
-	pp->src[3] = pos->r.ymax;
-	pp->src[4] = pos->r.xmax;
-	pp->src[5] = pos->r.ymin;
-	pp->src[6] = pos->r.xmin;
-	pp->src[7] = pos->r.ymin;
-
-	int32_t hw = (pos->r.xmax - pos->r.xmin) * 8,
-		    hh = (pos->r.ymax - pos->r.ymin) * 8;
-	pp->screen[0] = -hw;
-	pp->screen[1] = -hh;
-	pp->screen[2] = hw;
-	pp->screen[3] = -hh;
-	pp->screen[4] = hw;
-	pp->screen[5] = hh;
-	pp->screen[6] = -hw;
-	pp->screen[7] = hh;
-
-	// fill sprite
-	spr->pack = pkg;
-	spr->ani = (struct animation*)pic;
-	spr->frame = 0;
-	spr->extra = 0;
-	spr->action = 0;
-	spr->flag = EJ_MATRIX;
-	spr->color_trans = 0xffffffff;
-	spr->color_additive = 0;
-	spr->c[0] = NULL;
-	static const float SCALE = 1.0f;
-	spr->mat[0] = 1024 * SCALE;
-	spr->mat[1] = 0;
-	spr->mat[2] = 0;
-	spr->mat[3] = 1024 * SCALE;
-	spr->mat[4] = 0;
-	spr->mat[5] = 0;
-
-	return spr;
+	return dtex_sprite_create(dst_tex, pos);
 }
 
 struct ej_package* 
@@ -387,8 +329,8 @@ dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id,
 void 
 dtexf_debug_draw() {
 //	dtexc1_debug_draw(C1);
-	dtexc2_debug_draw(C2);
-	//dtexc3_debug_draw(C3);
+	//dtexc2_debug_draw(C2);
+	dtexc3_debug_draw(C3);
 }
 
 void 
@@ -397,74 +339,13 @@ dtexf_del_texture(int tex) {
 	glDeleteTextures(1, &id);
 }
 
-#define PVRTEX3_HEADERSIZE 52
-
-struct PVRTexHeader {
-	uint32_t headerLength;
-	uint32_t height;
-	uint32_t width;
-	uint32_t numMipmaps;
-	uint32_t flags;
-	uint32_t dataLength;
-	uint32_t bpp;
-	uint32_t bitmaskRed;
-	uint32_t bitmaskGreen;
-	uint32_t bitmaskBlue;
-	uint32_t bitmaskAlpha;
-	uint32_t pvrTag;
-	uint32_t numSurfs;
-};
-
-struct PVRTexHeaderV3 {
-	uint32_t  u32Version;     ///< Version of the file header, used to identify it.
-	uint32_t  u32Flags;     ///< Various format flags.
-	uint64_t  u64PixelFormat;   ///< The pixel format, 8cc value storing the 4 channel identifiers and their respective sizes.
-	uint32_t  u32ColourSpace;   ///< The Colour Space of the texture, currently either linear RGB or sRGB.
-	uint32_t  u32ChannelType;   ///< Variable type that the channel is stored in. Supports signed/unsigned int/short/byte or float for now.
-	uint32_t  u32Height;      ///< Height of the texture.
-	uint32_t  u32Width;     ///< Width of the texture.
-	uint32_t  u32Depth;     ///< Depth of the texture. (Z-slices)
-	uint32_t  u32NumSurfaces;   ///< Number of members in a Texture Array.
-	uint32_t  u32NumFaces;    ///< Number of faces in a Cube Map. Maybe be a value other than 6.
-	uint32_t  u32MIPMapCount;   ///< Number of MIP Maps in the texture - NB: Includes top level.
-	uint32_t  u32MetaDataSize;  ///< Size of the accompanying meta data.  
-};
-
-typedef unsigned int    PVRTuint32;
-// V3 Header Identifiers.
-const PVRTuint32 PVRTEX3_IDENT      = 0x03525650; // 'P''V''R'3
-
 void 
 dtexf_test_pvr(const char* path) {
-	struct FileHandle* file = pf_fileopen(path, "rb");
-	if (file == NULL) {
-		fault("Can't open pvr file: %s\n", path);
-	}
-
 	uint32_t width, height;
-	uint32_t type;
-	pf_fileread(file, &type, sizeof(uint32_t));
-	pf_fileseek_from_head(file, 0);
-	if (type != PVRTEX3_IDENT) {
-		pf_fileseek_from_head(file, sizeof(uint32_t));
-	} else {
-		pf_fileseek_from_head(file, sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint64_t)+sizeof(uint32_t)+sizeof(uint32_t));			
-	}
-	pf_fileread(file, &height, sizeof(uint32_t));
-	pf_fileread(file, &width, sizeof(uint32_t));
+	uint8_t* buf_compressed = dtex_pvr_read_file(path, &width, &height);
+	assert(buf_compressed);
 
-	pf_fileseek_from_head(file, PVRTEX3_HEADERSIZE);
-
-	size_t sz = width * height / 2;
-	uint8_t* buf_compressed = (uint8_t*)malloc(sz);
-	if (pf_fileread(file, buf_compressed, sz) != 1) {
-		fault("Invalid uncompress data source\n");
-	}
-	pf_fileclose(file);	
-
-	uint8_t* buf_uncompressed = (uint8_t*)malloc(width * height * 4);
-	memset(buf_uncompressed, 0x00, width * height * 4);
-	dtex_pvr_decode(buf_uncompressed, buf_compressed, width, height);
+	uint8_t* buf_uncompressed = dtex_pvr_decode(buf_compressed, width, height);
 	free(buf_compressed);
 
 	GLuint tex = 0;
@@ -477,8 +358,7 @@ dtexf_test_pvr(const char* path) {
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
 #ifdef __APPLE__
-	uint8_t* new_compressed = (uint8_t*)malloc(sz);
-	dtex_pvr_encode(new_compressed, buf_uncompressed, width * height);
+	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
     glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, width * height, 0, sz, new_compressed);
 	free(new_compressed);
 #else
