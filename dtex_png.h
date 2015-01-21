@@ -8,7 +8,7 @@ extern "C"
 
 #include <stdint.h>
 
-// #define USE_LIBPNG
+#define USE_LIBPNG
 
 // todo cache buf for source
 uint8_t* dtex_png_read(const char* filepath, int* width, int* height, int* channels, int* format);
