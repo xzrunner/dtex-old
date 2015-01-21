@@ -12,6 +12,7 @@
 #include "dtex_texture.h"
 #include "dtex_pvr.h"
 #include "dtex_packer.h"
+#include "dtex_sprite.h"
 
 #include "package.h"
 #include "platform.h"
