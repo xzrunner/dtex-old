@@ -480,7 +480,7 @@ struct col_bounding_box {
 static inline void
 _cal_bounding_box(struct col_bounding_box* cbb, const uint8_t* src, int width, int xblock, int yblock) {
 	int size = width;
-	struct color_rgba_char* data = (struct color_rgba_char*)(src + yblock * 4 * size + xblock * 4);
+	struct color_rgba_char* data = (struct color_rgba_char*)(src) + yblock * 4 * size + xblock * 4;
 
 	cbb->min = cbb->max = data[0];
 	for (int i = 0; i < 4; ++i) {
@@ -528,7 +528,7 @@ dtex_pvr_encode(const uint8_t* buf, int width, int height) {
 	const int block_mask = blocks - 1;
 
 	struct pvrtc_packet* packets = (struct pvrtc_packet*)dst;
-
+	
 	for (int y = 0; y < blocks; ++y) {
 		for (int x = 0; x < blocks; ++x) {
 			struct col_bounding_box cbb;
@@ -543,7 +543,7 @@ dtex_pvr_encode(const uint8_t* buf, int width, int height) {
 	for(int y = 0; y < blocks; ++y) {
 		for(int x = 0; x < blocks; ++x) {
 			const unsigned char (*factor)[4] = BILINEAR_FACTORS;
-			const struct color_rgba_char* data = (const struct color_rgba_char*)(buf + y * 4 * size + x * 4);
+			const struct color_rgba_char* data = (const struct color_rgba_char*)(buf) + y * 4 * size + x * 4;
 
 			uint32_t modulationData = 0;
 			for(int py = 0; py < 4; ++py) {
@@ -566,7 +566,7 @@ dtex_pvr_encode(const uint8_t* buf, int width, int height) {
 					d.a = cb.a - ca.a;
 
 					struct color_rgba_int p;
-					const struct color_rgba_char* pixel = (const struct color_rgba_char*)(data + py * size + px);
+					const struct color_rgba_char* pixel = data + py * size + px;
 					p.r = pixel->r * 16;
 					p.g = pixel->g * 16;
 					p.b = pixel->b * 16;
