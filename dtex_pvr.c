@@ -458,7 +458,7 @@ dtex_pvr_decode(const uint8_t* buf, int width, int height) {
 					c.b = (ca.b * w[0] + cb.b * w[1]) >> 7;
 					c.a = (ca.a * w[2] + cb.a * w[3]) >> 7;
 
-					int ptr = ((py+y*4)*width+(px+x*4))*4;
+					int ptr = ((height - 1 - (py+y*4))*width+(px+x*4))*4;
 					memcpy(&dst[ptr], &c.r, sizeof(c));
 
 					mod >>= 2;
