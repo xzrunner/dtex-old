@@ -241,10 +241,11 @@ dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct d
 
 		// todo
 		struct dtex_rect src_rect;
-		src_rect.xmin = part->dst.x;
-		src_rect.xmax = part->dst.x + part->dst.w;
-		src_rect.ymin = part->dst.y;		
-		src_rect.ymax = part->dst.y + part->dst.h;
+		struct dtex_rect* c3_pos = part->dst_pos;
+		src_rect.xmin = c3_pos->xmin + part->dst.x;
+		src_rect.xmax = src_rect.xmin + part->dst.w;
+		src_rect.ymin = c3_pos->ymin + part->dst.y;		
+		src_rect.ymax = src_rect.ymin + part->dst.h;
 
 		struct dtex_rect dst_rect;
 		if (rotate) {

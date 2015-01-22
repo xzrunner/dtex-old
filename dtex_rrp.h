@@ -22,6 +22,9 @@ struct dr_part {
 	int8_t idx;
 	struct dr_rect src, dst;
 	bool is_rotated;
+
+	struct dtex_texture* dst_tex;
+	struct dtex_rect* dst_pos;
 };
 
 struct dr_picture {
@@ -40,6 +43,8 @@ struct dtex_rrp* dtex_rrp_create(void* data, int sz, int cap);
 void dtex_rrp_release(struct dtex_rrp*);
 
 struct dr_picture* dtex_rrp_get_pic(struct dtex_rrp*, int id);
+
+void dtex_rrp_relocate(struct dtex_rrp* rrp, int idx, struct dtex_texture* tex, struct dtex_rect* pos);
 
 #ifdef EXPORT_RRP
 size_t dtex_rrp_size(void* data, int sz);

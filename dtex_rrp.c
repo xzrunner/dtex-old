@@ -158,6 +158,25 @@ dtex_rrp_get_pic(struct dtex_rrp* rrp, int id) {
 	return &rrp->pictures[id - 1];
 }
 
+void 
+dtex_rrp_relocate(struct dtex_rrp* rrp, int idx, struct dtex_texture* tex, struct dtex_rect* pos) {
+	for (int i = 0; i < rrp->pic_size; ++i) {
+		if (i == 120) {
+			int zz = 0;
+		}
+
+		struct dr_picture* pic = &rrp->pictures[i];
+		for (int j = 0; j < pic->part_sz; ++j) {
+			struct dr_part* part = &pic->part[j];
+			if (part->idx == idx) {
+				part->dst_tex = tex;
+				part->dst_pos = pos;
+			}
+		}
+	}
+}
+
+
 #ifdef EXPORT_RRP
 
 size_t 

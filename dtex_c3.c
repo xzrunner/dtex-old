@@ -4,6 +4,7 @@
 #include "dtex_loader.h"
 #include "dtex_draw.h"
 #include "dtex_buffer.h"
+#include "dtex_rrp.h"
 
 #include "package.h"
 #include "platform.h"
@@ -451,8 +452,8 @@ dtexc3_preload_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_b
 	free(tex);
 }
 
-void 
-dtexc3_relocate(struct dtex_c3* dtex, struct dtex_package* pkg) {
+static inline void
+_relocate_epd(struct dtex_c3* dtex, struct dtex_package* pkg) {
 	pkg->ej_pkg->texture_n = pkg->tex_size;
 	for (int i = 0; i < pkg->tex_size; ++i) {
 		pkg->ej_pkg->tex[i].id = 0;
@@ -505,6 +506,44 @@ dtexc3_relocate(struct dtex_c3* dtex, struct dtex_package* pkg) {
 	}
 }
 
+static inline struct dtex_texture* 
+_query_tex_position(struct dtex_c3* dtex, const char* name, int idx, struct dtex_rect** pos) {
+	unsigned int hash = _hash_origin_pack(name);
+	struct hash_node* hn = dtex->hash[hash];
+	while (hn) {
+		struct dtex_node* dr = &hn->n;
+		if (strcmp(name, dr->pkg->name) == 0 && idx == dr->raw_tex_idx) {
+			*pos = &dr->dst_rect;
+			return dr->dst_tex;
+		}
+		hn = hn->next_hash;
+	}
+
+	pos = NULL;
+	return NULL;
+}
+
+static inline void
+_relocate_rrp(struct dtex_c3* dtex, struct dtex_package* pkg) {
+	struct dtex_rrp* rrp = pkg->rrp_pkg;
+	if (rrp == NULL) {
+		return;
+	}
+
+	for (int i = 0; i < pkg->tex_size; ++i) {
+		struct dtex_rect* pos;
+		struct dtex_texture* tex = _query_tex_position(dtex, pkg->name, i, &pos);
+		assert(tex && pos);
+		dtex_rrp_relocate(rrp, i, tex, pos);
+	}
+}
+
+void 
+dtexc3_relocate(struct dtex_c3* dtex, struct dtex_package* pkg) {
+	_relocate_epd(dtex, pkg);
+	_relocate_rrp(dtex, pkg);
+}
+
 struct dtex_package* 
 dtexc3_query_pkg(struct dtex_c3* dtex, const char* name) {
 	unsigned int idx = _hash_origin_pack(name);
@@ -530,11 +569,6 @@ dtexc3_query_rect(struct dtex_c3* dtex, const char* name) {
 		}
 		hn = hn->next_hash;
 	}
-	return NULL;
-}
-
-struct dtex_texture* 
-dtexc3_query_position(struct dtex_c3* C3, const char* name, struct dtex_rect* pos) {
 	return NULL;
 }
 
