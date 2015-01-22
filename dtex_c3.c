@@ -189,6 +189,7 @@ _new_hash_rect(struct dtex_c3* dtex) {
 	return ret;
 }
 
+// todo use name and id to hash
 static inline unsigned int
 _hash_origin_pack(const char* name) {
 	// BKDR Hash Function
@@ -529,6 +530,11 @@ dtexc3_query_rect(struct dtex_c3* dtex, const char* name) {
 		}
 		hn = hn->next_hash;
 	}
+	return NULL;
+}
+
+struct dtex_texture* 
+dtexc3_query_position(struct dtex_c3* C3, const char* name, struct dtex_rect* pos) {
 	return NULL;
 }
 

@@ -14,12 +14,12 @@ extern "C"
 #endif // _MSC_VER
 
 struct dr_rect {
-	int32_t texid;
 	int16_t x, y;
 	int16_t w, h;
 };
 
 struct dr_part {
+	int8_t idx;
 	struct dr_rect src, dst;
 	bool is_rotated;
 };

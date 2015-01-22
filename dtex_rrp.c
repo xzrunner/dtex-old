@@ -89,14 +89,15 @@ _decode_part(struct dtex_rrp* rrp, struct dr_part* part, uint8_t** buf) {
 		part->is_rotated = true;
 		part->src.w = -w; part->src.h = -h;
 		part->dst.w = -h; part->dst.h = -w;
-		// part->src.w = part->dst.w = -w;
-		// part->src.h = part->dst.h = -h;
 	} else {
 		assert(w > 0 && h > 0);
 		part->is_rotated = false;
 		part->src.w = part->dst.w = w;
 		part->src.h = part->dst.h = h;		
 	}
+
+	memcpy(&part->idx, ptr, sizeof(part->idx));
+	ptr += sizeof(part->idx);
 
 	*buf = ptr;
 }

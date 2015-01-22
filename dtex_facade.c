@@ -330,8 +330,8 @@ dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id,
 void 
 dtexf_debug_draw() {
 //	dtexc1_debug_draw(C1);
-//	dtexc2_debug_draw(C2);
-	dtexc3_debug_draw(C3);
+	dtexc2_debug_draw(C2);
+//	dtexc3_debug_draw(C3);
 }
 
 void 
