@@ -9,7 +9,9 @@ extern "C"
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef _MSC_VER
 #define EXPORT_RRP
+#endif // _MSC_VER
 
 struct dr_rect {
 	int32_t texid;

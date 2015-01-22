@@ -8,7 +8,9 @@ extern "C"
 
 #include <stdint.h>
 
+#ifdef _MSC_VER
 #define EXPORT_PTS
+#endif // _MSC_VER
 
 struct pts_strip {
 	int16_t pos_size;
