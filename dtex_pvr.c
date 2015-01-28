@@ -704,3 +704,8 @@ dtex_pvr_write_file(const char* filepath, const uint8_t* buf, uint32_t width, ui
 
 	pf_fileclose(file);
 }
+
+unsigned 
+dtex_pvr_get_morton_number(int x, int y) {
+	return GetMortonNumber(x, y);
+}
