@@ -13,28 +13,26 @@ extern "C"
 #define EXPORT_RRP
 #endif // _MSC_VER
 
-struct dr_rect {
+struct rrp_rect {
 	int16_t x, y;
 	int16_t w, h;
 };
 
-struct dr_part {
+struct rrp_part {
 	int8_t idx;
-	struct dr_rect src, dst;
+	struct rrp_rect src, dst;
 	bool is_rotated;
 
 	struct dtex_texture* dst_tex;
 	struct dtex_rect* dst_pos;
 };
 
-struct dr_picture {
+struct rrp_picture {
 	int16_t id;
 	int16_t w, h;
 
 	int16_t part_sz;
-	struct dr_part* part;
-
-	// todo triangle trips
+	struct rrp_part* part;
 };
 
 struct dtex_rrp;
@@ -42,7 +40,7 @@ struct dtex_rrp;
 struct dtex_rrp* dtex_rrp_create(void* data, int sz, int cap);
 void dtex_rrp_release(struct dtex_rrp*);
 
-struct dr_picture* dtex_rrp_get_pic(struct dtex_rrp*, int id);
+struct rrp_picture* dtex_rrp_get_pic(struct dtex_rrp*, int id);
 
 void dtex_rrp_relocate(struct dtex_rrp* rrp, int idx, struct dtex_texture* tex, struct dtex_rect* pos);
 

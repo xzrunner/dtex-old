@@ -296,7 +296,7 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 	int w = pn->rect.xmax - pn->rect.xmin,
 		h = pn->rect.ymax - pn->rect.ymin;
 	// rrp
-	struct dr_picture* rrp_pic = NULL;
+	struct rrp_picture* rrp_pic = NULL;
 	if (pn->rect.xmin < 0) {
 		struct dtex_rrp* rrp = dtexloader_query_rrp(loader, pn->pkg);
 		if (rrp == NULL) {

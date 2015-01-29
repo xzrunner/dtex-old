@@ -296,7 +296,7 @@ dtexf_draw_rrp(struct ej_package* pkg, struct texture* tex, int id,
 	if (rrp == NULL) {
 		return false;
 	}
-	struct dr_picture* pic = dtex_rrp_get_pic(rrp, id);
+	struct rrp_picture* pic = dtex_rrp_get_pic(rrp, id);
 	if (pic == NULL) {
 		return false;
 	}

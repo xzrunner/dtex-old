@@ -40,7 +40,7 @@ _before_draw(int format) {
 }
 
 void 
-dtex_draw_rrp(struct dtex_raw_tex* src, struct dr_picture* pic, 
+dtex_draw_rrp(struct dtex_raw_tex* src, struct rrp_picture* pic, 
 	struct draw_params* params, const int32_t part_screen[8]) {
 	assert(pic);
 	_before_draw(src->format);
@@ -53,7 +53,7 @@ dtex_draw_rrp(struct dtex_raw_tex* src, struct dr_picture* pic,
     float inv_dw = 1.0f / pic->w,
           inv_dh = 1.0f / pic->h;
 	for (int i = 0; i < pic->part_sz; ++i) {
-		struct dr_part* part = &pic->part[i];
+		struct rrp_part* part = &pic->part[i];
 
 		float vb[16];
 		// texture coords
@@ -219,7 +219,7 @@ void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, con
 }
 
 void 
-dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dr_picture* pic, 
+dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct rrp_picture* pic, 
 	struct dtex_texture* dst, struct dp_position* pos, bool rotate) {
 
 	assert(pic);
@@ -237,7 +237,7 @@ dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct d
 	_before_fbo_draw(buf, src, dst, &fbo, &scr);
 
 	for (int i = 0; i < pic->part_sz; ++i) {
-		struct dr_part* part = &pic->part[i];
+		struct rrp_part* part = &pic->part[i];
 
 		// todo
 		struct dtex_rect src_rect;
