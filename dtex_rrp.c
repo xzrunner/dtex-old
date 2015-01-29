@@ -1,61 +1,11 @@
 #include "dtex_rrp.h"
+#include "dtex_alloc.h"
 
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 
 #define MAX_TEXTURE_SIZE 8
-
-#ifdef EXPORT_RRP
-
-struct alloc {
-	int sz;
-};
-
-static inline struct alloc*
-_init_alloc(int sz) {
-	struct alloc* a = malloc(sizeof(*a));
-	a->sz = 0;
-	return a;
-}
-
-static inline void*
-_alloc(struct alloc* a, int sz) {
-	if (sz & 3) {
-		sz = (sz + 3) & ~3;
-	}
-	a->sz += sz;
-	return malloc(sz);
-}
-
-#else
-
-struct alloc {
-	int sz;
-	char* free;
-};
-
-static inline struct alloc*
-_init_alloc(int sz) {
-	struct alloc* a = malloc(sizeof(*a) + sz); 
-	a->sz = sz;
-	a->free = (char*)(a + 1);
-	return a;
-}
-
-static inline void*
-_alloc(struct alloc* a, int sz) {
-	if (sz & 3) {
-		sz = (sz + 3) & ~3;
-	}
-	assert(sz <= a->sz);
-	void* ret = a->free;
-	a->sz -= sz;
-	a->free += sz;
-	return ret;
-} 
-
-#endif // EXPORT_RRP
 
 struct dtex_rrp {
 	struct alloc* alloc;
@@ -64,11 +14,11 @@ struct dtex_rrp {
 	// int16_t tex_size;
 
 	int16_t pic_size;
-	struct dr_picture pictures[0];
+	struct rrp_picture pictures[0];
 };
 
 static inline void
-_decode_part(struct dtex_rrp* rrp, struct dr_part* part, uint8_t** buf) {
+_decode_part(struct dtex_rrp* rrp, struct rrp_part* part, uint8_t** buf) {
 	uint8_t* ptr = *buf;
 
 	memcpy(&part->src.x, ptr, sizeof(part->src.x));
@@ -103,7 +53,7 @@ _decode_part(struct dtex_rrp* rrp, struct dr_part* part, uint8_t** buf) {
 }
 
 static inline void
-_decode_picture(struct dtex_rrp* rrp, struct dr_picture* pic, uint8_t** buf) {
+_decode_picture(struct dtex_rrp* rrp, struct rrp_picture* pic, uint8_t** buf) {
 	uint8_t* ptr = *buf;
 
 	memcpy(&pic->id, ptr, sizeof(pic->id));
@@ -115,7 +65,7 @@ _decode_picture(struct dtex_rrp* rrp, struct dr_picture* pic, uint8_t** buf) {
 	memcpy(&pic->part_sz, ptr, sizeof(pic->part_sz));
 	ptr += sizeof(pic->part_sz);
 
-	pic->part = _alloc(rrp->alloc, pic->part_sz * sizeof(struct dr_part));
+	pic->part = dtex_alloc(rrp->alloc, pic->part_sz * sizeof(struct rrp_part));
 	for (int i = 0; i < pic->part_sz; ++i) {
 		_decode_part(rrp, &pic->part[i], &ptr);
 	}
@@ -131,8 +81,8 @@ dtex_rrp_create(void* data, int sz, int cap) {
 	memcpy(&pic_sz, ptr, sizeof(pic_sz));
 	ptr += sizeof(pic_sz);
 
-	struct alloc* a = _init_alloc(cap);
-	struct dtex_rrp* rrp = _alloc(a, sizeof(*rrp) + pic_sz * sizeof(struct dr_picture));
+	struct alloc* a = dtex_init_alloc(cap);
+	struct dtex_rrp* rrp = dtex_alloc(a, sizeof(*rrp) + pic_sz * sizeof(struct rrp_picture));
 	rrp->alloc = a;
 
 	rrp->pic_size = pic_sz;
@@ -152,7 +102,7 @@ dtex_rrp_release(struct dtex_rrp* rrp) {
 }
 
 // id also is index
-struct dr_picture* 
+struct rrp_picture* 
 dtex_rrp_get_pic(struct dtex_rrp* rrp, int id) {
 	assert(id > 0 && id <= rrp->pic_size);
 	return &rrp->pictures[id - 1];
@@ -161,13 +111,9 @@ dtex_rrp_get_pic(struct dtex_rrp* rrp, int id) {
 void 
 dtex_rrp_relocate(struct dtex_rrp* rrp, int idx, struct dtex_texture* tex, struct dtex_rect* pos) {
 	for (int i = 0; i < rrp->pic_size; ++i) {
-		if (i == 120) {
-			int zz = 0;
-		}
-
-		struct dr_picture* pic = &rrp->pictures[i];
+		struct rrp_picture* pic = &rrp->pictures[i];
 		for (int j = 0; j < pic->part_sz; ++j) {
-			struct dr_part* part = &pic->part[j];
+			struct rrp_part* part = &pic->part[j];
 			if (part->idx == idx) {
 				part->dst_tex = tex;
 				part->dst_pos = pos;
@@ -176,15 +122,14 @@ dtex_rrp_relocate(struct dtex_rrp* rrp, int idx, struct dtex_texture* tex, struc
 	}
 }
 
-
 #ifdef EXPORT_RRP
 
 size_t 
 dtex_rrp_size(void* data, int sz) {
 	struct dtex_rrp* rrp = dtex_rrp_create(data, sz, 0);
-	size_t ret = rrp->alloc->sz;
+	size_t size = dtex_alloc_size(rrp->alloc);
 	dtex_rrp_release(rrp);
-	return ret;
+	return size;
 }
 
 #endif // EXPORT_RRP
