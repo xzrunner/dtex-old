@@ -30,7 +30,7 @@ struct rrr_picture {
 struct dtex_rrr;
 
 struct dtex_rrr* dtex_rrr_create(void* data, int sz, int cap);
-void dtex_rrr_release(struct dtex_rrp*);
+void dtex_rrr_release(struct dtex_rrr*);
 
 #ifdef EXPORT_RRR
 size_t dtex_rrr_size(void* data, int sz);
