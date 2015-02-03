@@ -1,8 +1,10 @@
 #include "dtex_loader.h"
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
+#include "dtex_rrr.h"
 #include "dtex_png.h"
 #include "dtex_pvr.h"
+#include "dtex_math.h"
 
 #include "package.h"
 #include "fault.h"
@@ -26,7 +28,9 @@
 
 #define LZMA_PROPS_SIZE 5
 
-#define IS_POT(x) (((x) & ((x) -1)) == 0)
+#ifdef _MSC_VER
+#define strdup _strdup
+#endif // _MSC_VER
 
 struct load_task {
 	bool is_epp;
@@ -189,6 +193,18 @@ _load_pts(uint8_t* buffer, size_t sz, struct dtex_package* pkg) {
 		fault("Error create rrp.\n");
 	}
 	pkg->pts_pkg = pts;
+}
+
+static inline void
+_load_rrr(uint8_t* buffer, size_t sz, struct dtex_package* pkg) {
+	assert(pkg->pts_pkg == NULL);
+
+	uint32_t cap = buffer[0] | buffer[1]<<8 | buffer[2]<<16 | buffer[3]<<24;
+	struct dtex_rrr* rrr = dtex_rrr_create(buffer + 4, sz - 4, cap);
+	if (rrr == NULL) {
+		fault("Error create rrr.\n");
+	}
+	pkg->rrr_pkg = rrr;
 }
 
 static inline GLuint
@@ -374,6 +390,9 @@ _unpack_memory_to_pkg(uint8_t* buffer, size_t sz, void* ud) {
 		case PTS:
 			_load_pts(buffer+1, sz-1, params->pkg);
 			break;
+		case RRR:
+			_load_rrr(buffer+1, sz-1, params->pkg);
+			break;
 		default:
 			fault("Invalid package format %d\n",format);
 		}
@@ -471,7 +490,7 @@ static inline void
 _unpack_file(struct dtex_loader* dtex, struct FileHandle* file, void (*unpack_func)(), void* ud) {
 	int block_count = _check_block_count(file);
 	pf_fileseek_from_head(file, 0);
-
+ 
 	for (int i = 0; i < block_count; ++i) {
 		int32_t sz = 0;
 		pf_fileread(file, &sz, sizeof(sz));

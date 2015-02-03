@@ -23,6 +23,8 @@ struct rrr_picture {
 	int16_t id;
 	int16_t w, h;
 
+	int16_t x, y;
+
 	int16_t part_sz;
 	struct rrr_part* part;
 };
@@ -31,6 +33,8 @@ struct dtex_rrr;
 
 struct dtex_rrr* dtex_rrr_create(void* data, int sz, int cap);
 void dtex_rrr_release(struct dtex_rrr*);
+
+void dtex_rrr_load_texture(struct dtex_rrr*);
 
 #ifdef EXPORT_RRR
 size_t dtex_rrr_size(void* data, int sz);

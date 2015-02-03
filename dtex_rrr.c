@@ -1,8 +1,12 @@
 #include "dtex_rrr.h"
 #include "dtex_alloc.h"
+#include "dtex_packer.h"
+#include "dtex_pvr.h"
+#include "dtex_math.h"
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct dtex_rrr {
 	struct alloc* alloc;
@@ -70,6 +74,9 @@ dtex_rrr_create(void* data, int sz, int cap) {
 		_decode_picture(rrr, &rrr->pictures[i], &ptr);		
 	}
 
+	// for test
+	dtex_rrr_load_texture(rrr);
+
 	return rrr;
 }
 
@@ -79,6 +86,64 @@ dtex_rrr_release(struct dtex_rrr* rrr) {
 		assert(rrr->alloc);
 		free(rrr->alloc);
 	}
+}
+
+#define TO_4TIMES(x) (((x) + 3) & ~3)
+#define IS_4TIMES(x) ((x) % 4 == 0)
+
+uint8_t*
+_init_blank_pvr(int edge) {
+	assert(IS_POT(edge));
+
+	size_t sz = edge * edge / 2;
+	uint8_t* buf = (uint8_t*)malloc(sz);
+
+	int block = edge >> 2;
+	int block_sz = block * block;
+	for (int i = 0; i < block_sz; ++i) {
+		int64_t* ptr = (int64_t*)buf + i;
+		*ptr = 0x00000001aaaaaaaa;
+	}
+
+	return buf;
+}
+
+void 
+dtex_rrr_load_texture(struct dtex_rrr* rrr) {
+	int edge = 1024;
+	uint8_t* buf = _init_blank_pvr(edge);
+
+	struct dtex_packer* packer = dtexpacker_create(edge, edge, 100);
+	for (int i = 0; i < rrr->pic_size; ++i) {
+		struct rrr_picture* pic = &rrr->pictures[i];
+		struct dp_position* pos = dtexpacker_add(packer, TO_4TIMES(pic->w), TO_4TIMES(pic->h));
+		assert(IS_4TIMES(pos->r.xmin) && IS_4TIMES(pos->r.ymin));
+		int sx = pos->r.xmin >> 2,
+			sy = pos->r.ymin >> 2;
+
+		for (int j = 0; j < pic->part_sz; ++j) {
+			struct rrr_part* part = &pic->part[j];
+
+			int idx_src = 0;
+			for (int y = part->y; y < part->y + part->h; ++y) {
+				for (int x = part->x; x < part->x + part->w; ++x) {
+					int idx_dst = dtex_pvr_get_morton_number(sx + x, sy + y);
+					assert(idx_dst < edge * edge / 16);
+					int64_t* src = (int64_t*)part->data + idx_src;
+					int64_t* dst = (int64_t*)buf + idx_dst;
+					memcpy(dst, src, sizeof(int64_t));
+
+					++idx_src;
+				}
+			}
+		}
+	}
+
+	// for test
+	dtex_pvr_write_file("F:/debug/rpack/test/rrr.pvr", buf, edge, edge);
+
+ 	dtexpacker_release(packer);
+	free(buf);
 }
 
 #ifdef EXPORT_RRR

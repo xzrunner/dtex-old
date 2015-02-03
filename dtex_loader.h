@@ -31,6 +31,7 @@ struct dtex_package {
 	struct ej_package* ej_pkg;		// epd
 	struct dtex_rrp* rrp_pkg;		// regular rect pack
 	struct dtex_pts* pts_pkg;		// picture triangles strip
+	struct dtex_rrr* rrr_pkg;		// regular rect raw (only for pvr)
 };
 
 struct dtex_rect;
