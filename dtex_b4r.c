@@ -27,8 +27,11 @@ _decode_picture(struct dtex_b4r* b4r, struct b4r_picture* pic, uint8_t** buf) {
 	memcpy(&pic->h, ptr, sizeof(pic->h));
 	ptr += sizeof(pic->h);
 
-	assert(pic->w == pic->h && pic->w % 4 == 0);
-	int block_sz = (pic->w >> 2) * (pic->w >> 2);
+	int w_p2 = next_p2(pic->w),
+		h_p2 = next_p2(pic->h);
+	int edge = w_p2 > h_p2 ? w_p2 : h_p2;
+
+	int block_sz = (edge >> 2) * (edge >> 2);
 	int flag_sz = ceil(block_sz / 8.0f);
 	pic->flag = dtex_alloc(b4r->alloc, flag_sz);
 	memcpy(pic->flag, ptr, flag_sz);
@@ -85,7 +88,11 @@ _load_picture_to_texture(uint8_t* texture, int edge, struct dtex_packer* packer,
 	int sx = pos->r.xmin >> 2,
 		sy = pos->r.ymin >> 2;
 
-	int block = pic->w >> 2;
+	int w_p2 = next_p2(pic->w),
+		h_p2 = next_p2(pic->h);
+	int _edge = w_p2 > h_p2 ? w_p2 : h_p2;
+	int block = _edge >> 2;
+
 	int64_t* ptr_data = (int64_t*)pic->pixels;
 	for (int y = 0; y < block; ++y) {
 		for (int x = 0; x < block; ++x) {
