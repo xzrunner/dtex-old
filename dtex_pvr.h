@@ -17,6 +17,8 @@ void dtex_pvr_write_file(const char* filepath, const uint8_t* buf, uint32_t widt
 
 unsigned dtex_pvr_get_morton_number(int x, int y);
 
+uint8_t* dtex_pvr_init_blank(int edge);
+
 #endif // dynamic_texture_pvr_h
 
 #ifdef __cplusplus

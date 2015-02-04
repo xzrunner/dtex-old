@@ -88,55 +88,39 @@ dtex_rrr_release(struct dtex_rrr* rrr) {
 	}
 }
 
-#define TO_4TIMES(x) (((x) + 3) & ~3)
-#define IS_4TIMES(x) ((x) % 4 == 0)
+static inline void
+_load_picture_to_texture(uint8_t* texture, int edge, struct dtex_packer* packer, struct rrr_picture* pic) {
+	struct dp_position* pos = dtexpacker_add(packer, TO_4TIMES(pic->w), TO_4TIMES(pic->h));
+	assert(IS_4TIMES(pos->r.xmin) && IS_4TIMES(pos->r.ymin));
+	int sx = pos->r.xmin >> 2,
+		sy = pos->r.ymin >> 2;
 
-uint8_t*
-_init_blank_pvr(int edge) {
-	assert(IS_POT(edge));
+	for (int i = 0; i < pic->part_sz; ++i) {
+		struct rrr_part* part = &pic->part[i];
 
-	size_t sz = edge * edge / 2;
-	uint8_t* buf = (uint8_t*)malloc(sz);
-
-	int block = edge >> 2;
-	int block_sz = block * block;
-	for (int i = 0; i < block_sz; ++i) {
-		int64_t* ptr = (int64_t*)buf + i;
-		*ptr = 0x00000001aaaaaaaa;
+		int idx_src = 0;
+		for (int y = part->y; y < part->y + part->h; ++y) {
+			for (int x = part->x; x < part->x + part->w; ++x) {
+				int idx_dst = dtex_pvr_get_morton_number(sx + x, sy + y);
+				assert(idx_dst < edge * edge / 16);
+				int64_t* src = (int64_t*)part->data + idx_src;
+				int64_t* dst = (int64_t*)texture + idx_dst;
+				memcpy(dst, src, sizeof(int64_t));
+				++idx_src;
+			}
+		}
 	}
-
-	return buf;
 }
 
 void 
 dtex_rrr_load_texture(struct dtex_rrr* rrr) {
 	int edge = 1024;
-	uint8_t* buf = _init_blank_pvr(edge);
+	uint8_t* buf = dtex_pvr_init_blank(edge);
 
 	struct dtex_packer* packer = dtexpacker_create(edge, edge, 100);
 	for (int i = 0; i < rrr->pic_size; ++i) {
 		struct rrr_picture* pic = &rrr->pictures[i];
-		struct dp_position* pos = dtexpacker_add(packer, TO_4TIMES(pic->w), TO_4TIMES(pic->h));
-		assert(IS_4TIMES(pos->r.xmin) && IS_4TIMES(pos->r.ymin));
-		int sx = pos->r.xmin >> 2,
-			sy = pos->r.ymin >> 2;
-
-		for (int j = 0; j < pic->part_sz; ++j) {
-			struct rrr_part* part = &pic->part[j];
-
-			int idx_src = 0;
-			for (int y = part->y; y < part->y + part->h; ++y) {
-				for (int x = part->x; x < part->x + part->w; ++x) {
-					int idx_dst = dtex_pvr_get_morton_number(sx + x, sy + y);
-					assert(idx_dst < edge * edge / 16);
-					int64_t* src = (int64_t*)part->data + idx_src;
-					int64_t* dst = (int64_t*)buf + idx_dst;
-					memcpy(dst, src, sizeof(int64_t));
-
-					++idx_src;
-				}
-			}
-		}
+		_load_picture_to_texture(buf, edge, packer, pic);
 	}
 
 	// for test

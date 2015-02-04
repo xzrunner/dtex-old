@@ -1,4 +1,5 @@
 #include "dtex_pvr.h"
+#include "dtex_math.h"
 
 #include "fault.h"
 #include "platform.h"
@@ -708,4 +709,23 @@ dtex_pvr_write_file(const char* filepath, const uint8_t* buf, uint32_t width, ui
 unsigned 
 dtex_pvr_get_morton_number(int x, int y) {
 	return GetMortonNumber(x, y);
+}
+
+uint8_t* 
+dtex_pvr_init_blank(int edge) {
+	assert(IS_POT(edge));
+
+	size_t sz = edge * edge / 2;
+	uint8_t* buf = (uint8_t*)malloc(sz);
+
+	int block = edge >> 2;
+	int block_sz = block * block;
+	for (int i = 0; i < block_sz; ++i) {
+		int64_t* ptr = (int64_t*)buf + i;
+		*ptr = 0x00000001aaaaaaaa;
+	}
+
+	memset(buf, 0xaa, sz);
+
+	return buf;
 }
