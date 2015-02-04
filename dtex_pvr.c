@@ -725,7 +725,8 @@ dtex_pvr_init_blank(int edge) {
 		*ptr = 0x00000001aaaaaaaa;
 	}
 
-	memset(buf, 0xaa, sz);
+//	// for debug
+//	memset(buf, 0xaa, sz);
 
 	return buf;
 }
