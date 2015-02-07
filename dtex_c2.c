@@ -203,7 +203,7 @@ _unique_preload_list(struct dtex_c2* dtex) {
 }
 
 static inline int
-_compare_edge(const void *arg1, const void *arg2) {
+_compare_max_edge(const void *arg1, const void *arg2) {
 	struct preload_node *node1, *node2;
 
 	node1 = *((struct preload_node**)(arg1));
@@ -374,7 +374,7 @@ dtexc2_preload_end(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_lo
 	}
 
 	// insert
-	qsort((void*)dtex->preload_list, dtex->preload_size, sizeof(struct preload_node*), _compare_edge);	
+	qsort((void*)dtex->preload_list, dtex->preload_size, sizeof(struct preload_node*), _compare_max_edge);	
 	for (int i = 0; i < dtex->preload_size; ++i) {
 		_insert_node(dtex, buf, loader, dtex->preload_list[i], !use_only_one_texture);
 	}
