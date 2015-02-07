@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 struct ej_sprite* 
-dtex_sprite_create(struct dtex_texture* dst_tex, struct dp_position* pos) {
+dtex_sprite_create(struct dtex_texture* dst_tex, struct dp_pos* pos) {
 	size_t pkg_sz = sizeof(struct ej_package) + sizeof(struct texture);
 	size_t pic_sz = sizeof(struct picture) + sizeof(struct picture_part);
 	struct ej_sprite* spr = (struct ej_sprite*)malloc(sizeof(*spr) + pkg_sz + pic_sz);

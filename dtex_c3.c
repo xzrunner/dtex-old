@@ -208,7 +208,7 @@ static inline bool
 _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node, struct dtex_texture* texture) {
 	int w = node->pkg->textures[node->raw_tex_idx].width * node->scale * scale,
 		h = node->pkg->textures[node->raw_tex_idx].height * node->scale * scale;
-	struct dp_position* pos = NULL;
+	struct dp_pos* pos = NULL;
 	// todo padding
 	if (w >= h) {
 		pos = dtexpacker_add(texture->packer, w, h);
@@ -387,7 +387,7 @@ dtexc3_preload_pkg_end(struct dtex_c3* dtex, struct dtex_loader* loader, struct 
     dtex->preload_size = 0;
 }
 
-struct dp_position* 
+struct dp_pos* 
 dtexc3_load_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_buffer* buf, struct dtex_texture** dst) {
 	// todo sort
 
@@ -396,7 +396,7 @@ dtexc3_load_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_buff
 	*dst = dst_tex;
 
 	// insert
-	struct dp_position* pos = dtexpacker_add(dst_tex->packer, tex->width, tex->height);
+	struct dp_pos* pos = dtexpacker_add(dst_tex->packer, tex->width, tex->height);
 	if (!pos) {
 		return NULL;
 	}
@@ -427,7 +427,7 @@ dtexc3_preload_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_b
 	struct dtex_texture* dst_tex = dtex->textures[0];
 
 	// insert
-	struct dp_position* pos = dtexpacker_add(dst_tex->packer, tex->width, tex->height);
+	struct dp_pos* pos = dtexpacker_add(dst_tex->packer, tex->width, tex->height);
 	if (!pos) {
 		return;
 	}
@@ -525,23 +525,22 @@ _query_tex_position(struct dtex_c3* dtex, const char* name, int idx, struct dtex
 
 static inline void
 _relocate_rrp(struct dtex_c3* dtex, struct dtex_package* pkg) {
-	struct dtex_rrp* rrp = pkg->rrp_pkg;
-	if (rrp == NULL) {
-		return;
-	}
-
+	assert(pkg->rrp_pkg);
 	for (int i = 0; i < pkg->tex_size; ++i) {
 		struct dtex_rect* pos;
 		struct dtex_texture* tex = _query_tex_position(dtex, pkg->name, i, &pos);
 		assert(tex && pos);
-		dtex_rrp_relocate(rrp, i, tex, pos);
+		dtex_rrp_relocate(pkg->rrp_pkg, i, tex, pos);
 	}
 }
 
 void 
 dtexc3_relocate(struct dtex_c3* dtex, struct dtex_package* pkg) {
 	_relocate_epd(dtex, pkg);
-	_relocate_rrp(dtex, pkg);
+
+	if (pkg->rrp_pkg) {
+		_relocate_rrp(dtex, pkg);
+	}
 }
 
 struct dtex_package* 

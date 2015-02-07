@@ -31,7 +31,7 @@ struct dtex_node {
 
 	// dest info
 	float vb[8];
-	struct dp_position* pos;
+	struct dp_pos* pos;
 };
 
 struct hash_node {
@@ -251,7 +251,7 @@ _get_animation_region(struct ej_package* pkg, struct animation* ani, int action)
 
 static inline void
 _draw_animation(struct dtex_c1* dtex, struct ej_package* pkg, struct animation* ani, int action, int frame, 
-				struct dp_position* pos, struct ej_rect* rect, bool need_clear, struct dtex_fbo* fbo) {
+				struct dp_pos* pos, struct ej_rect* rect, bool need_clear, struct dtex_fbo* fbo) {
 	struct dtex_texture* tex = dtex->texture;
 
 	dtex_fbo_bind_texture(fbo, tex);
@@ -329,7 +329,7 @@ dtexc1_load_anim(struct dtex_c1* dtex, struct ej_package* pkg, struct animation*
 	int w = rect.xmax - rect.xmin,
 		h = rect.ymax - rect.ymin;
 	struct dtex_texture* tex = dtex->texture;
-	struct dp_position* pos = NULL;
+	struct dp_pos* pos = NULL;
 	// todo padding and rotate
 //	if (w >= h) {
 		pos = dtexpacker_add(tex->packer, w, h);

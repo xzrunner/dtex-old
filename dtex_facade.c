@@ -111,7 +111,7 @@ dtexf_create_sprite(const char* path) {
 	struct dtex_raw_tex* src_tex = dtexloader_load_tex_file(path);
 
 	struct dtex_texture* dst_tex = NULL;
-	struct dp_position* pos = dtexc3_load_tex(C3, src_tex, BUF, &dst_tex);
+	struct dp_pos* pos = dtexc3_load_tex(C3, src_tex, BUF, &dst_tex);
 
 	dtexloader_unload_tex(src_tex);
 	free(src_tex);
@@ -199,7 +199,7 @@ dtexf_c2_lookup_texcoords(struct texture* ori_tex, float* ori_vb, int* dst_tex) 
 
 void 
 dtexf_c2_lookup_node(struct texture* ori_tex, float* ori_vb, 
-	struct dtex_texture** out_tex, struct dp_position** out_pos) {
+	struct dtex_texture** out_tex, struct dp_pos** out_pos) {
 
 	if (C2 == NULL) {
 		return;
@@ -237,7 +237,7 @@ dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* pat
 }
 
 static inline void
-_prepare_trans_pos(struct ej_package* pkg, struct dtex_rect* rect, int tex_idx, struct dtex_raw_tex* dst_tex, struct dtex_pos* ori_pos, struct dtex_pos* dst_pos) {
+_prepare_trans_pos(struct ej_package* pkg, struct dtex_rect* rect, int tex_idx, struct dtex_raw_tex* dst_tex, struct dtex_img_pos* ori_pos, struct dtex_img_pos* dst_pos) {
 	assert(tex_idx < pkg->texture_n);
 	struct texture* src_tex = &pkg->tex[tex_idx];
 	ori_pos->id = src_tex->id;
@@ -257,7 +257,7 @@ _prepare_trans_pos(struct ej_package* pkg, struct dtex_rect* rect, int tex_idx, 
 
 static inline void
 _on_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id, int tex_idx, struct dtex_raw_tex* dst_tex) {
-	struct dtex_pos ori_pos, dst_pos;
+	struct dtex_img_pos ori_pos, dst_pos;
 	_prepare_trans_pos(pkg, rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
 
 	dtex_relocate_spr(pkg, spr_id, &ori_pos, &dst_pos);
@@ -267,7 +267,7 @@ _on_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id, in
 
 static inline void
 _after_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id, int tex_idx, struct dtex_raw_tex* dst_tex) {
-	struct dtex_pos ori_pos, dst_pos;
+	struct dtex_img_pos ori_pos, dst_pos;
 	_prepare_trans_pos(pkg, rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
 
     dtex_relocate_spr(pkg, spr_id, &ori_pos, &dst_pos);
@@ -312,7 +312,7 @@ dtexf_draw_rrp(struct ej_package* pkg, struct texture* tex, int id,
 
 bool 
 dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id, 
-	struct dp_position* src_pos, struct draw_params* params, const int32_t part_screen[8]) {
+	struct dp_pos* src_pos, struct draw_params* params, const int32_t part_screen[8]) {
 
 	struct dtex_pts* pts = dtexloader_query_pts(LOADER, pkg);
 	if (pts == NULL) {

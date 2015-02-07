@@ -116,7 +116,7 @@ dtex_draw_rrp(struct dtex_raw_tex* src, struct rrp_picture* pic,
 }
 
 void 
-dtex_draw_pts(struct dtex_texture* src_tex, struct dp_position* src_pos, struct pts_picture* src_pts_pic,
+dtex_draw_pts(struct dtex_texture* src_tex, struct dp_pos* src_pos, struct pts_picture* src_pts_pic,
 	struct draw_params* params, const int32_t part_screen[8]) {
 
 	assert(src_pts_pic);
@@ -220,7 +220,7 @@ void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, con
 
 void 
 dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct rrp_picture* pic, 
-	struct dtex_texture* dst, struct dp_position* pos, bool rotate) {
+	struct dtex_texture* dst, struct dp_pos* pos, bool rotate) {
 
 	assert(pic);
 

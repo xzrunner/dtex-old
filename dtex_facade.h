@@ -12,7 +12,7 @@ extern "C"
 
 // todo
 struct dtex_texture;
-struct dp_position;
+struct dp_pos;
 
 struct animation;
 struct texture;
@@ -34,7 +34,7 @@ void dtexf_c2_load_begin();
 void dtexf_c2_load_sprite(struct ej_package* pkg, const char* name);
 void dtexf_c2_load_end();
 float* dtexf_c2_lookup_texcoords(struct texture* ori_tex, float* ori_vb, int* dst_tex);
-void dtexf_c2_lookup_node(struct texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dp_position** out_pos);
+void dtexf_c2_lookup_node(struct texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dp_pos** out_pos);
 
 // C1
 void dtexf_c1_load_anim(struct ej_package* pkg, struct animation* ani, int action);
@@ -52,7 +52,7 @@ bool dtexf_draw_rrp(struct ej_package* pkg, struct texture* tex, int id,
 
 // PTS
 bool dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id, 
-	struct dp_position* src_pos, struct draw_params* params, const int32_t part_screen[8]);
+	struct dp_pos* src_pos, struct draw_params* params, const int32_t part_screen[8]);
 
 // for debug
 void dtexf_debug_draw();

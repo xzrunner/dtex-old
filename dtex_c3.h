@@ -20,7 +20,7 @@ void dtexc3_preload_pkg(struct dtex_c3*, struct dtex_package*, float scale);
 void dtexc3_preload_pkg_end(struct dtex_c3*, struct dtex_loader*, struct dtex_buffer*);
 
 // todo cache and sort
-struct dp_position* dtexc3_load_tex(struct dtex_c3*, struct dtex_raw_tex*, struct dtex_buffer*, struct dtex_texture** dst);
+struct dp_pos* dtexc3_load_tex(struct dtex_c3*, struct dtex_raw_tex*, struct dtex_buffer*, struct dtex_texture** dst);
 
 void dtexc3_relocate(struct dtex_c3*, struct dtex_package*);
 

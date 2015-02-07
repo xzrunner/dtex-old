@@ -83,7 +83,7 @@ dtex_b4r_release(struct dtex_b4r* b4r) {
 
 static inline void
 _load_picture_to_texture(uint8_t* texture, int edge, struct dtex_packer* packer, struct b4r_picture* pic) {
-	struct dp_position* pos = dtexpacker_add(packer, TO_4TIMES(pic->w), TO_4TIMES(pic->h));
+	struct dp_pos* pos = dtexpacker_add(packer, TO_4TIMES(pic->w), TO_4TIMES(pic->h));
 	assert(IS_4TIMES(pos->r.xmin) && IS_4TIMES(pos->r.ymin));
 	int sx = pos->r.xmin >> 2,
 		sy = pos->r.ymin >> 2;

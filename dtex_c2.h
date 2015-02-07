@@ -13,7 +13,7 @@ struct dtex_buffer;
 struct dtex_loader;
 struct dtex_rect;
 struct dtex_texture;
-struct dp_position;
+struct dp_pos;
 
 struct ej_package;
 
@@ -26,7 +26,7 @@ void dtexc2_preload_sprite(struct dtex_c2*, struct ej_package* pkg, int id);
 void dtexc2_preload_end(struct dtex_c2*, struct dtex_buffer*, struct dtex_loader*, bool use_only_one_texture);
 
 float* dtexc2_lookup_texcoords(struct dtex_c2*, int texid, struct dtex_rect* rect, int* out_texid);
-void dtexc2_lookup_node(struct dtex_c2*, int texid, struct dtex_rect* rect, struct dtex_texture** out_tex, struct dp_position** out_pos);
+void dtexc2_lookup_node(struct dtex_c2*, int texid, struct dtex_rect* rect, struct dtex_texture** out_tex, struct dp_pos** out_pos);
 
 void dtexc2_change_key(struct dtex_c2*, int src_texid, struct dtex_rect* src_rect, int dst_texid, struct dtex_rect* dst_rect);
 

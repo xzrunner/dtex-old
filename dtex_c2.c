@@ -27,7 +27,7 @@ struct dtex_node {
 
 	// dst info
 	struct dtex_texture* dst_tex;
-	struct dp_position* dst_pos;
+	struct dp_pos* dst_pos;
 	float dst_vb[8];
 
 	// draw ori to dst
@@ -307,7 +307,7 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 		w = rrp_pic->w;
 		h = rrp_pic->h;
 	}
-	struct dp_position* pos = NULL;
+	struct dp_pos* pos = NULL;
 	struct dtex_texture* tex = NULL;
 	bool rotate = false;
 	for (int i = 0; i < dtex->tex_size && pos == NULL; ++i) {
@@ -395,7 +395,7 @@ dtexc2_lookup_texcoords(struct dtex_c2* dtex, int texid, struct dtex_rect* rect,
 
 void 
 dtexc2_lookup_node(struct dtex_c2* dtex, int texid, struct dtex_rect* rect,
-	struct dtex_texture** out_tex, struct dp_position** out_pos) {
+	struct dtex_texture** out_tex, struct dp_pos** out_pos) {
 
 	struct hash_node* hn = _query_node(dtex, texid, rect);
 	if (hn == NULL) {
