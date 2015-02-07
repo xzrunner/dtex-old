@@ -12,11 +12,13 @@ struct dp_pack {
 };
 
 struct dp_node {
-	struct dp_position pos;
+	struct dp_pos pos;
 	struct dp_pack pack;
 };
 
 struct dtex_packer {
+	int w, h;
+
 	struct dp_node* root;
 
 	int capacity;
@@ -66,6 +68,9 @@ dtexpacker_create(int width, int height, int size) {
 	struct dtex_packer* packer = (struct dtex_packer*)malloc(packer_sz);
 	memset(packer, 0, packer_sz);
 
+	packer->w = width;
+	packer->h = height;
+
 	packer->capacity = sz;
 
 	void* ptr = packer + 1;
@@ -77,6 +82,7 @@ dtexpacker_create(int width, int height, int size) {
 	}
 
 	_init_root(packer, width, height);
+
 	return packer;
 }
 
@@ -254,8 +260,14 @@ _insert(struct dtex_packer* packer, struct dp_node* dst, int w, int h) {
 	}
 }
 
-struct dp_position* 
+struct dp_pos* 
 dtexpacker_add(struct dtex_packer* packer, int width, int height) {
 	struct dp_node* node =  _insert(packer, packer->root, width, height);
 	return &node->pos;
+}
+
+void 
+dtexpacker_get_size(struct dtex_packer* packer, int* width, int* height) {
+	*width = packer->w;
+	*height = packer->h;
 }

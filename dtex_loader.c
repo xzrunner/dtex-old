@@ -2,6 +2,7 @@
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
 #include "dtex_rrr.h"
+#include "dtex_b4r.h"
 #include "dtex_png.h"
 #include "dtex_pvr.h"
 #include "dtex_math.h"
@@ -197,7 +198,7 @@ _load_pts(uint8_t* buffer, size_t sz, struct dtex_package* pkg) {
 
 static inline void
 _load_rrr(uint8_t* buffer, size_t sz, struct dtex_package* pkg) {
-	assert(pkg->pts_pkg == NULL);
+	assert(pkg->rrr_pkg == NULL);
 
 	uint32_t cap = buffer[0] | buffer[1]<<8 | buffer[2]<<16 | buffer[3]<<24;
 	struct dtex_rrr* rrr = dtex_rrr_create(buffer + 4, sz - 4, cap);
@@ -205,6 +206,18 @@ _load_rrr(uint8_t* buffer, size_t sz, struct dtex_package* pkg) {
 		fault("Error create rrr.\n");
 	}
 	pkg->rrr_pkg = rrr;
+}
+
+static inline void
+_load_b4r(uint8_t* buffer, size_t sz, struct dtex_package* pkg) {
+	assert(pkg->b4r_pkg == NULL);
+
+	uint32_t cap = buffer[0] | buffer[1]<<8 | buffer[2]<<16 | buffer[3]<<24;
+	struct dtex_b4r* b4r = dtex_b4r_create(buffer + 4, sz - 4, cap);
+	if (b4r == NULL) {
+		fault("Error create b4r.\n");
+	}
+	pkg->b4r_pkg = b4r;
 }
 
 static inline GLuint
@@ -392,6 +405,9 @@ _unpack_memory_to_pkg(uint8_t* buffer, size_t sz, void* ud) {
 			break;
 		case RRR:
 			_load_rrr(buffer+1, sz-1, params->pkg);
+			break;
+		case B4R:
+			_load_b4r(buffer+1, sz-1, params->pkg);
 			break;
 		default:
 			fault("Invalid package format %d\n",format);
