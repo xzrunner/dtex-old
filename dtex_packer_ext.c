@@ -8,7 +8,23 @@
 #include <assert.h>
 
 static inline int
-_compare_edge(const void *arg1, const void *arg2) {
+_compare_width(const void *arg1, const void *arg2) {
+	struct dp_rect *node1, *node2;
+
+	node1 = *((struct dp_rect**)(arg1));
+	node2 = *((struct dp_rect**)(arg2));
+
+	if (node1->w > node2->w) {
+		return -1;
+	} else if (node1->w < node2->w) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+static inline int
+_compare_max_edge(const void *arg1, const void *arg2) {
 	struct dp_rect *node1, *node2;
 
 	node1 = *((struct dp_rect**)(arg1));
@@ -59,7 +75,7 @@ dtex_packer_square_multi(struct dp_rect** rects, size_t sz) {
 	//	static const float AREA_LIMIT = 64 * 64;
 	static const int EDGE_LIMIT = 256;
 
-	qsort(rects, sz, sizeof(struct dp_rect*), _compare_edge);
+	qsort(rects, sz, sizeof(struct dp_rect*), _compare_width);
 
 	size_t curr_sz = sz;
 	struct dp_rect* curr_list[sz];
@@ -84,9 +100,6 @@ dtex_packer_square_multi(struct dp_rect** rects, size_t sz) {
 				r->dst_pos = pos;
 				success_list[success_sz++] = r;
 			} else {
-// 				if (r->dst_packer_idx != -1) {
-// 					int zz = 0;
-// 				}
 				assert(r->dst_packer_idx == -1);
 
 				r->dst_packer_idx = -1;
@@ -97,16 +110,20 @@ dtex_packer_square_multi(struct dp_rect** rects, size_t sz) {
 
 		int used_area = _cal_area(success_list, success_sz);
 		float fill = (float)used_area / (edge*edge);
-		if (fill > AREA_SCALE_LIMIT || edge <= EDGE_LIMIT) {
-			assert(success_sz > 0);
-			memcpy(curr_list, fail_list, sizeof(struct dp_rect*) * fail_sz);
-			curr_sz = fail_sz;
-			area -= used_area;
-			edge = next_p2((int)ceil(sqrt((float)area)));
-			dtex_vector_push_back(packers, packer);
-		} else {
-			edge /= 2;
+		if (success_sz == 0) {
+			edge *= 2;
 			dtexpacker_release(packer);
+		} else {
+			if (fill > AREA_SCALE_LIMIT || edge <= EDGE_LIMIT) {
+				memcpy(curr_list, fail_list, sizeof(struct dp_rect*) * fail_sz);
+				curr_sz = fail_sz;
+				area -= used_area;
+				edge = next_p2((int)ceil(sqrt((float)area)));
+				dtex_vector_push_back(packers, packer);
+			} else {
+				edge /= 2;
+				dtexpacker_release(packer);
+			}
 		}
 	}
 
