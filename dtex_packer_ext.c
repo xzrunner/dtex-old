@@ -95,8 +95,8 @@ dtex_packer_square_multi(struct dp_rect** rects, size_t sz) {
 		for (int i = 0; i < curr_sz; ++i) {
 			struct dp_rect* r = curr_list[i];
 			struct dp_pos* pos = dtexpacker_add(packer, r->w, r->h, false);
-			assert(!pos->is_rotated);
 			if (pos) {
+				assert(!pos->is_rotated);
 				r->dst_packer_idx = packer_sz;
 				r->dst_pos = pos;
 				success_list[success_sz++] = r;
@@ -124,6 +124,12 @@ dtex_packer_square_multi(struct dp_rect** rects, size_t sz) {
 			} else {
 				edge /= 2;
 				dtexpacker_release(packer);
+#ifdef _DEBUG
+				for (int i = 0; i < curr_sz; ++i) {
+					struct dp_rect* r = curr_list[i];
+					r->dst_packer_idx = -1;
+#endif // _DEBUG
+				}
 			}
 		}
 	}
