@@ -20,7 +20,7 @@ struct dtex_packer;
 struct dtex_packer* dtexpacker_create(int width, int height, int size);
 void dtexpacker_release(struct dtex_packer*);
 
-struct dp_pos* dtexpacker_add(struct dtex_packer*, int width, int height);
+struct dp_pos* dtexpacker_add(struct dtex_packer*, int width, int height, bool can_rotate);
 
 void dtexpacker_get_size(struct dtex_packer*, int* width, int* height);
 

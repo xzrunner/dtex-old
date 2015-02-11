@@ -211,9 +211,9 @@ _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node,
 	struct dp_pos* pos = NULL;
 	// todo padding
 	if (w >= h) {
-		pos = dtexpacker_add(texture->packer, w, h);
+		pos = dtexpacker_add(texture->packer, w, h, true);
 	} else {
-		pos = dtexpacker_add(texture->packer, h, w);
+		pos = dtexpacker_add(texture->packer, h, w, true);
 	}
 	if (!pos) {
 		return false;
@@ -396,7 +396,7 @@ dtexc3_load_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_buff
 	*dst = dst_tex;
 
 	// insert
-	struct dp_pos* pos = dtexpacker_add(dst_tex->packer, tex->width, tex->height);
+	struct dp_pos* pos = dtexpacker_add(dst_tex->packer, tex->width, tex->height, true);
 	if (!pos) {
 		return NULL;
 	}
@@ -427,7 +427,7 @@ dtexc3_preload_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_b
 	struct dtex_texture* dst_tex = dtex->textures[0];
 
 	// insert
-	struct dp_pos* pos = dtexpacker_add(dst_tex->packer, tex->width, tex->height);
+	struct dp_pos* pos = dtexpacker_add(dst_tex->packer, tex->width, tex->height, true);
 	if (!pos) {
 		return;
 	}

@@ -314,11 +314,11 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 		tex = dtex->textures[i];
 		// todo padding and rotate
 	//	if (w >= h) {
-			pos = dtexpacker_add(tex->packer, w, h);
+			pos = dtexpacker_add(tex->packer, w, h, true);
 			rotate = false;
 	//	} else {
-	//		pos = dtexpacker_add(tex->packer, h, w);
-	//		rotate = true;		
+	//		pos = dtexpacker_add(tex->packer, h, w, true);
+	//		rotate = true;
 	//	}
 	}
 

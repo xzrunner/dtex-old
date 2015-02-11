@@ -31,6 +31,15 @@ _decode_part(struct dtex_rrr* rrr, struct rrr_part* part, uint8_t** buf) {
 	memcpy(&part->h, ptr, sizeof(part->h));
 	ptr += sizeof(part->h);
 
+	if (part->x < 0) {
+		part->w += part->x;
+		part->x = 0;
+	}
+	if (part->y < 0) {
+		part->h += part->y;
+		part->y = 0;
+	}
+
 	size_t sz = sizeof(uint64_t) * part->w * part->h;
 	part->data = dtex_alloc(rrr->alloc, sz);
 	memcpy(part->data, ptr, sz);
@@ -123,7 +132,7 @@ dtex_rrr_load_texture(struct dtex_rrr* rrr) {
 	struct dtex_packer* packer = dtexpacker_create(edge, edge, 100);
 	for (int i = 0; i < rrr->pic_size; ++i) {
 		struct rrr_picture* pic = &rrr->pictures[i];
-		struct dp_pos* pos = dtexpacker_add(packer, TO_4TIMES(pic->w), TO_4TIMES(pic->h));
+		struct dp_pos* pos = dtexpacker_add(packer, TO_4TIMES(pic->w), TO_4TIMES(pic->h), true);
 		_load_picture_to_texture(buf, pos, pic);
 	}
 
@@ -181,7 +190,8 @@ dtex_rrr_load_to_c3(struct dtex_rrr* rrr, struct dtex_c3* c3) {
 		dtexpacker_get_size(packer, &w, &h);
 
 		char str_buf[50];
-		sprintf(str_buf, "F:/debug/rpack/test/rrr_part%d.pvr", i);
+		//sprintf(str_buf, "F:/debug/rpack/test/rrr_part%d.pvr", i);
+		sprintf(str_buf, "E:/debug/rpack/rrr/rrr_part%d.pvr", i);
 		dtex_pvr_write_file(str_buf, bufs[i], w, h);
 
 		dtexpacker_release(packer);

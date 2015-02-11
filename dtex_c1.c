@@ -332,9 +332,9 @@ dtexc1_load_anim(struct dtex_c1* dtex, struct ej_package* pkg, struct animation*
 	struct dp_pos* pos = NULL;
 	// todo padding and rotate
 //	if (w >= h) {
-		pos = dtexpacker_add(tex->packer, w, h);
+		pos = dtexpacker_add(tex->packer, w, h, true);
 //	} else {
-//		pos = dtexpacker_add(tex->packer, h, w);
+//		pos = dtexpacker_add(tex->packer, h, w, true);
 //	}
 	if (pos == NULL) {
 		return;

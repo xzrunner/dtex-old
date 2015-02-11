@@ -220,7 +220,7 @@ _rect_room_enough(struct dp_node* n, int w, int h) {
 }
 
 static inline struct dp_node*
-_insert(struct dtex_packer* packer, struct dp_node* dst, int w, int h) {
+_insert(struct dtex_packer* packer, struct dp_node* dst, int w, int h, bool can_rotate) {
 	assert(dst != NULL);
 	int16_t dw = dst->pos.r.xmax - dst->pos.r.xmin,
 	        dh = dst->pos.r.ymax - dst->pos.r.ymin;
@@ -234,7 +234,7 @@ _insert(struct dtex_packer* packer, struct dp_node* dst, int w, int h) {
 		}
 		if (w <= dw && h <= dh) {
 			return _split_node(packer, dst, w, h);
-		} else if (w <= dh && h <= dw) {
+		} else if (w <= dh && h <= dw && can_rotate) {
 			struct dp_node* n = _split_node(packer, dst, h, w);
 			if (n) {
 				n->pos.is_rotated = true;
@@ -248,7 +248,7 @@ _insert(struct dtex_packer* packer, struct dp_node* dst, int w, int h) {
 		while (next) {
 			struct dp_node* node = NULL;
 			if (_rect_room_enough(next, w, h)) {
-				node = _insert(packer, next, w, h);
+				node = _insert(packer, next, w, h, can_rotate);
 			}
 			if (node) {
 				return node;
@@ -261,8 +261,8 @@ _insert(struct dtex_packer* packer, struct dp_node* dst, int w, int h) {
 }
 
 struct dp_pos* 
-dtexpacker_add(struct dtex_packer* packer, int width, int height) {
-	struct dp_node* node =  _insert(packer, packer->root, width, height);
+dtexpacker_add(struct dtex_packer* packer, int width, int height, bool can_rotate) {
+	struct dp_node* node = _insert(packer, packer->root, width, height, can_rotate);
 	return &node->pos;
 }
 

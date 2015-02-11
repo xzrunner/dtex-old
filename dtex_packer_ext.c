@@ -94,7 +94,8 @@ dtex_packer_square_multi(struct dp_rect** rects, size_t sz) {
 		struct dtex_packer* packer = dtexpacker_create(edge, edge, sz);
 		for (int i = 0; i < curr_sz; ++i) {
 			struct dp_rect* r = curr_list[i];
-			struct dp_pos* pos = dtexpacker_add(packer, r->w, r->h);
+			struct dp_pos* pos = dtexpacker_add(packer, r->w, r->h, false);
+			assert(!pos->is_rotated);
 			if (pos) {
 				r->dst_packer_idx = packer_sz;
 				r->dst_pos = pos;
