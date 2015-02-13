@@ -223,6 +223,8 @@ _load_b4r(uint8_t* buffer, size_t sz, struct dtex_package* pkg) {
 		fault("Error create b4r.\n");
 	}
 	pkg->b4r_pkg = b4r;
+
+	dtex_b4r_preload_to_pkg(b4r, pkg);
 }
 
 static inline GLuint

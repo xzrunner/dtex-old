@@ -14,20 +14,15 @@ extern "C"
 
 struct dtex_b4r;
 
-struct b4r_picture {
-	int16_t id;
-	int16_t w, h;
-
-	int16_t x, y;
-
-	uint8_t* pixels;
-	uint8_t* flag;
-};
-
 struct dtex_b4r* dtex_b4r_create(void* data, int sz, int cap);
 void dtex_b4r_release(struct dtex_b4r*);
 
-void dtex_b4r_load_texture(struct dtex_b4r*);
+//void dtex_b4r_load_texture(struct dtex_b4r*);
+
+void dtex_b4r_preload_to_pkg(struct dtex_b4r*, struct dtex_package*);
+
+struct dtex_raw_tex* dtex_b4r_load_tex(struct dtex_b4r*, struct dtex_package*, int tex_idx);
+void dtex_b4r_relocate(struct dtex_b4r*, struct dtex_package*);
 
 #ifdef EXPORT_RRR
 size_t dtex_b4r_size(void* data, int sz);

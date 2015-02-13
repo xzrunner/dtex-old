@@ -6,6 +6,7 @@
 #include "dtex_buffer.h"
 #include "dtex_rrp.h"
 #include "dtex_rrr.h"
+#include "dtex_b4r.h"
 
 #include "package.h"
 #include "platform.h"
@@ -330,6 +331,8 @@ _draw_preload_list(struct dtex_c3* dtex, float scale, struct dtex_loader* loader
 		struct dtex_raw_tex* ori_tex = NULL;
 		if (dr->pkg->rrr_pkg) {
 			ori_tex = dtex_rrr_load_tex(dr->pkg->rrr_pkg, dr->pkg, dr->raw_tex_idx);
+		} else if (dr->pkg->b4r_pkg) {
+			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
 			ori_tex = dtexloader_load_epp(loader, dr->pkg, dr->raw_tex_idx);
 		}
@@ -544,6 +547,8 @@ void
 dtexc3_relocate(struct dtex_c3* dtex, struct dtex_package* pkg) {
 	if (pkg->rrr_pkg) {
 		dtex_rrr_relocate(pkg->rrr_pkg, pkg);
+	} else if (pkg->b4r_pkg) {
+		dtex_b4r_relocate(pkg->b4r_pkg, pkg);
 	}
 
 	_relocate_epd(dtex, pkg);
