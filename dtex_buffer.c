@@ -1,5 +1,6 @@
 #include "dtex_buffer.h"
 #include "dtex_fbo.h"
+#include "dtex_gl.h"
 
 #include "opengl.h"
 #include "platform.h"
@@ -59,15 +60,7 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
 	for (int i = end; i < end + max_count; ++i) {
         pf_log("dtex_buffer: new texture %d\n", edge);
         
-		GLuint tex = 0;
-		glGenTextures(1, &tex);
-		glBindTexture(GL_TEXTURE_2D, tex);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
+		GLuint tex = dtex_gen_texture_id(GL_TEXTURE0);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)edge, (GLsizei)edge, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);		
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)edge, (GLsizei)edge, GL_RGBA, GL_UNSIGNED_BYTE, &empty_data[0]);
 		GLenum err = glGetError();

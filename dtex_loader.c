@@ -6,6 +6,7 @@
 #include "dtex_png.h"
 #include "dtex_pvr.h"
 #include "dtex_math.h"
+#include "dtex_gl.h"
 
 #include "package.h"
 #include "fault.h"
@@ -96,6 +97,8 @@ _release_package(struct dtex_package* pkg) {
 	free(pkg->ej_pkg); pkg->ej_pkg = NULL;
 	free(pkg->rrp_pkg); pkg->rrp_pkg = NULL;
 	free(pkg->pts_pkg); pkg->pts_pkg = NULL;
+	free(pkg->rrr_pkg); pkg->rrr_pkg = NULL;
+	free(pkg->b4r_pkg); pkg->b4r_pkg = NULL;
 
 	free(pkg->name); pkg->name = NULL;
 	free(pkg->filepath); pkg->filepath = NULL;
@@ -206,6 +209,8 @@ _load_rrr(uint8_t* buffer, size_t sz, struct dtex_package* pkg) {
 		fault("Error create rrr.\n");
 	}
 	pkg->rrr_pkg = rrr;
+
+	dtex_rrr_preload_to_pkg(rrr, pkg);
 }
 
 static inline void
@@ -221,23 +226,6 @@ _load_b4r(uint8_t* buffer, size_t sz, struct dtex_package* pkg) {
 }
 
 static inline GLuint
-_gen_texture_id(int tex_no) {
-	GLuint texid = 0;
-
-	glActiveTexture(tex_no);
-	glGenTextures(1, &texid);
-    
-	glBindTexture(GL_TEXTURE_2D, texid);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	return texid;
-}
-
-static inline GLuint
 _texture_create(uint8_t* data, int format, int width, int height) {
 	if ((format == TEXTURE8) || (IS_POT(width) && IS_POT(height))) {
 		glPixelStorei(GL_UNPACK_ALIGNMENT,4);
@@ -245,7 +233,7 @@ _texture_create(uint8_t* data, int format, int width, int height) {
 		glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 	}
 
-	GLuint texid = _gen_texture_id(GL_TEXTURE0);
+	GLuint texid = dtex_gen_texture_id(GL_TEXTURE0);
 	switch(format) {
 	case TEXTURE8:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -261,7 +249,7 @@ _texture_create(uint8_t* data, int format, int width, int height) {
 
 static inline GLuint
 _pvr_texture_create(uint8_t* data, size_t sz, int internal_format, int width, int height) {
-	GLuint texid = _gen_texture_id(GL_TEXTURE0);
+	GLuint texid = dtex_gen_texture_id(GL_TEXTURE0);
 	uint8_t* ptr = data;
 	for (int i = 0; ptr - data < sz; ++i) {
 		int ori_sz = ptr[0] | ptr[1] << 8 | ptr[2] << 16 | ptr[3] << 24;
@@ -282,10 +270,10 @@ _pkm_texture_create(uint8_t* data, int width, int height, GLuint* id_rgb, GLuint
 #ifdef __ANDROID__	
 	size_t sz = (width * height) >> 1;
 
-	*id_rgb = _gen_texture_id(GL_TEXTURE0);
+	*id_rgb = dtex_gen_texture_id(GL_TEXTURE0);
   	glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES, width, height, 0, sz, data);	
 
-  	*id_alpha = _gen_texture_id(GL_TEXTURE1);
+  	*id_alpha = dtex_gen_texture_id(GL_TEXTURE1);
   	glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES, width, height, 0, sz, data+sz);  	
 #endif
 }
@@ -555,13 +543,11 @@ _find_package(struct dtex_loader* dtex, const char* name) {
 static inline struct dtex_package*
 _new_package(struct dtex_loader* dtex, const char* name) {
 	struct dtex_package* pkg = (struct dtex_package*)malloc(sizeof(struct dtex_package));
+	memset(pkg, 0, sizeof(*pkg));
 	pkg->name = strdup(name);
 	pkg->filepath = NULL;
 	pkg->tex_size = 0;
 	pkg->tex_scale = 1;
-	pkg->ej_pkg = NULL;
-	pkg->rrp_pkg = NULL;
-	pkg->pts_pkg = NULL;
 
 	if (dtex->pkg_size >= PACKAGE_SIZE) {
 		fault("dtex->pack_size >= PACKAGE_SIZE\n");
@@ -621,7 +607,7 @@ _unload_package(struct dtex_package* pkg) {
 }
 
 struct dtex_raw_tex* 
-dtexloader_load_tex_from_pkg(struct dtex_loader* dtex, struct dtex_package* pkg, int tex_idx) {
+dtexloader_load_epp(struct dtex_loader* dtex, struct dtex_package* pkg, int tex_idx) {
 	static struct dtex_package* last_pack = NULL;
 	assert(pkg != NULL && tex_idx < pkg->tex_size && tex_idx >= 0);
 	struct dtex_raw_tex* tex = &pkg->textures[tex_idx];
@@ -645,20 +631,12 @@ dtexloader_load_tex_from_pkg(struct dtex_loader* dtex, struct dtex_package* pkg,
 }
 
 struct dtex_raw_tex* 
-dtexloader_load_tex_file(const char* path) {
+dtexloader_load_image(const char* path) {
 	if (strstr(path, ".png")) {
 		int w, h, c, f;
 		uint8_t* p = dtex_png_read(path, &w, &h, &c, &f);
-		
-		GLuint tex = 0;
-		glGenTextures(1, &tex);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex);
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-		
+
+		GLuint tex = dtex_gen_texture_id(GL_TEXTURE0);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, p);
 
 		free(p);

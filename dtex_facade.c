@@ -13,6 +13,7 @@
 #include "dtex_pvr.h"
 #include "dtex_packer.h"
 #include "dtex_sprite.h"
+#include "dtex_gl.h"
 
 #include "package.h"
 #include "platform.h"
@@ -108,7 +109,7 @@ dtexf_create_sprite(const char* path) {
 		return NULL;
 	}
 
-	struct dtex_raw_tex* src_tex = dtexloader_load_tex_file(path);
+	struct dtex_raw_tex* src_tex = dtexloader_load_image(path);
 
 	struct dtex_texture* dst_tex = NULL;
 	struct dp_pos* pos = dtexc3_load_tex(C3, src_tex, BUF, &dst_tex);
@@ -349,15 +350,7 @@ dtexf_test_pvr(const char* path) {
 	uint8_t* buf_uncompressed = dtex_pvr_decode(buf_compressed, width, height);
 	free(buf_compressed);
 
-	GLuint tex = 0;
-	glGenTextures(1, &tex);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-
+	GLuint tex = dtex_gen_texture_id(GL_TEXTURE0);
 #ifdef __APPLE__
 	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
     size_t sz = width * height / 2;

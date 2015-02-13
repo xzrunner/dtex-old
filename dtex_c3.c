@@ -5,6 +5,7 @@
 #include "dtex_draw.h"
 #include "dtex_buffer.h"
 #include "dtex_rrp.h"
+#include "dtex_rrr.h"
 
 #include "package.h"
 #include "platform.h"
@@ -326,7 +327,12 @@ _draw_preload_list(struct dtex_c3* dtex, float scale, struct dtex_loader* loader
 		}
 
 		// load old tex
-		struct dtex_raw_tex* ori_tex = dtexloader_load_tex_from_pkg(loader, dr->pkg, dr->raw_tex_idx);
+		struct dtex_raw_tex* ori_tex = NULL;
+		if (dr->pkg->rrr_pkg) {
+			ori_tex = dtex_rrr_load_tex(dr->pkg->rrr_pkg, dr->pkg, dr->raw_tex_idx);
+		} else {
+			ori_tex = dtexloader_load_epp(loader, dr->pkg, dr->raw_tex_idx);
+		}
 
 		// draw old tex to new 
 		float tx_min = 0, tx_max = 1,
@@ -536,6 +542,10 @@ _relocate_rrp(struct dtex_c3* dtex, struct dtex_package* pkg) {
 
 void 
 dtexc3_relocate(struct dtex_c3* dtex, struct dtex_package* pkg) {
+	if (pkg->rrr_pkg) {
+		dtex_rrr_relocate(pkg->rrr_pkg, pkg);
+	}
+
 	_relocate_epd(dtex, pkg);
 
 	if (pkg->rrp_pkg) {

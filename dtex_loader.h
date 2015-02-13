@@ -43,8 +43,8 @@ struct dtex_loader* dtexloader_create();
 void dtexloader_release(struct dtex_loader*);
 
 struct dtex_package* dtexloader_preload_pkg(struct dtex_loader*, const char* name, const char* path);
-struct dtex_raw_tex* dtexloader_load_tex_from_pkg(struct dtex_loader*, struct dtex_package*, int idx);
-struct dtex_raw_tex* dtexloader_load_tex_file(const char* path);
+struct dtex_raw_tex* dtexloader_load_epp(struct dtex_loader*, struct dtex_package*, int idx);
+struct dtex_raw_tex* dtexloader_load_image(const char* path);
 void dtexloader_unload_tex(struct dtex_raw_tex*);
 
 struct dtex_package* dtexloader_get_pkg(struct dtex_loader*, int idx);
