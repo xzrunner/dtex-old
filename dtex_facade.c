@@ -11,6 +11,7 @@
 #include "dtex_draw.h"
 #include "dtex_texture.h"
 #include "dtex_pvr.h"
+#include "dtex_etc1.h"
 #include "dtex_packer.h"
 #include "dtex_sprite.h"
 #include "dtex_gl.h"
@@ -356,6 +357,38 @@ dtexf_test_pvr(const char* path) {
     size_t sz = width * height / 2;
     glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, width, height, 0, sz, new_compressed);
 	free(new_compressed);
+#else
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_uncompressed);
+#endif
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR){
+		printf("Error uploading compressed texture level: 0. glError: 0x%04X", err);
+	}
+	free(buf_uncompressed);
+
+	struct dtex_raw_tex src_tex;
+	src_tex.format = TEXTURE8;
+	src_tex.width = width;
+	src_tex.height = height;
+	src_tex.id = tex;
+	src_tex.id_alpha = 0;
+
+	struct dtex_texture* dst_tex = NULL;
+	dtexc3_load_tex(C3, &src_tex, BUF, &dst_tex);
+}
+
+void 
+dtexf_test_etc1(const char* path) {
+	uint32_t width, height;
+	uint8_t* buf_compressed = dtex_etc1_read_file(path, &width, &height);
+	assert(buf_compressed);
+
+	uint8_t* buf_uncompressed = dtex_etc1_decode(buf_compressed, width, height);
+	free(buf_compressed);
+
+	GLuint tex = dtex_gen_texture_id(GL_TEXTURE0);
+#ifdef __ANDROID__
+	// todo
 #else
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_uncompressed);
 #endif

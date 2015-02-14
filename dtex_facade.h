@@ -60,6 +60,7 @@ void dtexf_del_texture(int tex);
 
 // for test
 void dtexf_test_pvr(const char* path);
+void dtexf_test_etc1(const char* path);
 
 #endif // dynamic_texture_facade_h
 
