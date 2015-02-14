@@ -474,8 +474,6 @@ dtex_pvr_decode(const uint8_t* buf, int width, int height) {
 	return dst;
 }
 
-#define isp2(x)	((x) > 0 && ((x) & ((x) - 1)) == 0)
-
 struct col_bounding_box {
 	struct color_rgba_char min, max;
 };
@@ -517,7 +515,7 @@ _rotate_right(unsigned int value, unsigned int shift) {
 
 uint8_t* 
 dtex_pvr_encode(const uint8_t* buf, int width, int height) {
-	assert(width == height && isp2(width));
+	assert(width == height && IS_POT(width));
 
 	size_t sz = width * height / 2;
 	uint8_t* dst = (uint8_t*)malloc(sz);
