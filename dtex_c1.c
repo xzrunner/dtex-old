@@ -359,7 +359,7 @@ dtexc1_load_anim(struct dtex_c1* dtex, struct ej_package* pkg, struct animation*
 		hn->n.vb[0] = xmax; hn->n.vb[1] = ymin;
 		hn->n.vb[2] = xmin; hn->n.vb[3] = ymin;
 		hn->n.vb[4] = xmin; hn->n.vb[5] = ymax;
-		hn->n.vb[6] = xmax; hn->n.vb[7] = ymin;
+		hn->n.vb[6] = xmax; hn->n.vb[7] = ymax;
 	} else {
 		hn->n.vb[0] = xmin; hn->n.vb[1] = ymin;
 		hn->n.vb[2] = xmin; hn->n.vb[3] = ymax;

@@ -263,7 +263,7 @@ _pack_preload_list_with_scale(struct dtex_c3* dtex, float scale) {
 		if (!success) {
 			return false;
 		}
-	}	
+	}
 	return true;
 }
 
@@ -419,10 +419,22 @@ dtexc3_load_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_buff
 		  vy_min = (float)pos->r.ymin / dst_tex->height * 2 - 1,
 		  vy_max = (float)pos->r.ymax / dst_tex->height * 2 - 1;
 	float vb[16];
-	vb[0] = vx_min; vb[1] = vy_min; vb[2] = tx_min; vb[3] = ty_min;
-	vb[4] = vx_min; vb[5] = vy_max; vb[6] = tx_min; vb[7] = ty_max;
-	vb[8] = vx_max; vb[9] = vy_max; vb[10] = tx_max; vb[11] = ty_max;
-	vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
+	vb[0] = vx_min; vb[1] = vy_min;
+	vb[4] = vx_min; vb[5] = vy_max;
+	vb[8] = vx_max; vb[9] = vy_max;
+	vb[12] = vx_max; vb[13] = vy_min;
+	if (pos->is_rotated) {
+		vb[2] = tx_max; vb[3] = ty_min;
+		vb[6] = tx_min; vb[7] = ty_min;
+		vb[10] = tx_min; vb[11] = ty_max;
+		vb[14] = tx_max; vb[15] = ty_max;
+	} else {
+		vb[2] = tx_min; vb[3] = ty_min;
+		vb[6] = tx_min; vb[7] = ty_max;
+		vb[10] = tx_max; vb[11] = ty_max;
+		vb[14] = tx_max; vb[15] = ty_min;
+	}
+
 	dtex_draw_to_texture(buf, tex, vb, dst_tex);
 
 	return pos;
