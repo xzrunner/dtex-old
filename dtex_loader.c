@@ -7,6 +7,7 @@
 #include "dtex_pvr.h"
 #include "dtex_math.h"
 #include "dtex_gl.h"
+#include "dtex_etc1.h"
 
 #include "package.h"
 #include "fault.h"
@@ -269,14 +270,23 @@ _pvr_texture_create(uint8_t* data, size_t sz, int internal_format, int width, in
 
 static inline void
 _pkm_texture_create(uint8_t* data, int width, int height, GLuint* id_rgb, GLuint* id_alpha) {
-#ifdef __ANDROID__	
 	size_t sz = (width * height) >> 1;
-
+#ifdef __ANDROID__
 	*id_rgb = dtex_gen_texture_id(GL_TEXTURE0);
   	glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES, width, height, 0, sz, data);	
 
   	*id_alpha = dtex_gen_texture_id(GL_TEXTURE1);
   	glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES, width, height, 0, sz, data+sz);  	
+#else
+	*id_rgb = dtex_gen_texture_id(GL_TEXTURE0);
+	uint8_t* buf_rgb = dtex_etc1_decode(data, width, height);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_rgb);
+	free(buf_rgb);
+
+	*id_alpha = dtex_gen_texture_id(GL_TEXTURE1);
+	uint8_t* buf_alpha = dtex_etc1_decode(data + sz, width, height);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_alpha);
+	free(buf_alpha);
 #endif
 }
 
