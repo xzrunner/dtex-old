@@ -128,8 +128,8 @@ dtex_packer_square_multi(struct dp_rect** rects, size_t sz) {
 				for (int i = 0; i < curr_sz; ++i) {
 					struct dp_rect* r = curr_list[i];
 					r->dst_packer_idx = -1;
-#endif // _DEBUG
 				}
+#endif // _DEBUG
 			}
 		}
 	}
