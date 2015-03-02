@@ -733,15 +733,15 @@ dtex_pvr_init_blank(int edge) {
 
 GLuint 
 dtex_pvr_gen_texture(uint8_t* data, int internal_format, int width, int height) {
-	GLuint tex = dtex_gen_texture_id(GL_TEXTURE0);
+	GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
 #ifdef __APPLE__
 	size_t sz = width * height * 8 * internal_format / 16;
-	glCompressedTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, ori_sz, data);	
+	glCompressedTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, sz, data);	
 #else
-	tex = dtex_gen_texture_id(GL_TEXTURE0);
+	tex = dtex_prepare_texture(GL_TEXTURE0);
 	uint8_t* uncompressed = dtex_pvr_decode(data, width, height);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, uncompressed);		
 	free(uncompressed);
-#endif
+#endif // __APPLE__
 	return tex;
 }

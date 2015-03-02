@@ -236,7 +236,7 @@ _texture_create(uint8_t* data, int format, int width, int height) {
 		glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 	}
 
-	GLuint texid = dtex_gen_texture_id(GL_TEXTURE0);
+	GLuint texid = dtex_prepare_texture(GL_TEXTURE0);
 	switch(format) {
 	case TEXTURE8:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -252,7 +252,7 @@ _texture_create(uint8_t* data, int format, int width, int height) {
 
 static inline GLuint
 _pvr_texture_create(uint8_t* data, size_t sz, int internal_format, int width, int height) {
-	GLuint texid = dtex_gen_texture_id(GL_TEXTURE0);
+	GLuint texid = dtex_prepare_texture(GL_TEXTURE0);
 	uint8_t* ptr = data;
 	for (int i = 0; ptr - data < sz; ++i) {
 		int ori_sz = ptr[0] | ptr[1] << 8 | ptr[2] << 16 | ptr[3] << 24;
@@ -269,21 +269,18 @@ _pvr_texture_create(uint8_t* data, size_t sz, int internal_format, int width, in
 }
 
 static inline void
-_pkm_texture_create(uint8_t* data, int width, int height, GLuint* id_rgb, GLuint* id_alpha) {
+_etc1_texture_create(uint8_t* data, int width, int height, GLuint* id_rgb, GLuint* id_alpha) {
 	size_t sz = (width * height) >> 1;
+	*id_rgb = dtex_prepare_texture(GL_TEXTURE0);
+	*id_alpha = dtex_prepare_texture(GL_TEXTURE1);
 #ifdef __ANDROID__
-	*id_rgb = dtex_gen_texture_id(GL_TEXTURE0);
   	glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES, width, height, 0, sz, data);	
-
-  	*id_alpha = dtex_gen_texture_id(GL_TEXTURE1);
-  	glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES, width, height, 0, sz, data+sz);  	
+  	glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES, width, height, 0, sz, data+sz);
 #else
-	*id_rgb = dtex_gen_texture_id(GL_TEXTURE0);
 	uint8_t* buf_rgb = dtex_etc1_decode(data, width, height);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_rgb);
 	free(buf_rgb);
 
-	*id_alpha = dtex_gen_texture_id(GL_TEXTURE1);
 	uint8_t* buf_alpha = dtex_etc1_decode(data + sz, width, height);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_alpha);
 	free(buf_alpha);
@@ -323,7 +320,7 @@ _do_load_task(struct load_task* task) {
 		tex->id = _pvr_texture_create(buf+6, sz-6, buf[1], width, height);
 		break;
     case PKMC:
-    	_pkm_texture_create(buf+5, width, height, &tex->id, &tex->id_alpha);
+    	_etc1_texture_create(buf+5, width, height, &tex->id, &tex->id_alpha);
 		break;
 	default:
 		fault("Invalid package format %d\n",format);		
@@ -356,10 +353,10 @@ _load_pvr(uint8_t* buffer, size_t sz, struct dtex_raw_tex* tex) {
 }
 
 static inline void
-_load_pkm(uint8_t* buffer, struct dtex_raw_tex* tex) {
+_load_etc1(uint8_t* buffer, struct dtex_raw_tex* tex) {
 	assert(tex->width == (buffer[0] | buffer[1] << 8)
 		&& tex->height == (buffer[2] | buffer[3] << 8));
-	_pkm_texture_create(buffer+4, tex->width, tex->height, &tex->id, &tex->id_alpha);
+	_etc1_texture_create(buffer+4, tex->width, tex->height, &tex->id, &tex->id_alpha);
 }
 
 struct unpack2pkg_params {
@@ -383,7 +380,7 @@ _unpack_memory_to_pkg(uint8_t* buffer, size_t sz, void* ud) {
 			_load_pvr(buffer+1, sz-1, tex);
 			break;
 		case PKMC:
-			_load_pkm(buffer+1, tex);
+			_load_etc1(buffer+1, tex);
 			break;
 		default:
 			fault("Invalid package format %d\n",format);
@@ -648,7 +645,7 @@ dtexloader_load_image(const char* path) {
 		int w, h, c, f;
 		uint8_t* p = dtex_png_read(path, &w, &h, &c, &f);
 
-		GLuint tex = dtex_gen_texture_id(GL_TEXTURE0);
+		GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, p);
 
 		free(p);

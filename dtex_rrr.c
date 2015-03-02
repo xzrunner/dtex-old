@@ -2,6 +2,7 @@
 #include "dtex_alloc.h"
 #include "dtex_packer.h"
 #include "dtex_pvr.h"
+#include "dtex_etc1.h"
 #include "dtex_math.h"
 #include "dtex_packer_ext.h"
 #include "dtex_vector.h"
@@ -14,6 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+static const uint16_t TEX_PVR = 1;
+static const uint16_t TEX_ETC1 = 2;
 
 struct rrr_part {
 	int16_t x, y;
@@ -36,9 +40,11 @@ struct rrr_picture {
 struct dtex_rrr {
 	struct alloc* alloc;
 
+	uint16_t tex_type;
+
 	struct dtex_vector* packers;
 
-	int16_t pic_size;
+	uint16_t pic_size;
 	struct rrr_picture pictures[0];
 };
 
@@ -64,7 +70,11 @@ _decode_part(struct dtex_rrr* rrr, struct rrr_part* part, uint8_t** buf) {
 		part->y = 0;
 	}
 
+	assert(rrr->tex_type == TEX_PVR || rrr->tex_type == TEX_ETC1);
 	size_t sz = sizeof(uint64_t) * part->w * part->h;
+	if (rrr->tex_type == TEX_ETC1) {
+		sz *= 2;
+	}
 	part->data = dtex_alloc(rrr->alloc, sz);
 	memcpy(part->data, ptr, sz);
 	ptr += sz;
@@ -118,7 +128,7 @@ struct dtex_rrr*
 dtex_rrr_create(void* data, int sz, int cap) {
 	uint8_t* ptr = data;
 
-	int32_t pic_sz;
+	uint16_t pic_sz;
 	memcpy(&pic_sz, ptr, sizeof(pic_sz));
 	ptr += sizeof(pic_sz);
 
@@ -126,9 +136,12 @@ dtex_rrr_create(void* data, int sz, int cap) {
 	struct dtex_rrr* rrr = dtex_alloc(a, sizeof(*rrr) + pic_sz * sizeof(struct rrr_picture));
 	rrr->alloc = a;
 
+	memcpy(&rrr->tex_type, ptr, sizeof(rrr->tex_type));
+	ptr += sizeof(rrr->tex_type);
+
 	rrr->pic_size = pic_sz;
 	for (int i = 0; i < pic_sz; ++i) {
-		_decode_picture(rrr, &rrr->pictures[i], &ptr);		
+		_decode_picture(rrr, &rrr->pictures[i], &ptr);
 	}
 
 //	// for test
@@ -162,10 +175,11 @@ dtex_rrr_release(struct dtex_rrr* rrr) {
 }
 
 static inline void
-_load_picture_to_texture(uint8_t* texture, struct dp_pos* pos, struct rrr_picture* pic) {
+_load_picture_to_pvr_tex(uint8_t* texture, struct dp_pos* pos, struct rrr_picture* pic) {
 	assert(IS_4TIMES(pos->r.xmin) && IS_4TIMES(pos->r.ymin));
 	int sx = pos->r.xmin >> 2,
 		sy = pos->r.ymin >> 2;
+
 
 	for (int i = 0; i < pic->part_sz; ++i) {
 		struct rrr_part* part = &pic->part[i];
@@ -179,6 +193,34 @@ _load_picture_to_texture(uint8_t* texture, struct dp_pos* pos, struct rrr_pictur
 				int64_t* dst = (int64_t*)texture + idx_dst;
 				memcpy(dst, src, sizeof(int64_t));
 				++idx_src;
+			}
+		}
+	}
+}
+
+static inline void
+_load_picture_to_etc1_tex(uint8_t* texture, int w, int h, struct dp_pos* pos, struct rrr_picture* pic) {
+	assert(IS_4TIMES(pos->r.xmin) && IS_4TIMES(pos->r.ymin));
+	int sx = pos->r.xmin >> 2,
+		sy = pos->r.ymin >> 2;
+
+	int bw = w / 4,
+		bh = h / 4;
+	for (int i = 0; i < pic->part_sz; ++i) {
+		struct rrr_part* part = &pic->part[i];
+
+		int idx_src = 0;
+		for (int y = part->y; y < part->y + part->h; ++y) {
+			for (int x = part->x; x < part->x + part->w; ++x) {
+				int idx_dst = (sy + y) * bw + sx + x;
+
+				int64_t* src_rgb = (int64_t*)part->data + idx_src++;
+				int64_t* dst_rgb = (int64_t*)texture + idx_dst;
+				memcpy(dst_rgb, src_rgb, sizeof(int64_t));
+
+				int64_t* src_alpha = (int64_t*)part->data + idx_src++;
+				int64_t* dst_alpha = (int64_t*)texture + bw * bh + idx_dst;
+				memcpy(dst_alpha, src_alpha, sizeof(int64_t));
 			}
 		}
 	}
@@ -218,7 +260,7 @@ _load_picture_to_texture(uint8_t* texture, struct dp_pos* pos, struct rrr_pictur
 //	for (int i = 0; i < sz; ++i) {
 //		struct dp_rect* r = rects_ptr[i];
 //		assert(r->dst_pos && r->dst_packer_idx >= 0);
-//		_load_picture_to_texture(bufs[r->dst_packer_idx], r->dst_pos, (struct rrr_picture*)r->ud);
+//		_load_picture_to_pvr_tex(bufs[r->dst_packer_idx], r->dst_pos, (struct rrr_picture*)r->ud);
 //	}
 //
 //// 	// for test
@@ -267,7 +309,7 @@ dtex_rrr_preload_to_pkg(struct dtex_rrr* rrr, struct dtex_package* pkg) {
 }
 
 struct dtex_raw_tex* 
-dtex_rrr_load_tex(struct dtex_rrr* rrr, struct dtex_package* pkg, int tex_idx) {
+_load_pvr_tex(struct dtex_rrr* rrr, struct dtex_package* pkg, int tex_idx) {
 	struct dtex_raw_tex* tex = &pkg->textures[tex_idx];
 
 	struct dtex_packer* packer = (struct dtex_packer*)dtex_vector_get(rrr->packers, tex_idx);
@@ -279,7 +321,7 @@ dtex_rrr_load_tex(struct dtex_rrr* rrr, struct dtex_package* pkg, int tex_idx) {
 		struct dp_rect* r = &rrr->pictures[i].dst_r;
 		assert(r->dst_pos && r->dst_packer_idx >= 0);
 		if (r->dst_packer_idx == tex_idx) {
-			_load_picture_to_texture(buf, r->dst_pos, (struct rrr_picture*)r->ud);
+			_load_picture_to_pvr_tex(buf, r->dst_pos, (struct rrr_picture*)r->ud);
 		}
 	}
 
@@ -291,6 +333,47 @@ dtex_rrr_load_tex(struct dtex_rrr* rrr, struct dtex_package* pkg, int tex_idx) {
 	tex->format = PVRTC;
 
 	return tex;
+}
+
+struct dtex_raw_tex* 
+_load_etc1_tex(struct dtex_rrr* rrr, struct dtex_package* pkg, int tex_idx) {
+	struct dtex_raw_tex* tex = &pkg->textures[tex_idx];
+
+	struct dtex_packer* packer = (struct dtex_packer*)dtex_vector_get(rrr->packers, tex_idx);
+	int w, h;
+	dtexpacker_get_size(packer, &w, &h);
+
+	size_t sz = w * h;
+	uint8_t* buf = (uint8_t*)malloc(sz);
+	memset(buf, 0, sz);
+
+	for (int i = 0; i < rrr->pic_size; ++i) {
+		struct dp_rect* r = &rrr->pictures[i].dst_r;
+		assert(r->dst_pos && r->dst_packer_idx >= 0);
+		if (r->dst_packer_idx == tex_idx) {
+			_load_picture_to_etc1_tex(buf, w, h, r->dst_pos, (struct rrr_picture*)r->ud);
+		}
+	}
+
+	tex->width = w;
+	tex->height = h;
+	dtex_etc1_gen_texture(buf, w, h, &tex->id, &tex->id_alpha);
+	tex->format = PKMC;
+
+	return tex;
+}
+
+struct dtex_raw_tex* 
+dtex_rrr_load_tex(struct dtex_rrr* rrr, struct dtex_package* pkg, int tex_idx) {
+	struct dtex_raw_tex* ret = NULL;
+	if (rrr->tex_type == TEX_PVR) {
+		ret = _load_pvr_tex(rrr, pkg, tex_idx);
+	} else if (rrr->tex_type == TEX_ETC1) {
+		ret = _load_etc1_tex(rrr, pkg, tex_idx);
+	} else {
+		assert(0);
+	}
+	return ret;
 }
 
 void 

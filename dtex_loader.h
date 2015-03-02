@@ -15,7 +15,7 @@ struct dtex_pts;
 
 struct dtex_raw_tex {
 	GLuint id;
-	GLuint id_alpha;	// for pkm
+	GLuint id_alpha;	// for etc1
 	int width, height;
 	int format;
 };
