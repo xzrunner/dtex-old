@@ -8,7 +8,7 @@ extern "C"
 
 typedef unsigned int GLuint;
 
-GLuint dtex_gen_texture_id(int texture);
+GLuint dtex_prepare_texture(int texture);
 
 #endif // dynamic_texture_gl_h
 

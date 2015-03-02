@@ -3,7 +3,7 @@
 #include "opengl.h"
 
 GLuint 
-dtex_gen_texture_id(int texture) {
+dtex_prepare_texture(int texture) {
 	GLuint texid = 0;
 
 	glActiveTexture(texture);

@@ -351,7 +351,7 @@ dtexf_test_pvr(const char* path) {
 	uint8_t* buf_uncompressed = dtex_pvr_decode(buf_compressed, width, height);
 	free(buf_compressed);
 
-	GLuint tex = dtex_gen_texture_id(GL_TEXTURE0);
+	GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
 #ifdef __APPLE__
 	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
     size_t sz = width * height / 2;
@@ -386,7 +386,7 @@ dtexf_test_etc1(const char* path) {
 	uint8_t* buf_uncompressed = dtex_etc1_decode(buf_compressed, width, height);
 	free(buf_compressed);
 
-	GLuint tex = dtex_gen_texture_id(GL_TEXTURE0);
+	GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
 #ifdef __ANDROID__
 	// todo
 #else

@@ -60,7 +60,7 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
 	for (int i = end; i < end + max_count; ++i) {
         pf_log("dtex_buffer: new texture %d\n", edge);
         
-		GLuint tex = dtex_gen_texture_id(GL_TEXTURE0);
+		GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)edge, (GLsizei)edge, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);		
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)edge, (GLsizei)edge, GL_RGBA, GL_UNSIGNED_BYTE, &empty_data[0]);
 		GLenum err = glGetError();
