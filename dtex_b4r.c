@@ -2,6 +2,7 @@
 #include "dtex_alloc.h"
 #include "dtex_packer.h"
 #include "dtex_pvr.h"
+#include "dtex_etc1.h"
 #include "dtex_math.h"
 #include "dtex_packer_ext.h"
 #include "dtex_vector.h"
@@ -14,6 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+static const uint16_t TEX_PVR = 1;
+static const uint16_t TEX_ETC1 = 2;
 
 struct b4r_picture {
 	int16_t id;
@@ -29,6 +33,8 @@ struct b4r_picture {
 
 struct dtex_b4r {
 	struct alloc* alloc;
+
+	uint16_t tex_type;
 
 	struct dtex_vector* packers;
 
@@ -47,21 +53,31 @@ _decode_picture(struct dtex_b4r* b4r, struct b4r_picture* pic, uint8_t** buf) {
 	memcpy(&pic->h, ptr, sizeof(pic->h));
 	ptr += sizeof(pic->h);
 
+	// flag
+	int block_sz;
 	int w_p2 = next_p2(pic->w),
 		h_p2 = next_p2(pic->h);
-	int edge = w_p2 > h_p2 ? w_p2 : h_p2;
-
-	int block_sz = (edge >> 2) * (edge >> 2);
+	if (b4r->tex_type == TEX_PVR) {
+		int edge = w_p2 > h_p2 ? w_p2 : h_p2;
+		block_sz = (edge >> 2) * (edge >> 2);
+	} else {
+		block_sz = (w_p2 >> 2) * (h_p2 >> 2);
+	}
 	int flag_sz = ceil(block_sz / 8.0f);
 	pic->flag = dtex_alloc(b4r->alloc, flag_sz);
 	memcpy(pic->flag, ptr, flag_sz);
 	ptr += flag_sz;
 
-	int data_sz = 0;
+	// pixels
+	int block_used_count = 0;
 	for (int i = 0; i < block_sz; ++i) {
 		if (pic->flag[i / 8] & (1 << (i % 8))) {
-			data_sz += sizeof(int64_t);
+			++block_used_count;
 		}
+	}
+	int data_sz = block_used_count * sizeof(int64_t);
+	if (b4r->tex_type == TEX_ETC1) {
+		data_sz *= 2;
 	}
 	pic->pixels = dtex_alloc(b4r->alloc, data_sz);
 	memcpy(pic->pixels, ptr, data_sz);
@@ -95,13 +111,16 @@ struct dtex_b4r*
 dtex_b4r_create(void* data, int sz, int cap) {
 	uint8_t* ptr = data;
 
-	int32_t pic_sz;
+	uint16_t pic_sz;
 	memcpy(&pic_sz, ptr, sizeof(pic_sz));
 	ptr += sizeof(pic_sz);
 
 	struct alloc* a = dtex_init_alloc(cap);
 	struct dtex_b4r* b4r = dtex_alloc(a, sizeof(*b4r) + pic_sz * sizeof(struct b4r_picture));
 	b4r->alloc = a;
+
+	memcpy(&b4r->tex_type, ptr, sizeof(b4r->tex_type));
+	ptr += sizeof(b4r->tex_type);
 
 	b4r->pic_size = pic_sz;
 	for (int i = 0; i < pic_sz; ++i) {
@@ -139,7 +158,7 @@ dtex_b4r_release(struct dtex_b4r* b4r) {
 }
 
 static inline void
-_load_picture_to_texture(uint8_t* texture, struct dp_pos* pos, struct b4r_picture* pic) {
+_load_picture_to_pvr_tex(uint8_t* texture, struct dp_pos* pos, struct b4r_picture* pic) {
 	assert(IS_4TIMES(pos->r.xmin) && IS_4TIMES(pos->r.ymin));
 	int sx = pos->r.xmin >> 2,
 		sy = pos->r.ymin >> 2;
@@ -163,8 +182,35 @@ _load_picture_to_texture(uint8_t* texture, struct dp_pos* pos, struct b4r_pictur
 	}
 }
 
+static inline void
+_load_picture_to_etc1_tex(uint8_t* texture, int w, int h, struct dp_pos* pos, struct b4r_picture* pic) {
+	assert(IS_4TIMES(pos->r.xmin) && IS_4TIMES(pos->r.ymin));
+	int sx = pos->r.xmin >> 2,
+		sy = pos->r.ymin >> 2;
+
+	int packer_bw = w >> 2,
+		packer_bh = h >> 2;
+	int bw = next_p2(pic->w) >> 2,
+		bh = next_p2(pic->h) >> 2;
+	int64_t* ptr_data = (int64_t*)pic->pixels;
+	for (int y = 0; y < bh; ++y) {
+		for (int x = 0; x < bw; ++x) {
+			int idx = y * bw + x;
+			if (pic->flag[idx / 8] & (1 << (idx % 8))) {
+				int idx_dst = (sy + y) * packer_bw + sx + x;
+
+				int64_t* dst_rgb = (int64_t*)texture + idx_dst;
+				memcpy(dst_rgb, ptr_data++, sizeof(int64_t));
+
+				int64_t* dst_alpha = (int64_t*)texture + packer_bw * packer_bh + idx_dst;
+				memcpy(dst_alpha, ptr_data++, sizeof(int64_t));
+			}
+		}
+	}
+}
+
 // static inline void
-// _load_picture_to_texture(uint8_t* texture, int edge, struct dtex_packer* packer, struct b4r_picture* pic) {
+// _load_picture_to_pvr_tex(uint8_t* texture, int edge, struct dtex_packer* packer, struct b4r_picture* pic) {
 // 	struct dp_pos* pos = dtexpacker_add(packer, TO_4TIMES(pic->w), TO_4TIMES(pic->h), true);
 // 	assert(IS_4TIMES(pos->r.xmin) && IS_4TIMES(pos->r.ymin));
 // 	int sx = pos->r.xmin >> 2,
@@ -198,7 +244,7 @@ _load_picture_to_texture(uint8_t* texture, struct dp_pos* pos, struct b4r_pictur
 // 	struct dtex_packer* packer = dtexpacker_create(edge, edge, 100);
 // 	for (int i = 0; i < b4r->pic_size; ++i) {
 // 		struct b4r_picture* pic = &b4r->pictures[i];
-// 		_load_picture_to_texture(buf, edge, packer, pic);
+// 		_load_picture_to_pvr_tex(buf, edge, packer, pic);
 // 	}
 // 
 // 	// for test
@@ -225,8 +271,8 @@ dtex_b4r_preload_to_pkg(struct dtex_b4r* b4r, struct dtex_package* pkg) {
 	}
 }
 
-struct dtex_raw_tex* 
-dtex_b4r_load_tex(struct dtex_b4r* b4r, struct dtex_package* pkg, int tex_idx) {
+static inline struct dtex_raw_tex* 
+_load_pvr_tex(struct dtex_b4r* b4r, struct dtex_package* pkg, int tex_idx) {
 	struct dtex_raw_tex* tex = &pkg->textures[tex_idx];
 
 	struct dtex_packer* packer = (struct dtex_packer*)dtex_vector_get(b4r->packers, tex_idx);
@@ -238,7 +284,7 @@ dtex_b4r_load_tex(struct dtex_b4r* b4r, struct dtex_package* pkg, int tex_idx) {
 		struct dp_rect* r = &b4r->pictures[i].dst_r;
 		assert(r->dst_pos && r->dst_packer_idx >= 0);
 		if (r->dst_packer_idx == tex_idx) {
-			_load_picture_to_texture(buf, r->dst_pos, (struct b4r_picture*)r->ud);
+			_load_picture_to_pvr_tex(buf, r->dst_pos, (struct b4r_picture*)r->ud);
 		}
 	}
 
@@ -250,6 +296,47 @@ dtex_b4r_load_tex(struct dtex_b4r* b4r, struct dtex_package* pkg, int tex_idx) {
 	tex->format = PVRTC;
 
 	return tex;
+}
+
+static inline struct dtex_raw_tex* 
+_load_etc1_tex(struct dtex_b4r* b4r, struct dtex_package* pkg, int tex_idx) {
+	struct dtex_raw_tex* tex = &pkg->textures[tex_idx];
+
+	struct dtex_packer* packer = (struct dtex_packer*)dtex_vector_get(b4r->packers, tex_idx);
+	int w, h;
+	dtexpacker_get_size(packer, &w, &h);
+
+	size_t sz = w * h;
+	uint8_t* buf = (uint8_t*)malloc(sz);
+	memset(buf, 0, sz);
+
+	for (int i = 0; i < b4r->pic_size; ++i) {
+		struct dp_rect* r = &b4r->pictures[i].dst_r;
+		assert(r->dst_pos && r->dst_packer_idx >= 0);
+		if (r->dst_packer_idx == tex_idx) {
+			_load_picture_to_etc1_tex(buf, w, h, r->dst_pos, (struct b4r_picture*)r->ud);
+		}
+	}
+
+	tex->width = w;
+	tex->height = h;
+	dtex_etc1_gen_texture(buf, w, h, &tex->id, &tex->id_alpha);
+	tex->format = PKMC;
+
+	return tex;
+}
+
+struct dtex_raw_tex* 
+dtex_b4r_load_tex(struct dtex_b4r* b4r, struct dtex_package* pkg, int tex_idx) {
+	struct dtex_raw_tex* ret = NULL;
+	if (b4r->tex_type == TEX_PVR) {
+		ret = _load_pvr_tex(b4r, pkg, tex_idx);
+	} else if (b4r->tex_type == TEX_ETC1) {
+		ret = _load_etc1_tex(b4r, pkg, tex_idx);
+	} else {
+		assert(0);
+	}
+	return ret;
 }
 
 void 

@@ -308,7 +308,7 @@ dtex_rrr_preload_to_pkg(struct dtex_rrr* rrr, struct dtex_package* pkg) {
 	}
 }
 
-struct dtex_raw_tex* 
+static inline struct dtex_raw_tex* 
 _load_pvr_tex(struct dtex_rrr* rrr, struct dtex_package* pkg, int tex_idx) {
 	struct dtex_raw_tex* tex = &pkg->textures[tex_idx];
 
@@ -335,7 +335,7 @@ _load_pvr_tex(struct dtex_rrr* rrr, struct dtex_package* pkg, int tex_idx) {
 	return tex;
 }
 
-struct dtex_raw_tex* 
+static inline struct dtex_raw_tex* 
 _load_etc1_tex(struct dtex_rrr* rrr, struct dtex_package* pkg, int tex_idx) {
 	struct dtex_raw_tex* tex = &pkg->textures[tex_idx];
 
