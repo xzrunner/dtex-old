@@ -30,6 +30,8 @@ void dtex_draw_rrp_to_tex(struct dtex_buffer*, struct dtex_raw_tex* src, struct 
 	struct dtex_texture* dst, struct dp_pos* pos, bool rotate);
 
 void dtex_debug_draw(unsigned int texid);
+void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin, float xmax, float ymax);
+
 //void dtex_debug_draw(struct dtex_texture*);
 
 void dtex_flush_shader();

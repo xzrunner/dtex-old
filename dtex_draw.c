@@ -282,6 +282,11 @@ dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct r
 }
 
 void dtex_debug_draw(unsigned int texid) {
+	dtex_debug_draw_with_pos(texid, -1, -1, 1, 1);
+}
+
+void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin, 
+							  float xmax, float ymax) {
 	//assert(glIsTexture(texid));
 
 	shader_program(PROGRAM_SPRITE);
@@ -294,12 +299,12 @@ void dtex_debug_draw(unsigned int texid) {
 	vb[10] = 1, vb[11] = 1;
 	vb[14] = 1, vb[15] = 0;
 
-	vb[0] = -1, vb[1] = -1;
-	vb[4] = -1, vb[5] = 1;
-	vb[8] = 1, vb[9] = 1;
-	vb[12] = 1, vb[13] = -1;
+	vb[0] = xmin, vb[1] = ymin;
+	vb[4] = xmin, vb[5] = ymax;
+	vb[8] = xmax, vb[9] = ymax;
+	vb[12] = xmax, vb[13] = ymin;
 
-	shader_draw(vb, texid);	
+	shader_draw(vb, texid);		
 }
 
 // void dtex_debug_draw(struct dtex_texture* tex) {

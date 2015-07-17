@@ -600,6 +600,11 @@ dtexc3_query_rect(struct dtex_c3* dtex, const char* name) {
 
 void 
 dtexc3_debug_draw(struct dtex_c3* dtex) {
-    dtex_debug_draw(dtex->textures[0]->tex);
+	const float edge = 0.5f;
+	for (int i = 0; i < dtex->tex_size; ++i) {
+		dtex_debug_draw_with_pos(dtex->textures[i]->tex, 
+			-1 + i * edge, 1 - edge, -1 + i * edge + edge, 1);
+	}
+
     //dtex_debug_draw(5);
 }
