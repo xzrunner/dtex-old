@@ -233,9 +233,12 @@ dtexf_c1_draw_anim(struct ej_package* pkg, struct animation* ani, int action,
 void 
 dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path) {
 	struct dtex_package* pkg = dtexc3_query_pkg(C3, pkg_name);
-	struct dtex_rect* rect = dtexc3_query_rect(C3, pkg_name);
+
+	struct dtex_rect* rect[pkg->tex_size];
+	dtexc3_query_rect(C3, pkg_name, rect, pkg->tex_size);
+
 	int spr_id = sprite_id(pkg->ej_pkg, spr_name);
-	dtex_async_load_spr(LOADER, pkg->ej_pkg, rect, spr_id, path);
+	dtex_async_load_spr(LOADER, pkg->ej_pkg, rect, pkg->tex_size, spr_id, path);
 }
 
 static inline void
@@ -262,9 +265,9 @@ _on_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id, in
 	struct dtex_img_pos ori_pos, dst_pos;
 	_prepare_trans_pos(pkg, rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
 
-	dtex_relocate_spr(pkg, spr_id, &ori_pos, &dst_pos);
+	dtex_relocate_spr(pkg, spr_id, tex_idx, &ori_pos, &dst_pos);
 	dtexc2_preload_sprite(C2, pkg, spr_id);
-	dtex_relocate_spr(pkg, spr_id, &dst_pos, &ori_pos);
+	dtex_relocate_spr(pkg, spr_id, tex_idx, &dst_pos, &ori_pos);
 }
 
 static inline void
@@ -272,9 +275,9 @@ _after_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id,
 	struct dtex_img_pos ori_pos, dst_pos;
 	_prepare_trans_pos(pkg, rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
 
-    dtex_relocate_spr(pkg, spr_id, &ori_pos, &dst_pos);
+    dtex_relocate_spr(pkg, spr_id, tex_idx, &ori_pos, &dst_pos);
 	dtex_relocate_c2_key(C2, pkg, spr_id, &dst_pos, &ori_pos);
-	dtex_relocate_spr(pkg, spr_id, &dst_pos, &ori_pos);
+	dtex_relocate_spr(pkg, spr_id, tex_idx, &dst_pos, &ori_pos);
 }
 
 static inline void
@@ -332,8 +335,8 @@ dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id,
 void 
 dtexf_debug_draw() {
 //	dtexc1_debug_draw(C1);
-//	dtexc2_debug_draw(C2);
-	dtexc3_debug_draw(C3);
+	dtexc2_debug_draw(C2);
+//	dtexc3_debug_draw(C3);
 }
 
 void 

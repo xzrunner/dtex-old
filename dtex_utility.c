@@ -36,19 +36,25 @@ _relocate_spr(struct ej_package* pkg, struct picture* pic, struct dtex_img_pos* 
 	for (int i = 0; i < -pic->n; ++i) {
 		struct picture_part* part = &pic->part[i];
 		assert(pkg->texture_n > part->texid);
+		int* texid = (int*)ud;
+		if (part->texid != *texid) {
+			continue;
+		}
 		struct texture* tex = &pkg->tex[part->texid];
-		if (tex->id == src->id) {
-			assert(tex->id_alpha == src->id_alpha
-				&& tex->width == src->inv_width
-				&& tex->height == src->inv_height);
-			int16_t sw = src->rect.xmax - src->rect.xmin,
-					sh = src->rect.ymax - src->rect.ymin;
-			int16_t dw = dst->rect.xmax - dst->rect.xmin,
-					dh = dst->rect.ymax - dst->rect.ymin;
-			for (int i = 0; i < 4; ++i) {
-				part->src[i*2]   = (part->src[i*2]   - src->rect.xmin) * dw / sw + dst->rect.xmin;
-				part->src[i*2+1] = (part->src[i*2+1] - src->rect.ymin) * dh / sh + dst->rect.ymin;				
-			}
+		if (tex->id != src->id) {
+			continue;
+		}
+
+		assert(tex->id_alpha == src->id_alpha
+			&& tex->width == src->inv_width
+			&& tex->height == src->inv_height);
+		int16_t sw = src->rect.xmax - src->rect.xmin,
+				sh = src->rect.ymax - src->rect.ymin;
+		int16_t dw = dst->rect.xmax - dst->rect.xmin,
+				dh = dst->rect.ymax - dst->rect.ymin;
+		for (int i = 0; i < 4; ++i) {
+			part->src[i*2]   = (part->src[i*2]   - src->rect.xmin) * dw / sw + dst->rect.xmin;
+			part->src[i*2+1] = (part->src[i*2+1] - src->rect.ymin) * dh / sh + dst->rect.ymin;		
 		}
 	}
 }
@@ -59,6 +65,11 @@ _relocate_tex(struct ej_package* pkg, struct picture* pic, struct dtex_img_pos* 
 	for (int i = 0; i < -pic->n; ++i) {
 		struct picture_part* part = &pic->part[i];
 		assert(pkg->texture_n > part->texid);
+		int* texid = (int*)ud;
+		if (part->texid != *texid) {
+			continue;
+		}
+
 		struct texture* tex = &pkg->tex[part->texid];
 		if (tex->id == src->id) {
 			assert(tex->id_alpha == src->id_alpha
@@ -73,9 +84,9 @@ _relocate_tex(struct ej_package* pkg, struct picture* pic, struct dtex_img_pos* 
 }
 
 void 
-dtex_relocate_spr(struct ej_package* pkg, int id, struct dtex_img_pos* src, struct dtex_img_pos* dst) {
-	_traverse_animation(pkg, id, src, dst, &_relocate_spr, NULL);
-	_traverse_animation(pkg, id, src, dst, &_relocate_tex, NULL);	
+dtex_relocate_spr(struct ej_package* pkg, int spr_id, int tex_idx, struct dtex_img_pos* src, struct dtex_img_pos* dst) {
+	_traverse_animation(pkg, spr_id, src, dst, &_relocate_spr, &tex_idx);
+	_traverse_animation(pkg, spr_id, src, dst, &_relocate_tex, &tex_idx);	
 }
 
 static inline void

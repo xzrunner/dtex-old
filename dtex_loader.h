@@ -49,7 +49,7 @@ void dtexloader_unload_tex(struct dtex_raw_tex*);
 
 struct dtex_package* dtexloader_get_pkg(struct dtex_loader*, int idx);
 
-void dtexloader_load_spr2task(struct dtex_loader*, struct ej_package*, struct dtex_rect*, int id, const char* path);
+void dtexloader_load_spr2task(struct dtex_loader*, struct ej_package*, struct dtex_rect**, int id, const char* path);
 void dtexloader_do_task(struct dtex_loader*, void (*on_load_func)());
 void dtexloader_after_do_task(struct dtex_loader*, void (*after_load_func)());
 

@@ -584,27 +584,28 @@ dtexc3_query_pkg(struct dtex_c3* dtex, const char* name) {
 	return NULL;
 }
 
-struct dtex_rect*
-dtexc3_query_rect(struct dtex_c3* dtex, const char* name) {
+void
+dtexc3_query_rect(struct dtex_c3* dtex, const char* name, struct dtex_rect** rect, int count) {
 	unsigned int idx = _hash_origin_pack(name);
 	struct hash_node* hn = dtex->hash[idx];
 	while (hn) {
 		struct dtex_node* dr = &hn->n;
 		if (strcmp(name, dr->pkg->name) == 0) {
-			return &dr->dst_rect;
+			rect[--count] = &dr->dst_rect;
 		}
 		hn = hn->next_hash;
 	}
-	return NULL;
 }
 
 void 
 dtexc3_debug_draw(struct dtex_c3* dtex) {
-	const float edge = 0.5f;
-	for (int i = 0; i < dtex->tex_size; ++i) {
-		dtex_debug_draw_with_pos(dtex->textures[i]->tex, 
-			-1 + i * edge, 1 - edge, -1 + i * edge + edge, 1);
-	}
+// 	const float edge = 0.5f;
+// 	for (int i = 0; i < dtex->tex_size; ++i) {
+// 		dtex_debug_draw_with_pos(dtex->textures[i]->tex, 
+// 			-1 + i * edge, 1 - edge, -1 + i * edge + edge, 1);
+// 	}
+
+	dtex_debug_draw(dtex->textures[0]->tex);
 
     //dtex_debug_draw(5);
 }

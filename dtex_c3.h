@@ -25,8 +25,7 @@ struct dp_pos* dtexc3_load_tex(struct dtex_c3*, struct dtex_raw_tex*, struct dte
 void dtexc3_relocate(struct dtex_c3*, struct dtex_package*);
 
 struct dtex_package* dtexc3_query_pkg(struct dtex_c3*, const char* name);
-// todo: tex_idx
-struct dtex_rect* dtexc3_query_rect(struct dtex_c3*, const char* name);
+void dtexc3_query_rect(struct dtex_c3*, const char* name, struct dtex_rect** rect, int count);
 
 void dtexc3_debug_draw(struct dtex_c3*);
 

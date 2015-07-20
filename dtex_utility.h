@@ -16,7 +16,7 @@ struct dtex_inv_size;
 
 struct ej_package;
 
-void dtex_relocate_spr(struct ej_package*, int id, struct dtex_img_pos* src, struct dtex_img_pos* dst);
+void dtex_relocate_spr(struct ej_package*, int spr_id, int tex_idx, struct dtex_img_pos* src, struct dtex_img_pos* dst);
 
 void dtex_relocate_c2_key(struct dtex_c2*, struct ej_package*, int id, struct dtex_img_pos* src, struct dtex_img_pos* dst);
 

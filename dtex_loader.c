@@ -365,7 +365,7 @@ struct unpack2pkg_params {
 };
 
 static inline void
-_unpack_memory_to_pkg(uint8_t* buffer, size_t sz, void* ud) {
+_unpack_memory_to_pkg(int block_idx, uint8_t* buffer, size_t sz, void* ud) {
 	struct unpack2pkg_params* params = (struct unpack2pkg_params*)ud;
 
 	int format = buffer[0];
@@ -418,13 +418,12 @@ struct unpack2task_params {
 	bool is_epp;
 
 	struct ej_package* pkg;	
-	struct dtex_rect* rect;
+	struct dtex_rect** rect;
 	int spr_id;
-	int tex_idx;
 };
 
 static inline void
-_unpack_memory_to_task(uint8_t* buffer, size_t sz, void* ud) {
+_unpack_memory_to_task(int block_idx, uint8_t* buffer, size_t sz, void* ud) {
 	struct unpack2task_params* params = (struct unpack2task_params*)ud;
 
 	assert(params->dtex->task_size < TASK_SIZE);
@@ -432,9 +431,9 @@ _unpack_memory_to_task(uint8_t* buffer, size_t sz, void* ud) {
 
 	task->is_epp = params->is_epp;
 	task->pkg = params->pkg;
-	task->rect = params->rect;
+	task->rect = params->rect[block_idx];
 	task->spr_id = params->spr_id;
-	task->tex_idx = params->tex_idx;
+	task->tex_idx = block_idx;
 
 	if (task->sz == 0 || sz > task->sz) {
 //        printf("alloc buf\n");
@@ -513,7 +512,7 @@ _unpack_file(struct dtex_loader* dtex, struct FileHandle* file, void (*unpack_fu
 			if (pf_fileread(file, dtex->buf, sz) != 1) {
 				fault("Invalid uncompress data source\n");
 			}
-			unpack_func(dtex->buf, sz, ud);
+			unpack_func(i, dtex->buf, sz, ud);
 		} else {
 			uint8_t ori_sz_arr[4];
 			pf_fileread(file, ori_sz_arr, sizeof(ori_sz_arr));
@@ -533,7 +532,7 @@ _unpack_file(struct dtex_loader* dtex, struct FileHandle* file, void (*unpack_fu
 			if (r != SZ_OK) {
 				fault("Uncompress error %d\n",r);
 			}
-			unpack_func(buffer, ori_sz, ud);		
+			unpack_func(i, buffer, ori_sz, ud);		
 		}
 	}
 }
@@ -678,7 +677,7 @@ dtexloader_get_pkg(struct dtex_loader* dtex, int idx) {
 
 // todo if already exists
 void 
-dtexloader_load_spr2task(struct dtex_loader* dtex, struct ej_package* pkg, struct dtex_rect* rect, int id, const char* path) {
+dtexloader_load_spr2task(struct dtex_loader* dtex, struct ej_package* pkg, struct dtex_rect** rect, int id, const char* path) {
 	struct FileHandle* file = pf_fileopen(path, "rb");
 	if (file == NULL) {
 		fault("[dtexloader_load_spr2task] Can't open file: %s\n", path);
@@ -689,7 +688,6 @@ dtexloader_load_spr2task(struct dtex_loader* dtex, struct ej_package* pkg, struc
 	params.pkg = pkg;
 	params.rect = rect;
 	params.spr_id = id;
-	params.tex_idx = 0;
 	_unpack_file(dtex, file, &_unpack_memory_to_task, &params);
 	pf_fileclose(file);
 }
@@ -699,6 +697,9 @@ void
 dtexloader_do_task(struct dtex_loader* dtex, void (*on_load_func)()) {
 	for (int i = 0; i < dtex->task_size; ++i) {
 		struct load_task* task = dtex->tasks[i];
+		if (!task->sz) {
+			continue;
+		}
 		// load task
 		_do_load_task(task);		
 		// parser task data
