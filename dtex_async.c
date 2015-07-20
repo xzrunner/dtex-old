@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <pthread.h>
+#include <stdlib.h>
 
 #define MAX_ARGS_SIZE 10
 struct thread_args {
@@ -17,9 +18,14 @@ _load_epp(void* arguments) {
 	struct ej_package* pkg = (struct ej_package*)args->args[1];
 	int* id = (int*)args->args[2];
 	struct dtex_rect* rect = (struct dtex_rect*)args->args[3];
-	const char* path = (const char*)args->args[4];
+	char* path = (char*)args->args[4];
 
 	dtexloader_load_spr2task(loader, pkg, rect, *id, path);
+
+	free(id);
+	free(path);
+	free(args);
+
 //	pthread_exit(NULL);
 	return NULL;
 }
@@ -27,15 +33,16 @@ _load_epp(void* arguments) {
 void 
 dtex_async_load_spr(struct dtex_loader* loader, struct ej_package* pkg, struct dtex_rect* rect, int id, const char* path) {
 	pthread_t thread;
-	struct thread_args args;
-	args.args[0] = loader;
-	args.args[1] = pkg;
-	args.args[2] = &id;
-	args.args[3] = rect;
+	struct thread_args* args = (struct thread_args*)malloc(sizeof(struct thread_args));
+	args->args[0] = loader;
+	args->args[1] = pkg;
+	args->args[2] = malloc(sizeof(id));
+	memcpy(args->args[2], &id, sizeof(id));
+	args->args[3] = rect;
 
-	char p[strlen(path)];
+	char* p = malloc(strlen(path) + 1);
 	strcpy(p, path);
-	args.args[4] = p;
+	args->args[4] = p;
 
-	pthread_create(&thread, NULL, _load_epp, (void*)&args);
+	pthread_create(&thread, NULL, _load_epp, (void*)args);
 }
