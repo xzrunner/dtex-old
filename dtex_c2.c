@@ -103,7 +103,7 @@ dtexc2_preload_begin(struct dtex_c2* dtex) {
 
 // todo hash pic for preload_list
 static inline void
-_preload_picture(struct dtex_c2* dtex, struct ej_package* pkg, struct picture* pic) {
+_preload_picture(struct dtex_c2* dtex, struct ej_package* pkg, struct picture* pic, int tex_idx) {
 	if (dtex->loadable == 0 || dtex->preload_size >= PRELOAD_SIZE - 1) {
 		return;
 	}
@@ -114,6 +114,9 @@ _preload_picture(struct dtex_c2* dtex, struct ej_package* pkg, struct picture* p
 			break;
 		}
 		struct picture_part* part = &pic->part[i];
+		if (tex_idx != -1 && part->texid != tex_idx) {
+			continue;
+		}
 		struct preload_node* pn = dtex->preload_list[dtex->preload_size++];
 		pn->pkg = pkg;
 		pn->part = part;
@@ -125,27 +128,27 @@ _preload_picture(struct dtex_c2* dtex, struct ej_package* pkg, struct picture* p
 
 // todo hash anim for preload_list
 static inline void
-_preload_animation(struct dtex_c2* dtex, struct ej_package* pkg, int id) {
+_preload_animation(struct dtex_c2* dtex, struct ej_package* pkg, int spr_id, int tex_idx) {
 	if (dtex->loadable == 0 || dtex->preload_size >= PRELOAD_SIZE - 1) {
 		return;
 	}
 
 	struct ejoypic* ep = pkg->ep;
-	if (id < 0 || ep->max_id < id) {
+	if (spr_id < 0 || ep->max_id < spr_id) {
 		return;
 	}
-	struct animation* ani = ep->spr[id];
+	struct animation* ani = ep->spr[spr_id];
 	if (ani == NULL) {
 		return;
 	}
 
 	if (ani->part_n <= 0) {
-		_preload_picture(dtex, pkg, (struct picture*)ani);
+		_preload_picture(dtex, pkg, (struct picture*)ani, tex_idx);
 	} else {
 		for (int i = 0; i < ani->part_n; ++i) {
 			struct animation_part* part = &ani->part[i];
 			if (!part->text) {
-				_preload_animation(dtex, pkg, part->id);
+				_preload_animation(dtex, pkg, part->id, tex_idx);
 			}
 		}
 	}
@@ -153,9 +156,9 @@ _preload_animation(struct dtex_c2* dtex, struct ej_package* pkg, int id) {
 
 // todo hash sprite for preload_list
 void 
-dtexc2_preload_sprite(struct dtex_c2* dtex, struct ej_package* pkg, int id) {
-	assert(id >= 0);
-	_preload_animation(dtex, pkg, id);
+dtexc2_preload_sprite(struct dtex_c2* dtex, struct ej_package* pkg, int spr_id, int tex_idx) {
+	assert(spr_id >= 0);
+	_preload_animation(dtex, pkg, spr_id, tex_idx);
 }
 
 static inline int 
@@ -421,9 +424,6 @@ dtexc2_change_key(struct dtex_c2* dtex, int src_texid, struct dtex_rect* src_rec
 		curr = curr->next_hash;
 	}
 
-	// if (!curr) {
-	// 	return;
-	// }
 	assert(curr);
 	curr->n.ori_tex.id = dst_texid;
 	curr->n.ori_rect = *dst_rect;

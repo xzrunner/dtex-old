@@ -21,7 +21,7 @@ struct dtex_c2* dtexc2_create(struct dtex_buffer*);
 void dtexc2_release(struct dtex_c2*, struct dtex_buffer*);
 
 void dtexc2_preload_begin(struct dtex_c2*);
-void dtexc2_preload_sprite(struct dtex_c2*, struct ej_package* pkg, int id);
+void dtexc2_preload_sprite(struct dtex_c2*, struct ej_package* pkg, int spr_id, int tex_idx);
 // todo preload no name spr
 void dtexc2_preload_end(struct dtex_c2*, struct dtex_buffer*, struct dtex_loader*, bool use_only_one_texture);
 

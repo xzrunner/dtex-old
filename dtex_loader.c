@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <pthread.h>
 
 // todo define max texture in one package
 #define MAX_TEX_PER_PKG 4
@@ -35,6 +36,14 @@
 #define strdup _strdup
 #endif // _MSC_VER
 
+enum {
+	LT_NULL = 0,
+	LT_LOADED_BUF,
+	LT_LOADED_TEX,
+	LT_RELOCATED,
+	LT_FINISH
+};
+
 struct load_task {
 	bool is_epp;
 
@@ -46,6 +55,8 @@ struct load_task {
 
 	uint8_t* buf;
 	size_t sz;
+
+	int status;
 };
 
 struct dtex_loader {
@@ -63,6 +74,8 @@ struct dtex_loader {
 	int task_size;
 };
 
+pthread_mutex_t mutexsum;
+
 struct dtex_loader* 
 dtexloader_create() {
 	size_t sz = sizeof(struct dtex_loader);
@@ -72,8 +85,12 @@ dtexloader_create() {
 	for (int i = 0; i < TASK_SIZE; ++i) {
 		struct load_task* task = malloc(sizeof(*task));
 		memset(task, 0, sizeof(*task));
+		task->tex_idx = -1;
 		loader->tasks[i] = task;
 	}
+
+	pthread_mutex_init(&mutexsum, NULL);
+
 	return loader;
 }
 
@@ -123,6 +140,8 @@ dtexloader_release(struct dtex_loader* dtex) {
 	dtex->buf_size = 0;
 
 	free(dtex);
+
+	pthread_mutex_destroy(&mutexsum);
 }
 
 static inline void
@@ -325,6 +344,8 @@ _do_load_task(struct load_task* task) {
 	default:
 		fault("Invalid package format %d\n",format);		
 	}
+
+	task->status = LT_LOADED_TEX;
 }
 
 static inline void
@@ -429,6 +450,8 @@ _unpack_memory_to_task(int block_idx, uint8_t* buffer, size_t sz, void* ud) {
 	assert(params->dtex->task_size < TASK_SIZE);
 	struct load_task* task = params->dtex->tasks[params->dtex->task_size++];
 
+	task->status = LT_NULL;
+
 	task->is_epp = params->is_epp;
 	task->pkg = params->pkg;
 	task->rect = params->rect[block_idx];
@@ -442,6 +465,7 @@ _unpack_memory_to_task(int block_idx, uint8_t* buffer, size_t sz, void* ud) {
 	}
 	task->sz = sz;
 	memcpy(task->buf, buffer, sz);
+	task->status = LT_LOADED_BUF;
 }
 
 static inline void
@@ -528,6 +552,7 @@ _unpack_file(struct dtex_loader* dtex, struct FileHandle* file, void (*unpack_fu
 
 			unsigned char* buffer = (unsigned char*)(dtex->buf + ((sz + 3) & ~3));
 			size_t compressed_sz = sz - sizeof(block->size) - LZMA_PROPS_SIZE;
+
 			int r = _lzma_uncompress(buffer, &ori_sz, block->data, &compressed_sz, block->prop, LZMA_PROPS_SIZE);
 			if (r != SZ_OK) {
 				fault("Uncompress error %d\n",r);
@@ -675,6 +700,11 @@ dtexloader_get_pkg(struct dtex_loader* dtex, int idx) {
 	}
 }
 
+bool 
+dtexloader_has_task(struct dtex_loader* dtex) {
+	return dtex->task_size != 0;
+}
+
 // todo if already exists
 void 
 dtexloader_load_spr2task(struct dtex_loader* dtex, struct ej_package* pkg, struct dtex_rect** rect, int id, const char* path) {
@@ -682,42 +712,66 @@ dtexloader_load_spr2task(struct dtex_loader* dtex, struct ej_package* pkg, struc
 	if (file == NULL) {
 		fault("[dtexloader_load_spr2task] Can't open file: %s\n", path);
 	}
+
+	pthread_mutex_lock (&mutexsum);
+
 	struct unpack2task_params params;
 	params.dtex = dtex;
 	params.is_epp = true;	
 	params.pkg = pkg;
 	params.rect = rect;
 	params.spr_id = id;
+
 	_unpack_file(dtex, file, &_unpack_memory_to_task, &params);
+
 	pf_fileclose(file);
+
+	pthread_mutex_unlock (&mutexsum);
 }
 
 // to c2
 void 
 dtexloader_do_task(struct dtex_loader* dtex, void (*on_load_func)()) {
+	pthread_mutex_lock (&mutexsum);
+
 	for (int i = 0; i < dtex->task_size; ++i) {
 		struct load_task* task = dtex->tasks[i];
-		if (!task->sz) {
+		if (task->status != LT_LOADED_BUF) {
 			continue;
 		}
 		// load task
-		_do_load_task(task);		
+		_do_load_task(task);
+
 		// parser task data
 		on_load_func(task->pkg, task->rect, task->spr_id, task->tex_idx, &task->texture);
+		task->status = LT_RELOCATED;
+
 		// release task
 		free(task->buf); task->buf = NULL;
 		task->sz = 0;
 	}
+
+	pthread_mutex_unlock (&mutexsum);
 }
 
 void 
 dtexloader_after_do_task(struct dtex_loader* dtex, void (*after_load_func)()) {
+	pthread_mutex_lock (&mutexsum);
+
 	for (int i = 0; i < dtex->task_size; ++i) {
 		struct load_task* task = dtex->tasks[i];
+
+		if (task->status != LT_RELOCATED) {
+			continue;
+		}
+
 		after_load_func(task->pkg, task->rect, task->spr_id, task->tex_idx, &task->texture);
 		_release_texture(&task->texture);
+
+		task->status = LT_FINISH;
 	}
-	dtex->task_size = 0;
+
+	pthread_mutex_unlock (&mutexsum);
 }
 
 struct dtex_rrp* 

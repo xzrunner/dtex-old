@@ -591,7 +591,7 @@ dtexc3_query_rect(struct dtex_c3* dtex, const char* name, struct dtex_rect** rec
 	while (hn) {
 		struct dtex_node* dr = &hn->n;
 		if (strcmp(name, dr->pkg->name) == 0) {
-			rect[--count] = &dr->dst_rect;
+			rect[dr->raw_tex_idx] = &dr->dst_rect;
 		}
 		hn = hn->next_hash;
 	}

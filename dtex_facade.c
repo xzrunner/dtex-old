@@ -161,7 +161,7 @@ void
 dtexf_c2_load_sprite(struct ej_package* pkg, const char* name) {
 	if (C2) {
 		int id = sprite_id(pkg, name);
-		dtexc2_preload_sprite(C2, pkg, id);		
+		dtexc2_preload_sprite(C2, pkg, id, -1);		
 	}
 }
 
@@ -266,7 +266,7 @@ _on_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id, in
 	_prepare_trans_pos(pkg, rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
 
 	dtex_relocate_spr(pkg, spr_id, tex_idx, &ori_pos, &dst_pos);
-	dtexc2_preload_sprite(C2, pkg, spr_id);
+	dtexc2_preload_sprite(C2, pkg, spr_id, tex_idx);
 	dtex_relocate_spr(pkg, spr_id, tex_idx, &dst_pos, &ori_pos);
 }
 
@@ -282,6 +282,10 @@ _after_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id,
 
 static inline void
 _do_load_task() {
+	if (!dtexloader_has_task(LOADER)) {
+		return;
+	}
+
 	dtexc2_preload_begin(C2);	
 	dtexloader_do_task(LOADER, &_on_load_spr_task);
 	dtexc2_preload_end(C2, BUF, LOADER, true);

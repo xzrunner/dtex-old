@@ -27,7 +27,7 @@ _load_epp(void* arguments) {
 	free(path);
 	free(args);
 
-//	pthread_exit(NULL);
+	pthread_exit(NULL);
 	return NULL;
 }
 

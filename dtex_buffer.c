@@ -50,7 +50,7 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
 	// 	memset(empty_data, 0x00, edge*edge*4);		
 	// }
 
-	memset(empty_data, 0xaa, edge*edge*4);
+	memset(empty_data, 0x00, edge*edge*4);
 
 	int last_end = buf->end_tex;
 
