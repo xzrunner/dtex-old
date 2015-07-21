@@ -28,7 +28,7 @@
 
 #define PACKAGE_SIZE 512
 
-#define TASK_SIZE 16
+#define TASK_SIZE 64
 
 #define LZMA_PROPS_SIZE 5
 
@@ -59,6 +59,13 @@ struct load_task {
 	int status;
 };
 
+struct task_list
+{
+	struct load_task* tasks[TASK_SIZE];
+	int capaticy;
+	int size;
+};
+
 struct dtex_loader {
 	struct dtex_package* packages[PACKAGE_SIZE];
 	int pkg_size;
@@ -69,25 +76,39 @@ struct dtex_loader {
 	// cache tex id
 	// todo
 
-	// todo cache task's buf
-	struct load_task* tasks[TASK_SIZE];
-	int task_size;
+	struct task_list* task_list;
 };
 
 pthread_mutex_t mutexsum;
+
+struct task_list* _create_task_list() {
+	// todo ÄÚ´æ½ô´Õ
+	int capacity = TASK_SIZE;
+	struct task_list* list = (struct task_list*)malloc(sizeof(struct task_list));
+	list->capaticy = capacity;
+	list->size = 0;
+	for (int i = 0; i < capacity; ++i) {
+		struct load_task* task = malloc(sizeof(*task));
+		memset(task, 0, sizeof(*task));
+		task->tex_idx = -1;
+		list->tasks[i] = task;
+	}	
+	return list;
+}
+
+void _release_task_list(struct task_list* list) {
+	for (int i = 0; i < list->capaticy; ++i) {
+		free(list->tasks[i]);
+	}
+	free(list);
+}
 
 struct dtex_loader* 
 dtexloader_create() {
 	size_t sz = sizeof(struct dtex_loader);
 	struct dtex_loader* loader = (struct dtex_loader*)malloc(sz);
 	memset(loader, 0, sz);
-	// todo not malloc again
-	for (int i = 0; i < TASK_SIZE; ++i) {
-		struct load_task* task = malloc(sizeof(*task));
-		memset(task, 0, sizeof(*task));
-		task->tex_idx = -1;
-		loader->tasks[i] = task;
-	}
+	loader->task_list = _create_task_list();
 
 	pthread_mutex_init(&mutexsum, NULL);
 
@@ -138,6 +159,8 @@ dtexloader_release(struct dtex_loader* dtex) {
 
 	free(dtex->buf); dtex->buf = NULL;
 	dtex->buf_size = 0;
+
+	_release_task_list(dtex->task_list);
 
 	free(dtex);
 
@@ -447,8 +470,9 @@ static inline void
 _unpack_memory_to_task(int block_idx, uint8_t* buffer, size_t sz, void* ud) {
 	struct unpack2task_params* params = (struct unpack2task_params*)ud;
 
-	assert(params->dtex->task_size < TASK_SIZE);
-	struct load_task* task = params->dtex->tasks[params->dtex->task_size++];
+	struct task_list* tl = params->dtex->task_list;
+	assert(tl->size < tl->capaticy);
+	struct load_task* task = tl->tasks[tl->size++];
 
 	task->status = LT_NULL;
 
@@ -702,7 +726,7 @@ dtexloader_get_pkg(struct dtex_loader* dtex, int idx) {
 
 bool 
 dtexloader_has_task(struct dtex_loader* dtex) {
-	return dtex->task_size != 0;
+	return dtex->task_list->size != 0;
 }
 
 // todo if already exists
@@ -734,8 +758,9 @@ void
 dtexloader_do_task(struct dtex_loader* dtex, void (*on_load_func)()) {
 	pthread_mutex_lock (&mutexsum);
 
-	for (int i = 0; i < dtex->task_size; ++i) {
-		struct load_task* task = dtex->tasks[i];
+	struct task_list* tl = dtex->task_list;
+	for (int i = 0; i < tl->size; ++i) {
+		struct load_task* task = tl->tasks[i];
 		if (task->status != LT_LOADED_BUF) {
 			continue;
 		}
@@ -758,18 +783,49 @@ void
 dtexloader_after_do_task(struct dtex_loader* dtex, void (*after_load_func)()) {
 	pthread_mutex_lock (&mutexsum);
 
-	for (int i = 0; i < dtex->task_size; ++i) {
-		struct load_task* task = dtex->tasks[i];
+	struct task_list* tl = dtex->task_list;
+
+	//////////////////////////////////////////////////////////////////////////
+	//for (int i = 0; i < tl->free_idx; ++i) {
+	//	struct load_task* task = tl->tasks[i];
+
+	//	if (task->status != LT_RELOCATED) {
+	//		continue;
+	//	}
+
+	//	after_load_func(task->pkg, task->rect, task->spr_id, task->tex_idx, &task->texture);
+	//	_release_texture(&task->texture);
+
+	//	task->status = LT_FINISH;		
+	//}
+	//////////////////////////////////////////////////////////////////////////
+
+	int curr_idx = 0;
+	while (curr_idx != tl->size)
+	{
+		struct load_task* task = tl->tasks[curr_idx];
 
 		if (task->status != LT_RELOCATED) {
+			++curr_idx;
 			continue;
 		}
 
 		after_load_func(task->pkg, task->rect, task->spr_id, task->tex_idx, &task->texture);
 		_release_texture(&task->texture);
 
-		task->status = LT_FINISH;
+		task->status = LT_FINISH;		
+		task->status = -1;
+
+		assert(tl->size != 0);
+		if (curr_idx + 1 == tl->size) {
+			--tl->size;
+			break;
+		} else {
+			tl->tasks[curr_idx] = tl->tasks[--tl->size];
+		}
 	}
+
+	//////////////////////////////////////////////////////////////////////////
 
 	pthread_mutex_unlock (&mutexsum);
 }
