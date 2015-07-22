@@ -20,6 +20,8 @@
 #define HASH_SIZE 7561
 #define PRELOAD_SIZE 4096*2
 
+#define PADDING 1
+
 struct dtex_node {
 	// ori info
 	struct dtex_raw_tex ori_tex;
@@ -317,7 +319,7 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 		tex = dtex->textures[i];
 		// todo padding and rotate
 	//	if (w >= h) {
-			pos = dtexpacker_add(tex->packer, w, h, true);
+			pos = dtexpacker_add(tex->packer, w + PADDING * 2, h + PADDING * 2, true);
 			rotate = false;
 	//	} else {
 	//		pos = dtexpacker_add(tex->packer, h, w, true);
@@ -351,6 +353,11 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 	hn->n.ori_rect = pn->rect;
 	hn->n.dst_tex = tex;
 	hn->n.dst_pos = pos;
+	hn->n.dst_pos->r.xmin += PADDING;
+	hn->n.dst_pos->r.ymin += PADDING;
+	hn->n.dst_pos->r.xmax -= PADDING;
+	hn->n.dst_pos->r.ymax -= PADDING;
+
 	_set_rect_vb(pn, &hn->n, rotate);
 
 	unsigned int idx = _hash_node(pn->tex.id, &pn->rect);
