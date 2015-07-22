@@ -265,9 +265,13 @@ _on_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id, in
 	struct dtex_img_pos ori_pos, dst_pos;
 	_prepare_trans_pos(pkg, rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
 
-	dtex_relocate_spr(pkg, spr_id, tex_idx, &ori_pos, &dst_pos);
+	struct int_array* array = dtex_get_picture_id_set(pkg, spr_id);
+
+	dtex_relocate_spr(pkg, array, tex_idx, &ori_pos, &dst_pos);
 	dtexc2_preload_sprite(C2, pkg, spr_id, tex_idx);
-	dtex_relocate_spr(pkg, spr_id, tex_idx, &dst_pos, &ori_pos);
+	dtex_relocate_spr(pkg, array, tex_idx, &dst_pos, &ori_pos);
+
+	free(array);
 }
 
 static inline void
@@ -275,9 +279,13 @@ _after_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id,
 	struct dtex_img_pos ori_pos, dst_pos;
 	_prepare_trans_pos(pkg, rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
 
-    dtex_relocate_spr(pkg, spr_id, tex_idx, &ori_pos, &dst_pos);
-	dtex_relocate_c2_key(C2, pkg, spr_id, &dst_pos, &ori_pos);
-	dtex_relocate_spr(pkg, spr_id, tex_idx, &dst_pos, &ori_pos);
+	struct int_array* array = dtex_get_picture_id_set(pkg, spr_id);
+
+    dtex_relocate_spr(pkg, array, tex_idx, &ori_pos, &dst_pos);
+	dtex_relocate_c2_key(C2, pkg, array, &dst_pos, &ori_pos);
+	dtex_relocate_spr(pkg, array, tex_idx, &dst_pos, &ori_pos);
+
+	free(array);
 }
 
 static inline void

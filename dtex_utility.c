@@ -7,8 +7,47 @@
 #include <assert.h>
 #include <stdlib.h>
 
+// static inline void
+// _traverse_anim_relocate(struct ej_package* pkg, int id, struct dtex_img_pos* src, struct dtex_img_pos* dst, void (*pic_func)(), void* ud) {
+// 	struct ejoypic* ep = pkg->ep;
+// 	if (id < 0 || ep->max_id < id) {
+// 		return;
+// 	}
+// 	struct animation* ani = ep->spr[id];
+// 	if (ani == NULL) {
+// 		return;
+// 	}
+// 
+// 	if (ani->part_n <= 0) {
+// 		pic_func(pkg, (struct picture*)ani, src, dst, ud);
+// 	} else {
+// 		for (int i = 0; i < ani->part_n; ++i) {
+// 			struct animation_part* part = &ani->part[i];
+// 			if (!part->text) {
+// 				_traverse_anim_relocate(pkg, part->id, src, dst, pic_func, ud);
+// 			}
+// 		}
+// 	}
+// }
+
 static inline void
-_traverse_animation(struct ej_package* pkg, int id, struct dtex_img_pos* src, struct dtex_img_pos* dst, void (*pic_func)(), void* ud) {
+_traverse_array_relocate(struct ej_package* pkg, struct int_array* array, struct dtex_img_pos* src, struct dtex_img_pos* dst, void (*pic_func)(), void* ud) {
+	struct ejoypic* ep = pkg->ep;
+	for (int i = 0; i < array->size; ++i) {
+		int id = array->data[i];
+		if (id < 0 || ep->max_id < id) {
+			continue;
+		}
+		struct animation* ani = ep->spr[id];
+		if (ani == NULL) {
+			continue;
+		}
+		pic_func(pkg, (struct picture*)ani, src, dst, ud);
+	}
+}
+
+static inline void
+_traverse_anim_pic_id(struct ej_package* pkg, int id, void (*pic_func)(), void* ud) {
 	struct ejoypic* ep = pkg->ep;
 	if (id < 0 || ep->max_id < id) {
 		return;
@@ -19,15 +58,68 @@ _traverse_animation(struct ej_package* pkg, int id, struct dtex_img_pos* src, st
 	}
 
 	if (ani->part_n <= 0) {
-		pic_func(pkg, (struct picture*)ani, src, dst, ud);
+		pic_func(id, ud);
 	} else {
 		for (int i = 0; i < ani->part_n; ++i) {
 			struct animation_part* part = &ani->part[i];
 			if (!part->text) {
-				_traverse_animation(pkg, part->id, src, dst, pic_func, ud);
+				_traverse_anim_pic_id(pkg, part->id, pic_func, ud);
 			}
 		}
 	}
+}
+
+static inline void
+_get_pic_count(int id, void* ud) {
+	int* count = (int*)ud;
+	++*count;
+}
+
+static inline void
+_get_pic_id(int id, void* ud) {
+	struct int_array* array = (struct int_array*)ud;
+	array->data[array->size++] = id;
+}
+
+static inline int 
+_compare_id(const void *arg1, const void *arg2) {
+	int id1 = *(int*)(arg1);
+	int id2 = *(int*)(arg2);
+
+	if (id1 < id2) {
+		return -1;
+	} else if (id1 > id2) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+struct int_array*
+dtex_get_picture_id_set(struct ej_package* pkg, int id) {
+	int count = 0;
+	_traverse_anim_pic_id(pkg, id, _get_pic_count, &count);
+
+	struct int_array* array = (struct int_array*)malloc(sizeof(struct int_array) + sizeof(int) * count);
+	array->size = 0;
+	array->data = (int*)(array + 1);
+	_traverse_anim_pic_id(pkg, id, _get_pic_id, array);
+
+	if (array->size <= 1) {
+		return array;
+	}
+
+	qsort((void*)array->data, array->size, sizeof(int), _compare_id);
+	int last = array->data[0];
+	for (int i = 1; i < array->size; ) {
+		if (array->data[i] == last) {
+			array->data[i] = array->data[--array->size];
+		} else {
+			++i;
+		}
+	}
+	
+	return array;
 }
 
 static inline void
@@ -84,9 +176,9 @@ _relocate_tex(struct ej_package* pkg, struct picture* pic, struct dtex_img_pos* 
 }
 
 void 
-dtex_relocate_spr(struct ej_package* pkg, int spr_id, int tex_idx, struct dtex_img_pos* src, struct dtex_img_pos* dst) {
-	_traverse_animation(pkg, spr_id, src, dst, &_relocate_spr, &tex_idx);
-	_traverse_animation(pkg, spr_id, src, dst, &_relocate_tex, &tex_idx);	
+dtex_relocate_spr(struct ej_package* pkg, struct int_array* array, int tex_idx, struct dtex_img_pos* src, struct dtex_img_pos* dst) {
+	_traverse_array_relocate(pkg, array, src, dst, &_relocate_spr, &tex_idx);
+	_traverse_array_relocate(pkg, array, src, dst, &_relocate_tex, &tex_idx);
 }
 
 static inline void
@@ -120,8 +212,8 @@ _relocate_c2_key(struct ej_package* pkg, struct picture* pic, struct dtex_img_po
 }
 
 void 
-dtex_relocate_c2_key(struct dtex_c2* c2, struct ej_package* pkg, int id, struct dtex_img_pos* src, struct dtex_img_pos* dst) {
-	_traverse_animation(pkg, id, src, dst, &_relocate_c2_key, c2);
+dtex_relocate_c2_key(struct dtex_c2* c2, struct ej_package* pkg, struct int_array* array, struct dtex_img_pos* src, struct dtex_img_pos* dst) {
+	_traverse_array_relocate(pkg, array, src, dst, &_relocate_c2_key, c2);
 }
 
 void dtex_relocate_pic_part(int16_t part_src[8], struct dtex_inv_size* src_sz, struct dtex_rect* src_rect, 
