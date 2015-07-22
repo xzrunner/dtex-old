@@ -205,7 +205,7 @@ _relocate_c2_key(struct ej_package* pkg, struct picture* pic, struct dtex_img_po
 					sh = src->rect.ymax - src->rect.ymin;
 			int16_t dw = dst->rect.xmax - dst->rect.xmin,
 					dh = dst->rect.ymax - dst->rect.ymin;
-			int16_t dst_src[8];
+			float dst_src[8];
 			for (int i = 0; i < 4; ++i) {
 				dst_src[i*2]   = (part->src[i*2]   - src->rect.xmin) * dw / sw + dst->rect.xmin;
 				dst_src[i*2+1] = (part->src[i*2+1] - src->rect.ymin) * dh / sh + dst->rect.ymin;				
@@ -224,7 +224,7 @@ dtex_relocate_c2_key(struct dtex_c2* c2, struct ej_package* pkg, struct int_arra
 	_traverse_array_relocate(pkg, array, src, dst, &_relocate_c2_key, c2);
 }
 
-void dtex_relocate_pic_part(int16_t part_src[8], struct dtex_inv_size* src_sz, struct dtex_rect* src_rect, 
+void dtex_relocate_pic_part(float part_src[8], struct dtex_inv_size* src_sz, struct dtex_rect* src_rect, 
 	struct dtex_inv_size* dst_sz, struct dtex_rect* dst_rect, int rotate, float trans_vb[16], float dst_vb[8]) {
 	float src_xmin = src_rect->xmin * src_sz->inv_w,
 	      src_xmax = src_rect->xmax * src_sz->inv_w,
@@ -332,7 +332,7 @@ void dtex_relocate_pic_part(int16_t part_src[8], struct dtex_inv_size* src_sz, s
 }
 
 void 
-dtex_get_pic_src_rect(int16_t* src, struct dtex_rect* rect) {
+dtex_get_pic_src_rect(float* src, struct dtex_rect* rect) {
 	rect->xmin = rect->ymin = INT16_MAX;
 	rect->xmax = rect->ymax = 0;
 	for (int i = 0; i < 4; ++i) {
