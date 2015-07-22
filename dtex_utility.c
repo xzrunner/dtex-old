@@ -110,14 +110,21 @@ dtex_get_picture_id_set(struct ej_package* pkg, int id) {
 	}
 
 	qsort((void*)array->data, array->size, sizeof(int), _compare_id);
+
+	int tmp[array->size];
+	tmp[0] = array->data[0];
+	int tmp_sz = 1;
+
 	int last = array->data[0];
-	for (int i = 1; i < array->size; ) {
-		if (array->data[i] == last) {
-			array->data[i] = array->data[--array->size];
-		} else {
-			++i;
+	for (int i = 1; i < array->size; ++i) {
+		if (array->data[i] != last) {
+			tmp[tmp_sz++] = array->data[i];
+			last = array->data[i];
 		}
 	}
+
+	memcpy(array->data, tmp, sizeof(int) * tmp_sz);
+	array->size = tmp_sz;
 	
 	return array;
 }
@@ -144,6 +151,7 @@ _relocate_spr(struct ej_package* pkg, struct picture* pic, struct dtex_img_pos* 
 				sh = src->rect.ymax - src->rect.ymin;
 		int16_t dw = dst->rect.xmax - dst->rect.xmin,
 				dh = dst->rect.ymax - dst->rect.ymin;
+
 		for (int i = 0; i < 4; ++i) {
 			part->src[i*2]   = (part->src[i*2]   - src->rect.xmin) * dw / sw + dst->rect.xmin;
 			part->src[i*2+1] = (part->src[i*2+1] - src->rect.ymin) * dh / sh + dst->rect.ymin;		

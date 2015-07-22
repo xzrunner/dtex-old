@@ -821,7 +821,9 @@ dtexloader_after_do_task(struct dtex_loader* dtex, void (*after_load_func)()) {
 			--tl->size;
 			break;
 		} else {
+			struct load_task* tmp = tl->tasks[curr_idx];
 			tl->tasks[curr_idx] = tl->tasks[--tl->size];
+			tl->tasks[tl->size] = tmp;
 		}
 	}
 

@@ -421,10 +421,15 @@ dtexc2_change_key(struct dtex_c2* dtex, int src_texid, struct dtex_rect* src_rec
 			break;
 		}
 		last = curr;
+
 		curr = curr->next_hash;
 	}
 
+	if (!curr) {
+		return;
+	}
 	assert(curr);
+
 	curr->n.ori_tex.id = dst_texid;
 	curr->n.ori_rect = *dst_rect;
 
