@@ -13,6 +13,7 @@ extern "C"
 #endif // _MSC_VER
 
 struct dtex_rrr;
+struct dtex_package;
 
 struct dtex_rrr* dtex_rrr_create(void* data, int sz, int cap);
 void dtex_rrr_release(struct dtex_rrr*);

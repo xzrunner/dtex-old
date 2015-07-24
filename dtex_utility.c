@@ -6,6 +6,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 // static inline void
 // _traverse_anim_relocate(struct ej_package* pkg, int id, struct dtex_img_pos* src, struct dtex_img_pos* dst, void (*pic_func)(), void* ud) {

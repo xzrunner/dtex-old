@@ -685,7 +685,7 @@ dtex_pvr_write_file(const char* filepath, const uint8_t* buf, uint32_t width, ui
 		fault("Can't open pvr file: %s\n", filepath);
 	}
 
-	size_t sz = width * height * 0.5f;
+	int sz = width * height * 0.5f;
 
 	struct PVRTexHeader header;
 	memset(&header, 0, sizeof(header));
@@ -735,7 +735,7 @@ GLuint
 dtex_pvr_gen_texture(uint8_t* data, int internal_format, int width, int height) {
 	GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
 #ifdef __APPLE__
-	size_t sz = width * height * 8 * internal_format / 16;
+	int sz = width * height * 8 * internal_format / 16;
 	glCompressedTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, sz, data);	
 #else
 	tex = dtex_prepare_texture(GL_TEXTURE0);

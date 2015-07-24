@@ -346,6 +346,9 @@ dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id,
 
 void 
 dtexf_debug_draw() {
+	if (!C1 && !C2 && !C3) {
+		return;
+	}
 //	dtexc1_debug_draw(C1);
 	dtexc2_debug_draw(C2);
 //	dtexc3_debug_draw(C3);
@@ -392,6 +395,8 @@ dtexf_test_pvr(const char* path) {
 	dtexc3_load_tex(C3, &src_tex, BUF, &dst_tex);
 }
 
+#ifndef __ANDROID__
+
 void 
 dtexf_test_etc1(const char* path) {
 	uint32_t width, height;
@@ -423,3 +428,5 @@ dtexf_test_etc1(const char* path) {
 	struct dtex_texture* dst_tex = NULL;
 	dtexc3_load_tex(C3, &src_tex, BUF, &dst_tex);
 }
+
+#endif

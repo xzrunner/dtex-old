@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <string.h>
 
 static inline int
 _compare_width(const void *arg1, const void *arg2) {
@@ -60,7 +61,7 @@ _compare_max_edge(const void *arg1, const void *arg2) {
 }
 
 static inline int 
-_cal_area(struct dp_rect** rects, size_t sz) {
+_cal_area(struct dp_rect** rects, int sz) {
 	int area = 0;
 	for (int i = 0; i < sz; ++i) {
 		struct dp_rect* r = rects[i];
@@ -70,14 +71,14 @@ _cal_area(struct dp_rect** rects, size_t sz) {
 }
 
 struct dtex_vector* 
-dtex_packer_square_multi(struct dp_rect** rects, size_t sz) {
+dtex_packer_square_multi(struct dp_rect** rects, int sz) {
 	static const float AREA_SCALE_LIMIT = 0.55f;
 	//	static const float AREA_LIMIT = 64 * 64;
 	static const int EDGE_LIMIT = 256;
 
 	qsort(rects, sz, sizeof(struct dp_rect*), _compare_width);
 
-	size_t curr_sz = sz;
+	int curr_sz = sz;
 	struct dp_rect* curr_list[sz];
 	memcpy(curr_list, rects, sizeof(struct dp_rect*) * sz);
 
@@ -86,7 +87,7 @@ dtex_packer_square_multi(struct dp_rect** rects, size_t sz) {
 
 	struct dtex_vector* packers = dtex_vector_create(8);
 	while (curr_sz != 0) {
-		size_t success_sz = 0, fail_sz = 0;
+		int success_sz = 0, fail_sz = 0;
 		struct dp_rect *success_list[sz], *fail_list[sz];
 
 		int packer_sz = dtex_vector_size(packers);

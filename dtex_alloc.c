@@ -1,6 +1,7 @@
 #include "dtex_alloc.h"
 
 #include <stdlib.h>
+#include <assert.h>
 
 #ifdef _MSC_VER
 #define EXPORT_DATA

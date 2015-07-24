@@ -13,6 +13,7 @@ extern "C"
 #endif // _MSC_VER
 
 struct dtex_b4r;
+struct dtex_package;
 
 struct dtex_b4r* dtex_b4r_create(void* data, int sz, int cap);
 void dtex_b4r_release(struct dtex_b4r*);
