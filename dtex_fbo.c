@@ -85,5 +85,9 @@ dtex_fbo_bind(struct dtex_fbo* fbo) {
 
 void 
 dtex_fbo_unbind() {
+#ifdef _WIN32
+	glBindFramebuffer(GL_FRAMEBUFFER, 1);
+#else
 	glBindFramebuffer(GL_FRAMEBUFFER, shader_get_fbo());
+#endif
 }
