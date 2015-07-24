@@ -14,7 +14,11 @@
 #include "platform.h"
 
 #include "LzmaDec.h"
+#ifdef _MSC_VER
 #include "Alloc.h"
+#else
+#include "LzAlloc.h"
+#endif // _MSC_VER
 
 #include <stdint.h>
 #include <stdlib.h>
