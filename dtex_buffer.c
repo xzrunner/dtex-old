@@ -14,8 +14,8 @@
 #define MAX_TEX_COUNT 128
 #define MAX_FBO_COUNT 8
 
-#define MAX_TEXTURE_SIZE 4096
-//#define MAX_TEXTURE_SIZE 2048
+//#define MAX_TEXTURE_SIZE 4096
+#define MAX_TEXTURE_SIZE 2048
 
 struct dtex_buffer {
 	GLuint tex_pool[MAX_TEX_COUNT];
