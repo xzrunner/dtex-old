@@ -453,4 +453,13 @@ dtexc2_change_key(struct dtex_c2* dtex, int src_texid, struct dtex_rect* src_rec
 void 
 dtexc2_debug_draw(struct dtex_c2* dtex) {
 	dtex_debug_draw(dtex->textures[0]->tex);
+
+	// const float edge = 0.5f;
+	// int col = 2 / edge;
+	// for (int i = 0; i < 16; ++i) {
+	// 	int x = i % col;
+	// 	int y = i / col;
+	// 	dtex_debug_draw_with_pos(i + 1, 
+	// 		-1 + x * edge, 1 - y * edge - edge, -1 + x * edge + edge, 1 - y * edge);
+	// }
 }
