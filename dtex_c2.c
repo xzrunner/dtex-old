@@ -7,8 +7,6 @@
 #include "dtex_utility.h"
 #include "dtex_rrp.h"
 
-#include "package.h"
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,9 +40,9 @@ struct hash_node {
 };
 
 struct preload_node {
-	struct ej_package* pkg;
-	struct picture_part* part;
-	struct texture tex;
+	struct ej_sprite_pack* ej_pkg;
+	struct ej_pack_quad* ej_quad;
+	struct dtex_raw_tex tex;
 
 	struct dtex_rect rect;
 };
@@ -105,62 +103,68 @@ dtexc2_preload_begin(struct dtex_c2* dtex) {
 
 // todo hash pic for preload_list
 static inline void
-_preload_picture(struct dtex_c2* dtex, struct ej_package* pkg, struct picture* pic, int tex_idx) {
+_preload_picture(struct dtex_c2* dtex, struct ej_sprite_pack* ej_pkg, struct ej_pack_picture* ej_pic, int tex_idx) {
 	if (dtex->loadable == 0 || dtex->preload_size >= PRELOAD_SIZE - 1) {
 		return;
 	}
 
-	assert(pic->n < 0);
-	for (int i = 0; i < -pic->n; ++i) {
+	for (int i = 0; i < ej_pic->n; ++i) {
 		if (dtex->preload_size == PRELOAD_SIZE - 1) {
 			break;
 		}
-		struct picture_part* part = &pic->part[i];
-		if (tex_idx != -1 && part->texid != tex_idx) {
+		struct ej_pack_quad* ej_q = &ej_pic->rect[i];
+		if (tex_idx != -1 && ej_q->texid != tex_idx) {
 			continue;
 		}
 		struct preload_node* pn = dtex->preload_list[dtex->preload_size++];
-		pn->pkg = pkg;
-		pn->part = part;
-		assert(pkg->texture_n > part->texid);
-		pn->tex = pkg->tex[part->texid];
-		dtex_get_pic_src_rect(part->src, &pn->rect);
+		pn->ej_pkg = ej_pkg;
+		pn->ej_quad = ej_q;
+		pn->tex.id = texture_glid(ej_q->texid);
+		texture_size(ej_q->texid, &pn->tex.width, &pn->tex.height);
+		dtex_get_pic_src_rect(ej_q->texture_coord, &pn->rect);
 	}
 }
 
 // todo hash anim for preload_list
 static inline void
-_preload_animation(struct dtex_c2* dtex, struct ej_package* pkg, int spr_id, int tex_idx) {
+_preload_complex(struct dtex_c2* dtex, struct ej_sprite_pack* ej_pkg, int spr_id, int tex_idx) {
 	if (dtex->loadable == 0 || dtex->preload_size >= PRELOAD_SIZE - 1) {
 		return;
 	}
 
-	struct ejoypic* ep = pkg->ep;
-	if (spr_id < 0 || ep->max_id < spr_id) {
+	if (spr_id < 0 || spr_id >= ej_pkg->n || spr_id == ANCHOR_ID) {
 		return;
 	}
-	struct animation* ani = ep->spr[spr_id];
-	if (ani == NULL) {
-		return;
-	}
-
-	if (ani->part_n <= 0) {
-		_preload_picture(dtex, pkg, (struct picture*)ani, tex_idx);
-	} else {
-		for (int i = 0; i < ani->part_n; ++i) {
-			struct animation_part* part = &ani->part[i];
-			if (!part->text) {
-				_preload_animation(dtex, pkg, part->id, tex_idx);
-			}
+	
+	int type = ej_pkg->type[spr_id];
+	if (type == TYPE_PICTURE) {
+		struct ej_pack_picture* pic = (struct ej_pack_picture*)ej_pkg->data[spr_id];
+		_preload_picture(dtex, ej_pkg, pic, tex_idx);
+	} else if (type == TYPE_ANIMATION) {
+		struct ej_pack_animation* anim = (struct ej_pack_animation*)ej_pkg->data[spr_id];		
+		for (int i = 0; i < anim->component_number; ++i) {
+			_preload_complex(dtex, ej_pkg, anim->component[i].id, tex_idx);
+		}
+	} else if (type == TYPE_PARTICLE3D) {
+		struct ej_pack_particle3d* p3d = (struct ej_pack_particle3d*)ej_pkg->data[spr_id];
+		for (int i = 0; i < p3d->cfg.symbol_count;  ++i) {
+			uint32_t id = (uint32_t)p3d->cfg.symbols[i].ud;
+			_preload_complex(dtex, ej_pkg, id, tex_idx);
+		}
+	} else if (type == TYPE_PARTICLE2D) {
+		struct ej_pack_particle2d* p2d = (struct ej_pack_particle2d*)ej_pkg->data[spr_id];
+		for (int i = 0; i < p2d->cfg.symbol_count; ++i) {
+			uint32_t id = (uint32_t)p2d->cfg.symbols[i].ud;
+			_preload_complex(dtex, ej_pkg, id, tex_idx);
 		}
 	}
 }
 
 // todo hash sprite for preload_list
 void 
-dtexc2_preload_sprite(struct dtex_c2* dtex, struct ej_package* pkg, int spr_id, int tex_idx) {
+dtexc2_preload_sprite(struct dtex_c2* dtex, struct ej_sprite_pack* ej_pkg, int spr_id, int tex_idx) {
 	assert(spr_id >= 0);
-	_preload_animation(dtex, pkg, spr_id, tex_idx);
+	_preload_complex(dtex, ej_pkg, spr_id, tex_idx);
 }
 
 static inline int 
@@ -279,15 +283,15 @@ _new_hash_rect(struct dtex_c2* dtex) {
 static inline void
 _set_rect_vb(struct preload_node* pn, struct dtex_node* n, bool rotate) {
 	struct dtex_inv_size src_sz;
-	src_sz.inv_w = pn->tex.width;
-	src_sz.inv_h = pn->tex.height;
+	src_sz.inv_w = 1.0f / pn->tex.width;
+	src_sz.inv_h = 1.0f / pn->tex.height;
 
 	struct dtex_inv_size dst_sz;	
 	dst_sz.inv_w = 1.0f / n->dst_tex->width;
 	dst_sz.inv_h = 1.0f / n->dst_tex->height;
 
 	int rotate_times = rotate ? 1 : 0;
-	dtex_relocate_pic_part(pn->part->src, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb, n->dst_vb);
+	dtex_relocate_pic_part(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb, n->dst_vb);
 }
 
 static inline void
@@ -303,7 +307,7 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 	// rrp
 	struct rrp_picture* rrp_pic = NULL;
 	if (pn->rect.xmin < 0) {
-		struct dtex_rrp* rrp = dtexloader_query_rrp(loader, pn->pkg);
+		struct dtex_rrp* rrp = dtexloader_query_rrp(loader, pn->ej_pkg);
 		if (rrp == NULL) {
 			return;
 		}
@@ -345,11 +349,7 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 		return;
 	}
 	assert(tex);
-	hn->n.ori_tex.id = pn->tex.id;
-	hn->n.ori_tex.id_alpha = pn->tex.id_alpha;
-	hn->n.ori_tex.width = 1 / pn->tex.width;
-	hn->n.ori_tex.height = 1 / pn->tex.height;
-	hn->n.ori_tex.format = pn->tex.format;
+	hn->n.ori_tex = pn->tex;
 	hn->n.ori_rect = pn->rect;
 	hn->n.dst_tex = tex;
 	hn->n.dst_pos = pos;

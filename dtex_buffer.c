@@ -1,9 +1,9 @@
 #include "dtex_buffer.h"
 #include "dtex_fbo.h"
 #include "dtex_gl.h"
+#include "dtex_file.h"
 
 #include "opengl.h"
-#include "platform.h"
 
 #include <stdint.h>
 #include <string.h>

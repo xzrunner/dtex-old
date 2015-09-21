@@ -8,6 +8,8 @@ extern "C"
 
 #include "opengl.h"
 
+#include "ejoy2d.h"
+
 #include <stdbool.h>
 
 #define DTEX_PACK_TEX_SZ 16
@@ -19,6 +21,7 @@ struct dtex_raw_tex {
 	GLuint id;
 	GLuint id_alpha;	// for etc1
 	int width, height;
+	// todo inv ?
 	int format;
 };
 
@@ -30,7 +33,7 @@ struct dtex_package {
 	int tex_size;
 	float tex_scale;
 
-	struct ej_package* ej_pkg;		// epd
+	struct ej_sprite_pack* ej_pkg;	// epe
 	struct dtex_rrp* rrp_pkg;		// regular rect pack
 	struct dtex_pts* pts_pkg;		// picture triangles strip
 	struct dtex_rrr* rrr_pkg;		// regular rect raw (only for pvr)
@@ -52,12 +55,12 @@ void dtexloader_unload_tex(struct dtex_raw_tex*);
 struct dtex_package* dtexloader_get_pkg(struct dtex_loader*, int idx);
 
 bool dtexloader_has_task(struct dtex_loader*);
-void dtexloader_load_spr2task(struct dtex_loader*, struct ej_package*, struct dtex_rect**, int id, const char* path);
+void dtexloader_load_spr2task(struct dtex_loader*, struct ej_sprite_pack*, struct dtex_rect**, int id, const char* path);
 void dtexloader_do_task(struct dtex_loader*, void (*on_load_func)());
 void dtexloader_after_do_task(struct dtex_loader*, void (*after_load_func)());
 
-struct dtex_rrp* dtexloader_query_rrp(struct dtex_loader*, struct ej_package*);
-struct dtex_pts* dtexloader_query_pts(struct dtex_loader*, struct ej_package*);
+struct dtex_rrp* dtexloader_query_rrp(struct dtex_loader*, struct ej_sprite_pack*);
+struct dtex_pts* dtexloader_query_pts(struct dtex_loader*, struct ej_sprite_pack*);
 
 #endif // dynamic_texture_loader_h
 

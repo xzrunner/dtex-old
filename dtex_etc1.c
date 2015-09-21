@@ -1,10 +1,10 @@
 #include "dtex_etc1.h"
 #include "dtex_math.h"
 #include "dtex_gl.h"
+#include "dtex_file.h"
 
 #include "rg_etc1_for_c.h"
 #include "fault.h"
-#include "platform.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -76,14 +76,14 @@ struct PKMHeader {
 
 uint8_t* 
 dtex_etc1_read_file(const char* filepath, uint32_t* width, uint32_t* height) {
-	struct FileHandle* file = pf_fileopen(filepath, "rb");
+	struct dtex_file* file = dtex_file_open(filepath, "rb");
 	if (file == NULL) {
 		assert(0);
 		fault("Can't open etc1 file: %s\n", filepath);
 	}
 	
 	struct PKMHeader header;
-	pf_fileread(file, &header, sizeof(header));
+	dtex_file_read(file, &header, sizeof(header));
 
 	*width = (header.paddedWidthMSB << 8) | header.paddedWidthLSB,
 	*height = (header.paddedHeightMSB << 8) | header.paddedHeightLSB;
@@ -92,10 +92,10 @@ dtex_etc1_read_file(const char* filepath, uint32_t* width, uint32_t* height) {
 	if (buf == NULL) {
 		fault("Fail to malloc (dtex_etc1_read_file)");
 	}
-	if (pf_fileread(file, buf, sz) != 1) {
+	if (dtex_file_read(file, buf, sz) != 1) {
 		fault("Invalid uncompress data source\n");
 	}
-	pf_fileclose(file);	
+	dtex_file_close(file);	
 
 	return buf;
 }

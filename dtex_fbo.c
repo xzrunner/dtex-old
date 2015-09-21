@@ -1,9 +1,9 @@
 #include "dtex_fbo.h"
 #include "dtex_texture.h"
+#include "dtex_file.h"
 
 #include "opengl.h"
 #include "shader.h"
-#include "platform.h"
 
 #include <stdlib.h>
 #include <stdio.h>

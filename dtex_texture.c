@@ -2,9 +2,9 @@
 #include "dtex_buffer.h"
 #include "dtex_packer.h"
 #include "dtex_fbo.h"
+#include "dtex_file.h"
 
 #include "opengl.h"
-#include "platform.h"
 #include "shader.h"
 
 #include <assert.h>

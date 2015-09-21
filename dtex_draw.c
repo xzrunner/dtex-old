@@ -10,8 +10,6 @@
 #include "dtex_pts.h"
 
 #include "shader.h"
-#include "ejoy2d.h"
-#include "package.h"
 #include "sprite.h"
 
 #include <assert.h>
@@ -53,7 +51,7 @@ dtex_draw_rrp(struct dtex_raw_tex* src, struct rrp_picture* pic,
     float inv_dw = 1.0f / pic->w,
           inv_dh = 1.0f / pic->h;
 	for (int i = 0; i < pic->part_sz; ++i) {
-		struct rrp_part* part = &pic->part[i];
+		struct rrp_part* part = &pic->rect[i];
 
 		float vb[16];
 		// texture coords
@@ -237,7 +235,7 @@ dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct r
 	_before_fbo_draw(buf, src, dst, &fbo, &scr);
 
 	for (int i = 0; i < pic->part_sz; ++i) {
-		struct rrp_part* part = &pic->part[i];
+		struct rrp_part* part = &pic->rect[i];
 
 		// todo
 		struct dtex_rect src_rect;

@@ -2,8 +2,6 @@
 #include "dtex_typedef.h"
 #include "dtex_c2.h"
 
-#include "package.h"
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,7 +18,7 @@
 // 	}
 // 
 // 	if (ani->part_n <= 0) {
-// 		pic_func(pkg, (struct picture*)ani, src, dst, ud);
+// 		pic_func(pkg, (struct ej_pack_picture*)ani, src, dst, ud);
 // 	} else {
 // 		for (int i = 0; i < ani->part_n; ++i) {
 // 			struct animation_part* part = &ani->part[i];
@@ -43,7 +41,7 @@ _traverse_array_relocate(struct ej_package* pkg, struct int_array* array, struct
 		if (ani == NULL) {
 			continue;
 		}
-		pic_func(pkg, (struct picture*)ani, src, dst, ud);
+		pic_func(pkg, (struct ej_pack_picture*)ani, src, dst, ud);
 	}
 }
 
@@ -131,16 +129,16 @@ dtex_get_picture_id_set(struct ej_package* pkg, int id) {
 }
 
 static inline void
-_relocate_spr(struct ej_package* pkg, struct picture* pic, struct dtex_img_pos* src, struct dtex_img_pos* dst, void* ud) {
+_relocate_spr(struct ej_package* pkg, struct ej_pack_picture* pic, struct dtex_img_pos* src, struct dtex_img_pos* dst, void* ud) {
 	assert(pic->n < 0);
 	for (int i = 0; i < -pic->n; ++i) {
-		struct picture_part* part = &pic->part[i];
+		struct pack_quad* part = &pic->rect[i];
 		assert(pkg->texture_n > part->texid);
 		int* texid = (int*)ud;
 		if (part->texid != *texid) {
 			continue;
 		}
-		struct texture* tex = &pkg->tex[part->texid];
+		struct ej_texture* tex = &pkg->tex[part->texid];
 		if (tex->id != src->id) {
 			continue;
 		}
@@ -161,17 +159,17 @@ _relocate_spr(struct ej_package* pkg, struct picture* pic, struct dtex_img_pos* 
 }
 
 static inline void
-_relocate_tex(struct ej_package* pkg, struct picture* pic, struct dtex_img_pos* src, struct dtex_img_pos* dst, void* ud) {
+_relocate_tex(struct ej_package* pkg, struct ej_pack_picture* pic, struct dtex_img_pos* src, struct dtex_img_pos* dst, void* ud) {
 	assert(pic->n < 0);
 	for (int i = 0; i < -pic->n; ++i) {
-		struct picture_part* part = &pic->part[i];
+		struct pack_quad* part = &pic->rect[i];
 		assert(pkg->texture_n > part->texid);
 		int* texid = (int*)ud;
 		if (part->texid != *texid) {
 			continue;
 		}
 
-		struct texture* tex = &pkg->tex[part->texid];
+		struct ej_texture* tex = &pkg->tex[part->texid];
 		if (tex->id == src->id) {
 			assert(tex->id_alpha == src->id_alpha
 				&& tex->width == src->inv_width
@@ -191,13 +189,13 @@ dtex_relocate_spr(struct ej_package* pkg, struct int_array* array, int tex_idx, 
 }
 
 static inline void
-_relocate_c2_key(struct ej_package* pkg, struct picture* pic, struct dtex_img_pos* src, struct dtex_img_pos* dst, void* ud) {
+_relocate_c2_key(struct ej_package* pkg, struct ej_pack_picture* pic, struct dtex_img_pos* src, struct dtex_img_pos* dst, void* ud) {
 	assert(pic->n < 0);
 	struct dtex_c2* c2 = (struct dtex_c2*)ud;
 	for (int i = 0; i < -pic->n; ++i) {
-		struct picture_part* part = &pic->part[i];
+		struct pack_quad* part = &pic->rect[i];
 		assert(pkg->texture_n > part->texid);
-		struct texture* tex = &pkg->tex[part->texid];
+		struct ej_texture* tex = &pkg->tex[part->texid];
 		if (tex->id == src->id) {
 			assert(tex->id_alpha == src->id_alpha
 				&& tex->width == src->inv_width
@@ -225,7 +223,7 @@ dtex_relocate_c2_key(struct dtex_c2* c2, struct ej_package* pkg, struct int_arra
 	_traverse_array_relocate(pkg, array, src, dst, &_relocate_c2_key, c2);
 }
 
-void dtex_relocate_pic_part(float part_src[8], struct dtex_inv_size* src_sz, struct dtex_rect* src_rect, 
+void dtex_relocate_pic_part(uint16_t part_src[8], struct dtex_inv_size* src_sz, struct dtex_rect* src_rect, 
 	struct dtex_inv_size* dst_sz, struct dtex_rect* dst_rect, int rotate, float trans_vb[16], float dst_vb[8]) {
 	float src_xmin = src_rect->xmin * src_sz->inv_w,
 	      src_xmax = src_rect->xmax * src_sz->inv_w,
@@ -333,7 +331,7 @@ void dtex_relocate_pic_part(float part_src[8], struct dtex_inv_size* src_sz, str
 }
 
 void 
-dtex_get_pic_src_rect(float* src, struct dtex_rect* rect) {
+dtex_get_pic_src_rect(uint16_t* src, struct dtex_rect* rect) {
 	rect->xmin = rect->ymin = INT16_MAX;
 	rect->xmax = rect->ymax = 0;
 	for (int i = 0; i < 4; ++i) {

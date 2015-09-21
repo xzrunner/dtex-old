@@ -7,9 +7,11 @@
 #include "dtex_rrp.h"
 #include "dtex_rrr.h"
 #include "dtex_b4r.h"
+#include "dtex_file.h"
+#include "dtex_math.h"
+#include "dtex_texture_pool.h"
 
-#include "package.h"
-#include "platform.h"
+#include "ejoy2d.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -42,7 +44,7 @@ struct hash_node {
 };
 
 struct preload_node {
-	struct dtex_package* pkg;
+	struct dtex_package* ej_pkg;
 	int raw_tex_idx;
 
 	float scale;
@@ -93,7 +95,7 @@ void dtexc3_release(struct dtex_c3* dtex, struct dtex_buffer* buf) {
 void 
 dtexc3_preload_pkg(struct dtex_c3* dtex, struct dtex_package* pkg, float scale) {
 	for (int i = 0; i < dtex->preload_size; ++i) {
-		if (pkg == dtex->preload_list[i]->pkg) {
+		if (pkg == dtex->preload_list[i]->ej_pkg) {
 			return;
 		}
 	}
@@ -101,7 +103,7 @@ dtexc3_preload_pkg(struct dtex_c3* dtex, struct dtex_package* pkg, float scale) 
 	for (int i = 0; i < pkg->tex_size; ++i) {
 		assert(dtex->preload_size <= MAX_TEX_SIZE);
 		struct preload_node* n = dtex->preload_list[dtex->preload_size++];
-		n->pkg = pkg;
+		n->ej_pkg = pkg;
 		n->raw_tex_idx = i;
 		n->scale = scale;
 	}
@@ -114,7 +116,7 @@ _compare_preload_name(const void *arg1, const void *arg2) {
 	node1 = *((struct preload_node**)(arg1));
 	node2 = *((struct preload_node**)(arg2));
 
-	int cmp = strcmp(node1->pkg->name, node2->pkg->name);
+	int cmp = strcmp(node1->ej_pkg->name, node2->ej_pkg->name);
 	if (cmp == 0) {
 		return node1->raw_tex_idx < node2->raw_tex_idx;
 	} else {
@@ -129,10 +131,10 @@ _compare_preload_length(const void *arg1, const void *arg2) {
 	node1 = *((struct preload_node**)(arg1));
 	node2 = *((struct preload_node**)(arg2));
 
-	int w1 = node1->pkg->textures[node1->raw_tex_idx].width,
-		h1 = node1->pkg->textures[node1->raw_tex_idx].height;
-	int w2 = node2->pkg->textures[node2->raw_tex_idx].width,
-		h2 = node2->pkg->textures[node2->raw_tex_idx].height;	
+	int w1 = node1->ej_pkg->textures[node1->raw_tex_idx].width,
+		h1 = node1->ej_pkg->textures[node1->raw_tex_idx].height;
+	int w2 = node2->ej_pkg->textures[node2->raw_tex_idx].width,
+		h2 = node2->ej_pkg->textures[node2->raw_tex_idx].height;	
 
 	int16_t long1, long2, short1, short2;
 	if (w1 > h1) {
@@ -170,7 +172,7 @@ _unique_preload_list(struct dtex_c3* dtex) {
 	for (int i = 1; i < dtex->preload_size; ++i) {
 		struct preload_node* last = unique[unique_size-1];
 		struct preload_node* curr = dtex->preload_list[i];
-		if (strcmp(curr->pkg->name, last->pkg->name) == 0 && curr->raw_tex_idx == last->raw_tex_idx) {
+		if (strcmp(curr->ej_pkg->name, last->ej_pkg->name) == 0 && curr->raw_tex_idx == last->raw_tex_idx) {
 			;
 		} else {
 			unique[unique_size] = curr;
@@ -208,8 +210,8 @@ _hash_origin_pack(const char* name) {
 
 static inline bool
 _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node, struct dtex_texture* texture) {
-	int w = node->pkg->textures[node->raw_tex_idx].width * node->scale * scale,
-		h = node->pkg->textures[node->raw_tex_idx].height * node->scale * scale;
+	int w = node->ej_pkg->textures[node->raw_tex_idx].width * node->scale * scale,
+		h = node->ej_pkg->textures[node->raw_tex_idx].height * node->scale * scale;
 	struct dp_pos* pos = NULL;
 	// todo padding
 	if (w >= h) {
@@ -222,7 +224,7 @@ _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node,
 	}
 
 	struct hash_node* hn = _new_hash_rect(dtex);
-	hn->n.pkg = node->pkg;
+	hn->n.pkg = node->ej_pkg;
 	hn->n.raw_tex_idx = node->raw_tex_idx;
 	hn->n.dst_tex = texture;
 	hn->n.dst_rect = pos->r;
@@ -232,7 +234,7 @@ _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node,
 	}
 	pos->ud = &hn->n;
 
-	unsigned int idx = _hash_origin_pack(node->pkg->name);
+	unsigned int idx = _hash_origin_pack(node->ej_pkg->name);
 	hn->next_hash = dtex->hash[idx];
 	dtex->hash[idx] = hn;	
 
@@ -362,8 +364,8 @@ _alloc_texture(struct dtex_c3* dtex, struct dtex_buffer* buf) {
 	float area = 0;
 	for (int i = 0; i < dtex->preload_size; ++i) {
 		struct preload_node* n = dtex->preload_list[i];
-		int w = n->pkg->textures[n->raw_tex_idx].width * n->scale,
-			h = n->pkg->textures[n->raw_tex_idx].height * n->scale;
+		int w = n->ej_pkg->textures[n->raw_tex_idx].width * n->scale,
+			h = n->ej_pkg->textures[n->raw_tex_idx].height * n->scale;
 		area += w * h;
 	}
 	area *= TOT_AREA_SCALE;	
@@ -474,41 +476,36 @@ dtexc3_preload_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_b
 }
 
 static inline void
-_relocate_epd(struct dtex_c3* dtex, struct dtex_package* pkg) {
-	pkg->ej_pkg->texture_n = pkg->tex_size;
-	for (int i = 0; i < pkg->tex_size; ++i) {
-		pkg->ej_pkg->tex[i].id = 0;
-	}
-
+_relocate_epe(struct dtex_c3* dtex, struct dtex_package* pkg) {
 	unsigned int idx = _hash_origin_pack(pkg->name);
 	struct hash_node* pkg_hn = dtex->hash[idx];
 
-	struct ejoypic* ep = pkg->ej_pkg->ep;
-	for (int id = 0; id < ep->max_id; ++id) {
-		struct animation * ani = ep->spr[id];
-		if (ani == NULL || ani->part_n > 0) {
+	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
+	for (int id = 0; id < ej_pkg->n; ++id) {
+		int type = ej_pkg->type[id]; 
+		if (type != TYPE_PICTURE) {
 			continue;
 		}
 
-		struct picture* pic = (struct picture*)ani;
-		for (int j = 0; j < -pic->n; ++j) {
-			struct picture_part* part = &pic->part[j];
-			struct dtex_raw_tex* t = &pkg->textures[part->texid];
+		struct ej_pack_picture* ej_pic = (struct ej_pack_picture*)ej_pkg->data[id];
+		for (int j = 0; j < ej_pic->n; ++j) {
+			struct pack_quad* ej_q = &ej_pic->rect[j];
+			struct dtex_raw_tex* t = &pkg->textures[ej_q->texid];
 			// find dtex_node
 			struct dtex_node* to_node = NULL;
 			struct hash_node* hn = pkg_hn;
 			while (hn) {
 				struct dtex_node* n = &hn->n;
-				if (strcmp(pkg->name, n->pkg->name) == 0 && part->texid == n->raw_tex_idx) {
+				if (strcmp(pkg->name, n->pkg->name) == 0 && ej_q->texid == n->raw_tex_idx) {
 					to_node = n;
 					break;
 				}
 				hn = hn->next_hash;
 			}
 			assert(to_node);
+
 			// map part to dest texture
-			assert(part->texid < pkg->ej_pkg->texture_n);
-			struct texture* ori_tex = &pkg->ej_pkg->tex[part->texid];
+			struct dtex_raw_tex* ori_tex = dtex_pool_query(ej_q->texid);
 			if (ori_tex->id == 0) {
 				ori_tex->id = to_node->dst_tex->tex;
 				ori_tex->id_alpha = 0;
@@ -518,10 +515,10 @@ _relocate_epd(struct dtex_c3* dtex, struct dtex_package* pkg) {
 			}
 			struct dtex_rect* to_rect = &to_node->dst_rect;
 			for (int i = 0; i < 4; ++i) {
-				float x = (float)part->src[i*2] / t->width;
-				float y = (float)part->src[i*2+1] / t->height;
-				part->src[i*2] = to_rect->xmin + (to_rect->xmax - to_rect->xmin) * x;
-				part->src[i*2+1] = to_rect->ymin + (to_rect->ymax - to_rect->ymin) * y;
+				float x = (float)ej_q->texture_coord[i*2] / t->width;
+				float y = (float)ej_q->texture_coord[i*2+1] / t->height;
+				ej_q->texture_coord[i*2] = to_rect->xmin + (to_rect->xmax - to_rect->xmin) * x;
+				ej_q->texture_coord[i*2+1] = to_rect->ymin + (to_rect->ymax - to_rect->ymin) * y;
 			}
 		}
 	}
@@ -563,7 +560,7 @@ dtexc3_relocate(struct dtex_c3* dtex, struct dtex_package* pkg) {
 		dtex_b4r_relocate(pkg->b4r_pkg, pkg);
 	}
 
-	_relocate_epd(dtex, pkg);
+	_relocate_epe(dtex, pkg);
 
 	if (pkg->rrp_pkg) {
 		_relocate_rrp(dtex, pkg);

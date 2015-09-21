@@ -6,10 +6,6 @@
 #include "dtex_fbo.h"
 #include "dtex_draw.h"
 
-#include "eploader.h"
-#include "sprite.h"
-#include "package.h"
-#include "shader.h"
 #include "ejoy2d.h"
 
 #include <assert.h>
@@ -27,7 +23,7 @@ struct dtex_node {
 	struct animation* ani;
 	int action;
 	int frame;
-	struct ej_rect rect;
+	struct dtex_rect rect;
 
 	// dest info
 	float vb[8];
@@ -99,11 +95,10 @@ dtexc1_release(struct dtex_c1* dtex, struct dtex_buffer* buf) {
 }
 
 static inline void
-_get_picture_region(struct ej_package* pkg, struct picture* pic, int* mat, void* ud) {
-	assert(pic->n < 0);
-	struct ej_rect* rect = (struct ej_rect*)ud;	
-	for (int i = 0; i < -pic->n; ++i) {
-		int32_t* vb = pic->part[i].screen;
+_get_picture_region(struct ej_sprite_pack* ej_pkg, struct ej_pack_picture* ej_pic, int* mat, void* ud) {
+	struct dtex_rect* rect = (struct dtex_rect*)ud;	
+	for (int i = 0; i < ej_pic->n; ++i) {
+		int32_t* vb = ej_pic->rect[i].screen_coord;
 		if (mat) {
 			for (int i = 0; i < 4; ++i) {
 				int xx = vb[i*2],
@@ -138,18 +133,17 @@ struct draw_pic_params {
 };
 
 static inline void
-_draw_picture(struct ej_package* pkg, struct picture* pic, int* mat, void* ud) {
-	assert(pic->n < 0);
+_draw_picture(struct ej_sprite_pack* ej_pkg, struct ej_pack_picture* ej_pic, int* mat, void* ud) {
 	struct draw_pic_params* params = (struct draw_pic_params*)ud;	
-	for (int i = 0; i < -pic->n; ++i) {
-		struct picture_part* part = &pic->part[i];
-		assert(pkg->texture_n > part->texid);
-		struct texture* t = &pkg->tex[part->texid];
+	for (int i = 0; i < ej_pic->n; ++i) {
+		struct ej_pack_quad* ej_q = &ej_pic->rect[i];
+		assert(ej_pkg->texture_n > ej_q->texid);
+		struct ej_texture* t = &ej_pkg->tex[ej_q->texid];
 		float vb[16];
 		if (mat) {
 			for (int i = 0; i < 4; ++i) {
-				int xx = part->screen[i*2],
-					yy = part->screen[i*2+1];
+				int xx = ej_q->screen_coord[i*2],
+					yy = ej_q->screen_coord[i*2+1];
 				int dx = (xx * mat[0] + yy * mat[2]) / 1024 + mat[4],
 					dy = (xx * mat[1] + yy * mat[3]) / 1024 + mat[5];
 				int rx = params->x + dx,
@@ -157,20 +151,20 @@ _draw_picture(struct ej_package* pkg, struct picture* pic, int* mat, void* ud) {
 				vb[i*4+0]= rx * params->tex_wscale - 1.0f;
 				//vb[i*4+1]= -ry * params->tex_hscale + 1.0f;
                 vb[i*4+1]= ry * params->tex_hscale - 1.0f;
-				vb[i*4+2] = t->width * part->src[i*2];
-				vb[i*4+3] = t->height * part->src[i*2+1];
+				vb[i*4+2] = t->width * ej_q->texture_coord[i*2];
+				vb[i*4+3] = t->height * ej_q->texture_coord[i*2+1];
 			}
 		} else {
 			for (int i = 0; i < 4; ++i) {
-				int xx = part->screen[i*2],
-					yy = part->screen[i*2+1];
+				int xx = ej_q->screen_coord[i*2],
+					yy = ej_q->screen_coord[i*2+1];
 				int rx = params->x + xx,
 					ry = params->y + yy;
 				vb[i*4+0]= rx * params->tex_wscale - 1.0f;
 				//vb[i*4+1]= -ry * params->tex_hscale + 1.0f;
                 vb[i*4+1]= ry * params->tex_hscale - 1.0f;
-				vb[i*4+2] = t->width * part->src[i*2];
-				vb[i*4+3] = t->height * part->src[i*2+1];
+				vb[i*4+2] = t->width * ej_q->texture_coord[i*2];
+				vb[i*4+3] = t->height * ej_q->texture_coord[i*2+1];
 			}
 		}
 		if (params->is_rotated) {
@@ -188,14 +182,14 @@ _draw_picture(struct ej_package* pkg, struct picture* pic, int* mat, void* ud) {
 }
 
 static inline void
-_traverse_animation(struct ej_package* pkg, struct animation* ani, int action, int frame, int* mat, void (*pic_func)(), void* ud) {
+_traverse_animation(struct ej_sprite_pack* ej_pkg, struct animation* ani, int action, int frame, int* mat, void (*pic_func)(), void* ud) {
 	if (ani == NULL || ani->part_n == 0) {
 		return;
 	}
 
 	// draw picture
 	if (ani->part_n < 0) {
-		pic_func(pkg, (struct picture*)ani, mat, ud);
+		pic_func(ej_pkg, (struct ej_pack_picture*)ani, mat, ud);
 		return;
 	}
 	// draw children anim
@@ -204,7 +198,7 @@ _traverse_animation(struct ej_package* pkg, struct animation* ani, int action, i
 		return;
 	}
 	struct animation_frame* af = &act->frame[((unsigned int)frame) % act->n];
-	struct ejoypic* ep = pkg->ep;
+	struct ejoypic* ep = ej_pkg->ep;
 	for (int i = 0; i < af->n; ++i) {
 		struct animation_component* c = &af->c[i];
 		struct animation_part* part = &ani->part[c->index];
@@ -228,14 +222,14 @@ _traverse_animation(struct ej_package* pkg, struct animation* ani, int action, i
                 matrix_mul(tmp, c->mat, mat);
                 sub_m = tmp;
             }
-			_traverse_animation(pkg, subani, 0, frame, sub_m, pic_func, ud);
+			_traverse_animation(ej_pkg, subani, 0, frame, sub_m, pic_func, ud);
 		}
 	}
 }
 
-static inline struct ej_rect
-_get_animation_region(struct ej_package* pkg, struct animation* ani, int action) {
-	struct ej_rect rect;
+static inline struct dtex_rect
+_get_animation_region(struct ej_sprite_pack* pkg, struct animation* ani, int action) {
+	struct dtex_rect rect;
 	rect.xmin = rect.ymin = INT_MAX;
 	rect.xmax = rect.ymax = INT_MIN;
 	if (ani->part_n < 0) {
@@ -250,8 +244,8 @@ _get_animation_region(struct ej_package* pkg, struct animation* ani, int action)
 }
 
 static inline void
-_draw_animation(struct dtex_c1* dtex, struct ej_package* pkg, struct animation* ani, int action, int frame, 
-				struct dp_pos* pos, struct ej_rect* rect, bool need_clear, struct dtex_fbo* fbo) {
+_draw_animation(struct dtex_c1* dtex, struct ej_sprite_pack* pkg, struct animation* ani, int action, int frame, 
+				struct dp_pos* pos, struct dtex_rect* rect, bool need_clear, struct dtex_fbo* fbo) {
 	struct dtex_texture* tex = dtex->texture;
 
 	dtex_fbo_bind_texture(fbo, tex);
@@ -318,14 +312,14 @@ _new_hash_node(struct dtex_c1* dtex) {
 }
 
 void 
-dtexc1_load_anim(struct dtex_c1* dtex, struct ej_package* pkg, struct animation* ani, int action) {
+dtexc1_load_anim(struct dtex_c1* dtex, struct ej_sprite_pack* pkg, struct animation* ani, int action) {
 	struct hash_node* hn = _query_anim(dtex, ani, action);
 	if (hn != NULL) {
 		return;
 	}
 
 	// insert to packer
-	struct ej_rect rect = _get_animation_region(pkg, ani, action);
+	struct dtex_rect rect = _get_animation_region(pkg, ani, action);
 	int w = rect.xmax - rect.xmin,
 		h = rect.ymax - rect.ymin;
 	struct dtex_texture* tex = dtex->texture;
@@ -378,7 +372,7 @@ dtexc1_load_anim(struct dtex_c1* dtex, struct ej_package* pkg, struct animation*
 }
 
 bool 
-dtexc1_draw_anim(struct dtex_c1* dtex, struct ej_package* pkg, struct animation* ani, int action, int frame, struct draw_params* params) {
+dtexc1_draw_anim(struct dtex_c1* dtex, struct ej_sprite_pack* pkg, struct animation* ani, int action, int frame, struct draw_params* params) {
 	struct hash_node* hn = _query_anim(dtex, ani, action);
 	// need dtexc1_load_anim() first
 	if (hn == NULL) {
@@ -400,7 +394,7 @@ dtexc1_draw_anim(struct dtex_c1* dtex, struct ej_package* pkg, struct animation*
 	}
     
 	float vb[16];
-	struct ej_rect* rect = &hn->n.rect;
+	struct dtex_rect* rect = &hn->n.rect;
 	vb[0] = rect->xmin * 16; vb[1] = rect->ymin * 16;
 	vb[4] = rect->xmin * 16; vb[5] = rect->ymax * 16;
 	vb[8] = rect->xmax * 16; vb[9] = rect->ymax * 16;

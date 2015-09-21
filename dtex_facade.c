@@ -15,9 +15,8 @@
 #include "dtex_packer.h"
 #include "dtex_sprite.h"
 #include "dtex_gl.h"
+#include "dtex_file.h"
 
-#include "package.h"
-#include "platform.h"
 #include "sprite.h"
 #include "fault.h"
 
@@ -188,7 +187,7 @@ _get_pic_ori_rect(int ori_w, int ori_h, float* ori_vb, struct dtex_rect* rect) {
 }
 
 float* 
-dtexf_c2_lookup_texcoords(struct texture* ori_tex, float* ori_vb, int* dst_tex) {
+dtexf_c2_lookup_texcoords(struct ej_texture* ori_tex, float* ori_vb, int* dst_tex) {
 	if (C2 == NULL) {
 		return NULL;
 	}
@@ -200,7 +199,7 @@ dtexf_c2_lookup_texcoords(struct texture* ori_tex, float* ori_vb, int* dst_tex) 
 }
 
 void 
-dtexf_c2_lookup_node(struct texture* ori_tex, float* ori_vb, 
+dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, 
 	struct dtex_texture** out_tex, struct dp_pos** out_pos) {
 
 	if (C2 == NULL) {
@@ -244,7 +243,7 @@ dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* pat
 static inline void
 _prepare_trans_pos(struct ej_package* pkg, struct dtex_rect* rect, int tex_idx, struct dtex_raw_tex* dst_tex, struct dtex_img_pos* ori_pos, struct dtex_img_pos* dst_pos) {
 	assert(tex_idx < pkg->texture_n);
-	struct texture* src_tex = &pkg->tex[tex_idx];
+	struct ej_texture* src_tex = &pkg->tex[tex_idx];
 	ori_pos->id = src_tex->id;
 	ori_pos->id_alpha = src_tex->id_alpha;
 	ori_pos->inv_width = src_tex->width;
@@ -306,7 +305,7 @@ dtexf_update() {
 }
 
 bool 
-dtexf_draw_rrp(struct ej_package* pkg, struct texture* tex, int id, 
+dtexf_draw_rrp(struct ej_package* pkg, struct ej_texture* tex, int id, 
 	struct draw_params* params, const int32_t part_screen[8]) {
 
 	struct dtex_rrp* rrp = dtexloader_query_rrp(LOADER, pkg);

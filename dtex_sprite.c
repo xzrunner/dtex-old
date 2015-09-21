@@ -2,18 +2,17 @@
 #include "dtex_texture.h"
 #include "dtex_packer.h"
 
-#include "package.h"
 #include "sprite.h"
 
 #include <stdlib.h>
 
 struct ej_sprite* 
 dtex_sprite_create(struct dtex_texture* dst_tex, struct dp_pos* pos) {
-	size_t pkg_sz = sizeof(struct ej_package) + sizeof(struct texture);
-	size_t pic_sz = sizeof(struct picture) + sizeof(struct picture_part);
+	size_t pkg_sz = sizeof(struct ej_package) + sizeof(struct ej_texture);
+	size_t pic_sz = sizeof(struct ej_pack_picture) + sizeof(struct pack_quad);
 	struct ej_sprite* spr = (struct ej_sprite*)malloc(sizeof(*spr) + pkg_sz + pic_sz);
 	struct ej_package* pkg = (struct ej_package*)(spr + 1);
-	struct picture* pic = (struct picture*)((uint8_t*)pkg + pkg_sz);
+	struct ej_pack_picture* pic = (struct ej_pack_picture*)((uint8_t*)pkg + pkg_sz);
 
 	// fill pkg
 	pkg->name = NULL;
@@ -26,7 +25,7 @@ dtex_sprite_create(struct dtex_texture* dst_tex, struct dp_pos* pos) {
 
 	// fill pic
 	pic->n = -1;
-	struct picture_part* pp = pic->part;
+	struct pack_quad* pp = pic->rect;
 	pp->texid = 0;
 
 	pp->src[0] = pos->r.xmin;

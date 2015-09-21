@@ -8,10 +8,11 @@
 #include "dtex_math.h"
 #include "dtex_gl.h"
 #include "dtex_etc1.h"
+#include "dtex_file.h"
 
-#include "package.h"
+#include "spritepack.h"
+
 #include "fault.h"
-#include "platform.h"
 
 #include "LzmaDec.h"
 #ifdef _MSC_VER
@@ -51,7 +52,7 @@ enum {
 struct load_task {
 	bool is_epp;
 
-	struct ej_package* pkg;
+	struct ej_sprite_pack* ej_pkg;
 	struct dtex_rect* rect;
 	int spr_id;
 	int tex_idx;
@@ -205,7 +206,7 @@ static inline void
 _load_epd(uint8_t* buffer, size_t sz, struct dtex_package* pkg) {
 	assert(pkg->ej_pkg == NULL);
 
-	struct ej_package* ej_pkg = malloc(sizeof(*pkg) + sizeof(struct texture) * MAX_TEX_PER_PKG);
+	struct ej_sprite_pack* ej_pkg = malloc(sizeof(*pkg) + sizeof(struct ej_texture) * MAX_TEX_PER_PKG);
 	ej_pkg->name = NULL;
 	ej_pkg->texture_n = 0;
 	ej_pkg->ep = NULL;
@@ -465,7 +466,7 @@ struct unpack2task_params {
 
 	bool is_epp;
 
-	struct ej_package* pkg;	
+	struct ej_sprite_pack* ej_pkg;	
 	struct dtex_rect** rect;
 	int spr_id;
 };
@@ -481,7 +482,7 @@ _unpack_memory_to_task(int block_idx, uint8_t* buffer, size_t sz, void* ud) {
 	task->status = LT_NULL;
 
 	task->is_epp = params->is_epp;
-	task->pkg = params->pkg;
+	task->ej_pkg = params->ej_pkg;
 	task->rect = params->rect[block_idx];
 	task->spr_id = params->spr_id;
 	task->tex_idx = block_idx;
@@ -515,18 +516,18 @@ _buf_reserve(struct dtex_loader* dtex, uint32_t sz) {
 }
 
 static inline int 
-_check_block_count(struct FileHandle* file) {
+_check_block_count(struct dtex_file* file) {
 	int count = 0;
 	for (;;) {
 		int32_t sz = 0;
-		if (pf_fileread(file, &sz, sizeof(sz)) == 0) {
+		if (dtex_file_read(file, &sz, sizeof(sz)) == 0) {
 			return count;
 		}
 		++count;
 		if (sz < 0) {
 			sz = -sz;
 		}
-		pf_fileseek_from_cur(file, sz);
+		dtex_file_seek_from_cur(file, sz);
 	}
 }
 
@@ -551,30 +552,30 @@ struct block {
 };
 
 static inline void
-_unpack_file(struct dtex_loader* dtex, struct FileHandle* file, void (*unpack_func)(), void* ud) {
+_unpack_file(struct dtex_loader* dtex, struct dtex_file* file, void (*unpack_func)(), void* ud) {
 	int block_count = _check_block_count(file);
-	pf_fileseek_from_head(file, 0);
+	dtex_file_seek_from_head(file, 0);
  
 	for (int i = 0; i < block_count; ++i) {
 		int32_t sz = 0;
-		pf_fileread(file, &sz, sizeof(sz));
+		dtex_file_read(file, &sz, sizeof(sz));
 		if (sz < 0) {
 			sz = -sz;
 			_buf_reserve(dtex, sz);
-			if (pf_fileread(file, dtex->buf, sz) != 1) {
+			if (dtex_file_read(file, dtex->buf, sz) != 1) {
 				fault("Invalid uncompress data source\n");
 			}
 			unpack_func(i, dtex->buf, sz, ud);
 		} else {
 			uint8_t ori_sz_arr[4];
-			pf_fileread(file, ori_sz_arr, sizeof(ori_sz_arr));
-			pf_fileseek_from_cur(file, -sizeof(ori_sz_arr));
+			dtex_file_read(file, ori_sz_arr, sizeof(ori_sz_arr));
+			dtex_file_seek_from_cur(file, -sizeof(ori_sz_arr));
 			size_t ori_sz = ori_sz_arr[0] << 24 | ori_sz_arr[1] << 16 | ori_sz_arr[2] << 8 | ori_sz_arr[3];
 			size_t need_sz = sz + 7 + ori_sz;
 			_buf_reserve(dtex, need_sz);
 
 			struct block* block = (struct block*)dtex->buf;
-			if (sz <= 4 + LZMA_PROPS_SIZE || pf_fileread(file, block, sz) != 1) {
+			if (sz <= 4 + LZMA_PROPS_SIZE || dtex_file_read(file, block, sz) != 1) {
 				fault("Invalid compress data source\n");
 			}
 
@@ -620,7 +621,7 @@ _new_package(struct dtex_loader* dtex, const char* name) {
 struct dtex_package* 
 dtexloader_preload_pkg(struct dtex_loader* dtex, const char* name, const char* path) {
 	// open file
-	struct FileHandle* file = pf_fileopen(path, "rb");
+	struct dtex_file* file = dtex_file_open(path, "rb");
 	if (file == NULL) {
 		fault("Can't open name: %s file: %s\n", name, path);
 	}
@@ -642,7 +643,7 @@ dtexloader_preload_pkg(struct dtex_loader* dtex, const char* name, const char* p
 	params.load_tex_idx = -1;
 	_unpack_file(dtex, file, &_unpack_memory_to_pkg, &params);
 
-	pf_fileclose(file);
+	dtex_file_close(file);
 
 	// if load epp
 	if (pkg->tex_size > old_tex_size && pkg->filepath == NULL) {
@@ -677,7 +678,7 @@ dtexloader_load_epp(struct dtex_loader* dtex, struct dtex_package* pkg, int tex_
 			_unload_package(last_pack);
 			last_pack = NULL;
 		}
-		struct FileHandle* file = pf_fileopen(pkg->filepath, "rb");
+		struct dtex_file* file = dtex_file_open(pkg->filepath, "rb");
 		if (file == NULL) {
 			fault("Can't open name: %s file: %s\n", pkg->name, pkg->filepath);
 		}
@@ -735,8 +736,8 @@ dtexloader_has_task(struct dtex_loader* dtex) {
 
 // todo if already exists
 void 
-dtexloader_load_spr2task(struct dtex_loader* dtex, struct ej_package* pkg, struct dtex_rect** rect, int id, const char* path) {
-	struct FileHandle* file = pf_fileopen(path, "rb");
+dtexloader_load_spr2task(struct dtex_loader* dtex, struct ej_sprite_pack* ej_pkg, struct dtex_rect** rect, int id, const char* path) {
+	struct dtex_file* file = dtex_file_open(path, "rb");
 	if (file == NULL) {
 		fault("[dtexloader_load_spr2task] Can't open file: %s\n", path);
 	}
@@ -746,13 +747,13 @@ dtexloader_load_spr2task(struct dtex_loader* dtex, struct ej_package* pkg, struc
 	struct unpack2task_params params;
 	params.dtex = dtex;
 	params.is_epp = true;	
-	params.pkg = pkg;
+	params.ej_pkg = ej_pkg;
 	params.rect = rect;
 	params.spr_id = id;
 
 	_unpack_file(dtex, file, &_unpack_memory_to_task, &params);
 
-	pf_fileclose(file);
+	dtex_file_close(file);
 
 	pthread_mutex_unlock (&mutexsum);
 }
@@ -772,7 +773,7 @@ dtexloader_do_task(struct dtex_loader* dtex, void (*on_load_func)()) {
 		_do_load_task(task);
 
 		// parser task data
-		on_load_func(task->pkg, task->rect, task->spr_id, task->tex_idx, &task->texture);
+		on_load_func(task->ej_pkg, task->rect, task->spr_id, task->tex_idx, &task->texture);
 		task->status = LT_RELOCATED;
 
 		// release task
@@ -814,7 +815,7 @@ dtexloader_after_do_task(struct dtex_loader* dtex, void (*after_load_func)()) {
 			continue;
 		}
 
-		after_load_func(task->pkg, task->rect, task->spr_id, task->tex_idx, &task->texture);
+		after_load_func(task->ej_pkg, task->rect, task->spr_id, task->tex_idx, &task->texture);
 		_release_texture(&task->texture);
 
 		task->status = LT_FINISH;		
@@ -837,7 +838,7 @@ dtexloader_after_do_task(struct dtex_loader* dtex, void (*after_load_func)()) {
 }
 
 struct dtex_rrp* 
-dtexloader_query_rrp(struct dtex_loader* dtex, struct ej_package* ej_pkg) {
+dtexloader_query_rrp(struct dtex_loader* dtex, struct ej_sprite_pack* ej_pkg) {
     if (!dtex) {
         return NULL;
     }
@@ -859,7 +860,7 @@ dtexloader_query_rrp(struct dtex_loader* dtex, struct ej_package* ej_pkg) {
 }
 
 struct dtex_pts* 
-dtexloader_query_pts(struct dtex_loader* dtex, struct ej_package* ej_pkg) {
+dtexloader_query_pts(struct dtex_loader* dtex, struct ej_sprite_pack* ej_pkg) {
 	static struct dtex_package* cache_pkg = NULL;
 	if (cache_pkg && cache_pkg->ej_pkg == ej_pkg) {
 		return cache_pkg->pts_pkg;

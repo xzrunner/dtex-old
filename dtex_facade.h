@@ -15,7 +15,7 @@ struct dtex_texture;
 struct dp_pos;
 
 struct animation;
-struct texture;
+struct ej_texture;
 
 void dtexf_create(const char* cfg);
 void dtexf_release();
@@ -33,8 +33,8 @@ void dtexf_c3_load_pkg_finish();
 void dtexf_c2_load_begin();
 void dtexf_c2_load_sprite(struct ej_package* pkg, const char* name);
 void dtexf_c2_load_end();
-float* dtexf_c2_lookup_texcoords(struct texture* ori_tex, float* ori_vb, int* dst_tex);
-void dtexf_c2_lookup_node(struct texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dp_pos** out_pos);
+float* dtexf_c2_lookup_texcoords(struct ej_texture* ori_tex, float* ori_vb, int* dst_tex);
+void dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dp_pos** out_pos);
 
 // C1
 void dtexf_c1_load_anim(struct ej_package* pkg, struct animation* ani, int action);
@@ -47,7 +47,7 @@ void dtexf_update();
 
 // RRP
 // todo pkg to rrp
-bool dtexf_draw_rrp(struct ej_package* pkg, struct texture* tex, int id, 
+bool dtexf_draw_rrp(struct ej_package* pkg, struct ej_texture* tex, int id, 
 	struct draw_params* params, const int32_t part_screen[8]);
 
 // PTS

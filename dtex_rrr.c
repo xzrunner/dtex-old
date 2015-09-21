@@ -9,8 +9,6 @@
 #include "dtex_loader.h"
 #include "dtex_gl.h"
 
-#include "package.h"
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -95,9 +93,9 @@ _decode_picture(struct dtex_rrr* rrr, struct rrr_picture* pic, uint8_t** buf) {
 	memcpy(&pic->part_sz, ptr, sizeof(pic->part_sz));
 	ptr += sizeof(pic->part_sz);
 
-	pic->part = dtex_alloc(rrr->alloc, pic->part_sz * sizeof(struct rrr_part));
+	pic->rect = dtex_alloc(rrr->alloc, pic->part_sz * sizeof(struct rrr_part));
 	for (int i = 0; i < pic->part_sz; ++i) {
-		_decode_part(rrr, &pic->part[i], &ptr);
+		_decode_part(rrr, &pic->rect[i], &ptr);
 	}
 
 	*buf = ptr;
@@ -182,7 +180,7 @@ _load_picture_to_pvr_tex(uint8_t* texture, struct dp_pos* pos, struct rrr_pictur
 
 
 	for (int i = 0; i < pic->part_sz; ++i) {
-		struct rrr_part* part = &pic->part[i];
+		struct rrr_part* part = &pic->rect[i];
 
 		int idx_src = 0;
 		for (int y = part->y; y < part->y + part->h; ++y) {
@@ -207,7 +205,7 @@ _load_picture_to_etc1_tex(uint8_t* texture, int w, int h, struct dp_pos* pos, st
 	int bw = w / 4,
 		bh = h / 4;
 	for (int i = 0; i < pic->part_sz; ++i) {
-		struct rrr_part* part = &pic->part[i];
+		struct rrr_part* part = &pic->rect[i];
 
 		int idx_src = 0;
 		for (int y = part->y; y < part->y + part->h; ++y) {
@@ -385,9 +383,9 @@ dtex_rrr_relocate(struct dtex_rrr* rrr, struct dtex_package* pkg) {
 			continue;
 		}
 
-		struct picture* pic = (struct picture*)ani;
+		struct ej_pack_picture* pic = (struct ej_pack_picture*)ani;
 		for (int j = 0; j < -pic->n; ++j) {
-			struct picture_part* part = &pic->part[j];
+			struct pack_quad* part = &pic->rect[j];
 			assert(part->src[0] < 0);
 			int idx = -part->src[0];
 			assert(idx > 0 && idx <= rrr->pic_size);

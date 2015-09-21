@@ -65,9 +65,9 @@ _decode_picture(struct dtex_rrp* rrp, struct rrp_picture* pic, uint8_t** buf) {
 	memcpy(&pic->part_sz, ptr, sizeof(pic->part_sz));
 	ptr += sizeof(pic->part_sz);
 
-	pic->part = dtex_alloc(rrp->alloc, pic->part_sz * sizeof(struct rrp_part));
+	pic->rect = dtex_alloc(rrp->alloc, pic->part_sz * sizeof(struct rrp_part));
 	for (int i = 0; i < pic->part_sz; ++i) {
-		_decode_part(rrp, &pic->part[i], &ptr);
+		_decode_part(rrp, &pic->rect[i], &ptr);
 	}
 
 	*buf = ptr;
@@ -113,7 +113,7 @@ dtex_rrp_relocate(struct dtex_rrp* rrp, int idx, struct dtex_texture* tex, struc
 	for (int i = 0; i < rrp->pic_size; ++i) {
 		struct rrp_picture* pic = &rrp->pictures[i];
 		for (int j = 0; j < pic->part_sz; ++j) {
-			struct rrp_part* part = &pic->part[j];
+			struct rrp_part* part = &pic->rect[j];
 			if (part->idx == idx) {
 				part->dst_tex = tex;
 				part->dst_pos = pos;

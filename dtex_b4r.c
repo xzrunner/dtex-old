@@ -9,7 +9,7 @@
 #include "dtex_loader.h"
 #include "dtex_gl.h"
 
-#include "package.h"
+#include "ejoy2d.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -341,18 +341,18 @@ dtex_b4r_load_tex(struct dtex_b4r* b4r, struct dtex_package* pkg, int tex_idx) {
 
 void 
 dtex_b4r_relocate(struct dtex_b4r* b4r, struct dtex_package* pkg) {
-	struct ejoypic* ep = pkg->ej_pkg->ep;
-	for (int id = 0; id < ep->max_id; ++id) {
-		struct animation * ani = ep->spr[id];
-		if (ani == NULL || ani->part_n > 0) {
+	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
+	for (int id = 0; id < ej_pkg->n; ++id) {
+		int type = ej_pkg->type[id];
+		if (type != TYPE_PICTURE) {
 			continue;
 		}
 
-		struct picture* pic = (struct picture*)ani;
-		for (int j = 0; j < -pic->n; ++j) {
-			struct picture_part* part = &pic->part[j];
-			assert(part->src[0] < 0);
-			int idx = -part->src[0];
+		struct ej_pack_picture* ej_pic = (struct ej_pack_picture*)ej_pkg->data[id];
+		for (int j = 0; j < ej_pic->n; ++j) {
+			struct ej_pack_quad* ej_q = &ej_pic->rect[j];
+			assert(ej_q->texture_coord[0] < 0);
+			int idx = -ej_q->texture_coord[0];
 			assert(idx > 0 && idx <= b4r->pic_size);
 			struct b4r_picture* rp = &b4r->pictures[idx-1];
 			struct dtex_packer* packer = (struct dtex_packer*)dtex_vector_get(b4r->packers, rp->dst_r.dst_packer_idx);
@@ -361,11 +361,11 @@ dtex_b4r_relocate(struct dtex_b4r* b4r, struct dtex_package* pkg) {
 			dtexpacker_get_size(packer, &w, &h);
 
 			struct dtex_rect* dr = &rp->dst_r.dst_pos->r;
-			part->src[0] = part->src[2] = dr->xmin;
-			part->src[4] = part->src[6] = dr->xmax;
-			part->src[1] = part->src[7] = h - dr->ymin;
-			part->src[3] = part->src[5] = h - dr->ymax;
-			part->texid = rp->dst_r.dst_packer_idx;
+			ej_q->texture_coord[0] = ej_q->texture_coord[2] = dr->xmin;
+			ej_q->texture_coord[4] = ej_q->texture_coord[6] = dr->xmax;
+			ej_q->texture_coord[1] = ej_q->texture_coord[7] = h - dr->ymin;
+			ej_q->texture_coord[3] = ej_q->texture_coord[5] = h - dr->ymax;
+			ej_q->texid = rp->dst_r.dst_packer_idx;
 		}
 	}
 }
