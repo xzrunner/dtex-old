@@ -6,11 +6,21 @@ extern "C"
 #ifndef dynamic_texture_texture_pool_h
 #define dynamic_texture_texture_pool_h
 
-struct dtex_raw_tex;
+struct dtex_raw_tex {
+	int id;
+	int id_alpha;	// for etc1
+	int width, height;
+	// todo inv ?
+	int format;
 
-void dtedx_pool_init();
+	char* filepath;	// cache for reopen
+	int idx;		// in pool
+};
 
-int dtex_pool_add(struct dtex_raw_tex* tex);
+void dtex_pool_init();
+
+void dtex_pool_add(struct dtex_raw_tex* tex);
+void dtex_pool_remove(struct dtex_raw_tex* tex);
 
 struct dtex_raw_tex* dtex_pool_query(int id);
 

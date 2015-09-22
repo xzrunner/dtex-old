@@ -1,7 +1,10 @@
 #include "dtex_texture_pool.h"
 #include "dtex_loader.h"
 
+#include "opengl.h"
+
 #include <string.h>
+#include <stdlib.h>
 
 #define MAX_TEXTURE 512
 
@@ -13,11 +16,11 @@ struct texture_pool {
 static struct texture_pool POOL;
 
 void 
-dtedx_pool_init() {
+dtex_pool_init() {
 	memset(&POOL, 0, sizeof(POOL));
 }
 
-int 
+void 
 dtex_pool_add(struct dtex_raw_tex* tex) {
 	int idx = -1;
 	for (int i = 0; i < POOL.count; ++i) {
@@ -37,7 +40,35 @@ dtex_pool_add(struct dtex_raw_tex* tex) {
 	if (idx != -1) {
 		memcpy(&POOL.tex[idx], tex, sizeof(*tex));
 	}
-	return idx;
+	tex->idx = idx;
+}
+
+static inline void
+_release_texture(struct dtex_raw_tex* tex) {
+	if (tex->id != 0) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDeleteTextures(1, &tex->id);
+		tex->id = 0;
+	}
+   if (tex->id_alpha != 0) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDeleteTextures(1, &tex->id_alpha);
+		tex->id_alpha = 0;
+   }
+   free(tex->filepath);
+   memset(tex, 0, sizeof(*tex));
+}
+
+void 
+dtex_pool_remove(struct dtex_raw_tex* tex) {
+	for (int i = 0; i < POOL.count; ++i) {
+		if (&POOL.tex[i] == tex) {
+			_release_texture(tex);
+			return;
+		}
+	}
 }
 
 struct dtex_raw_tex* 

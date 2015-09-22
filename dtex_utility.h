@@ -29,8 +29,9 @@ void dtex_relocate_pic_part(uint16_t part_src[8], struct dtex_inv_size* src_sz, 
 
 void dtex_get_pic_src_rect(uint16_t* src, struct dtex_rect* rect);
 
-#define STREAM_IMPORT(ptr, data)	memcpy(&(data), (ptr), sizeof((data)));	\
-									(ptr) += sizeof((data));				\
+#define STREAM_IMPORT(ptr, data)			\
+	memcpy(&(data), (ptr), sizeof(data));	\
+	(ptr) += sizeof(data);					\
 
 #endif // dynamic_texture_utility_h
 

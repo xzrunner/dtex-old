@@ -4,7 +4,7 @@
 #include "dtex_file.h"
 
 #include "rg_etc1_for_c.h"
-#include "fault.h"
+#include "dtex_fault.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -16,7 +16,7 @@ dtex_etc1_decode(const uint8_t* buf, int width, int height) {
 
 	uint8_t* dst = (uint8_t*)malloc(width * height * 4);
 	if (dst == NULL) {
-		fault("Fail to malloc (dtex_pvr_decode)");
+		dtex_fault("Fail to malloc (dtex_pvr_decode)");
 	}
 	memset(dst, 0x00, width * height * 4);
 	const uint8_t* ptr_src = buf;
@@ -79,7 +79,7 @@ dtex_etc1_read_file(const char* filepath, uint32_t* width, uint32_t* height) {
 	struct dtex_file* file = dtex_file_open(filepath, "rb");
 	if (file == NULL) {
 		assert(0);
-		fault("Can't open etc1 file: %s\n", filepath);
+		dtex_fault("Can't open etc1 file: %s\n", filepath);
 	}
 	
 	struct PKMHeader header;
@@ -90,10 +90,10 @@ dtex_etc1_read_file(const char* filepath, uint32_t* width, uint32_t* height) {
 	size_t sz = *width * *height / 2;
 	uint8_t* buf = (uint8_t*)malloc(sz);
 	if (buf == NULL) {
-		fault("Fail to malloc (dtex_etc1_read_file)");
+		dtex_fault("Fail to malloc (dtex_etc1_read_file)");
 	}
 	if (dtex_file_read(file, buf, sz) != 1) {
-		fault("Invalid uncompress data source\n");
+		dtex_fault("Invalid uncompress data source\n");
 	}
 	dtex_file_close(file);	
 

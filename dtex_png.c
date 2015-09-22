@@ -1,7 +1,7 @@
 #include "dtex_png.h"
 #include "dtex_file.h"
 
-#include "fault.h"
+#include "dtex_fault.h"
 #include "opengl.h"
 
 #include <stdlib.h>
@@ -22,13 +22,13 @@ uint8_t*
 dtex_png_read(const char* filepath, int* width, int* height, int* channels, int* format) {
 	struct dtex_file* file = dtex_file_open(filepath, "rb");
 	if (file == NULL) {
-		fault("Can't open png file: %s\n", filepath);
+		dtex_fault("Can't open png file: %s\n", filepath);
 	}
 	
 	size_t sz = dtex_file_size(file);
 	uint8_t* buf = (uint8_t*)malloc(sz);
 	if (dtex_file_read(file, buf, sz) != 1) {
-		fault("Invalid uncompress data source\n");
+		dtex_fault("Invalid uncompress data source\n");
 	}
 	dtex_file_close(file);
 

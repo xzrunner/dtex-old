@@ -18,7 +18,7 @@
 #include "dtex_file.h"
 
 #include "sprite.h"
-#include "fault.h"
+#include "dtex_fault.h"
 
 #include "cJSON.h"
 
