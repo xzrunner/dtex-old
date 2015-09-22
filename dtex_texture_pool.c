@@ -20,8 +20,8 @@ dtex_pool_init() {
 	memset(&POOL, 0, sizeof(POOL));
 }
 
-void 
-dtex_pool_add(struct dtex_raw_tex* tex) {
+struct dtex_raw_tex*
+dtex_pool_add() {
 	int idx = -1;
 	for (int i = 0; i < POOL.count; ++i) {
 		struct dtex_raw_tex* tex = &POOL.tex[i];
@@ -38,9 +38,11 @@ dtex_pool_add(struct dtex_raw_tex* tex) {
 	}
 
 	if (idx != -1) {
-		memcpy(&POOL.tex[idx], tex, sizeof(*tex));
+		POOL.tex[idx].idx = idx;
+		return &POOL.tex[idx];
+	} else {
+		return NULL;
 	}
-	tex->idx = idx;
 }
 
 static inline void

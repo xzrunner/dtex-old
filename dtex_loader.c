@@ -12,8 +12,6 @@
 //
 //#include "spritepack.h"
 //
-//#include "dtex_fault.h"
-//
 //#include "LzmaDec.h"
 //#ifdef _MSC_VER
 //#include "Alloc.h"
@@ -336,7 +334,7 @@
 //	free(dtex->buf);
 //	dtex->buf = buf;
 //
-//	pf_log("dtex_loader buf size:%0.1fM\n", (float)new_sz / 1024 / 1024);
+//	dtex_info("dtex_loader buf size:%0.1fM\n", (float)new_sz / 1024 / 1024);
 //}
 //
 //static inline int 

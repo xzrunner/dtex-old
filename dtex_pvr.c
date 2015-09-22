@@ -3,7 +3,6 @@
 #include "dtex_gl.h"
 #include "dtex_file.h"
 
-#include "dtex_fault.h"
 #include "opengl.h"
 
 #include <stdlib.h>

@@ -2,6 +2,7 @@
 #include "dtex_fbo.h"
 #include "dtex_gl.h"
 #include "dtex_file.h"
+#include "dtex_math.h"
 
 #include "opengl.h"
 
@@ -58,7 +59,7 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
 	int max_count = MIN(expect_count, MAX_TEX_COUNT);
     int end = buf->end_tex;
 	for (int i = end; i < end + max_count; ++i) {
-        pf_log("dtex_buffer: new texture %d\n", edge);
+        dtex_info("dtex_buffer: new texture %d\n", edge);
         
 		GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)edge, (GLsizei)edge, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);		

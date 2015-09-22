@@ -8,9 +8,9 @@ extern "C"
 
 #include <stdint.h>
 
-// #ifdef _MSC_VER
-// #define USE_LIBPNG
-// #endif // _MSC_VER
+#ifdef _MSC_VER
+#define USE_LIBPNG
+#endif // _MSC_VER
 
 // todo cache buf for source
 uint8_t* dtex_png_read(const char* filepath, int* width, int* height, int* channels, int* format);

@@ -8,6 +8,7 @@ extern "C"
 
 #include "spritepack.h"
 #include "texture.h"
+#include "renderbuffer.h"
 
 #define ej_sprite_pack		sprite_pack
 
@@ -16,6 +17,8 @@ extern "C"
 #define ej_pack_animation	pack_animation
 #define ej_pack_particle3d	pack_particle3d
 #define ej_pack_particle2d	pack_particle2d
+
+#define ej_vertex_pack		vertex_pack
 
 #endif // dynamic_texture_ejoy2d_h
 

@@ -1,7 +1,7 @@
 #include "dtex_c3.h"
 #include "dtex_packer.h"
 #include "dtex_texture.h"
-#include "dtex_loader.h"
+#include "dtex_loader_new.h"
 #include "dtex_draw.h"
 #include "dtex_buffer.h"
 #include "dtex_rrp.h"
@@ -11,7 +11,7 @@
 #include "dtex_math.h"
 #include "dtex_texture_pool.h"
 
-#include "ejoy2d.h"
+//#include "ejoy2d.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -44,7 +44,7 @@ struct hash_node {
 };
 
 struct preload_node {
-	struct dtex_package* ej_pkg;
+	struct dtex_package* pkg;
 	int raw_tex_idx;
 
 	float scale;
@@ -95,7 +95,7 @@ void dtexc3_release(struct dtex_c3* dtex, struct dtex_buffer* buf) {
 void 
 dtexc3_preload_pkg(struct dtex_c3* dtex, struct dtex_package* pkg, float scale) {
 	for (int i = 0; i < dtex->preload_size; ++i) {
-		if (pkg == dtex->preload_list[i]->ej_pkg) {
+		if (pkg == dtex->preload_list[i]->pkg) {
 			return;
 		}
 	}
@@ -103,7 +103,7 @@ dtexc3_preload_pkg(struct dtex_c3* dtex, struct dtex_package* pkg, float scale) 
 	for (int i = 0; i < pkg->tex_size; ++i) {
 		assert(dtex->preload_size <= MAX_TEX_SIZE);
 		struct preload_node* n = dtex->preload_list[dtex->preload_size++];
-		n->ej_pkg = pkg;
+		n->pkg = pkg;
 		n->raw_tex_idx = i;
 		n->scale = scale;
 	}
@@ -116,7 +116,7 @@ _compare_preload_name(const void *arg1, const void *arg2) {
 	node1 = *((struct preload_node**)(arg1));
 	node2 = *((struct preload_node**)(arg2));
 
-	int cmp = strcmp(node1->ej_pkg->name, node2->ej_pkg->name);
+	int cmp = strcmp(node1->pkg->name, node2->pkg->name);
 	if (cmp == 0) {
 		return node1->raw_tex_idx < node2->raw_tex_idx;
 	} else {
@@ -131,10 +131,10 @@ _compare_preload_length(const void *arg1, const void *arg2) {
 	node1 = *((struct preload_node**)(arg1));
 	node2 = *((struct preload_node**)(arg2));
 
-	int w1 = node1->ej_pkg->textures[node1->raw_tex_idx].width,
-		h1 = node1->ej_pkg->textures[node1->raw_tex_idx].height;
-	int w2 = node2->ej_pkg->textures[node2->raw_tex_idx].width,
-		h2 = node2->ej_pkg->textures[node2->raw_tex_idx].height;	
+	int w1 = node1->pkg->textures[node1->raw_tex_idx]->width,
+		h1 = node1->pkg->textures[node1->raw_tex_idx]->height;
+	int w2 = node2->pkg->textures[node2->raw_tex_idx]->width,
+		h2 = node2->pkg->textures[node2->raw_tex_idx]->height;	
 
 	int16_t long1, long2, short1, short2;
 	if (w1 > h1) {
@@ -172,7 +172,7 @@ _unique_preload_list(struct dtex_c3* dtex) {
 	for (int i = 1; i < dtex->preload_size; ++i) {
 		struct preload_node* last = unique[unique_size-1];
 		struct preload_node* curr = dtex->preload_list[i];
-		if (strcmp(curr->ej_pkg->name, last->ej_pkg->name) == 0 && curr->raw_tex_idx == last->raw_tex_idx) {
+		if (strcmp(curr->pkg->name, last->pkg->name) == 0 && curr->raw_tex_idx == last->raw_tex_idx) {
 			;
 		} else {
 			unique[unique_size] = curr;
@@ -210,8 +210,8 @@ _hash_origin_pack(const char* name) {
 
 static inline bool
 _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node, struct dtex_texture* texture) {
-	int w = node->ej_pkg->textures[node->raw_tex_idx].width * node->scale * scale,
-		h = node->ej_pkg->textures[node->raw_tex_idx].height * node->scale * scale;
+	int w = node->pkg->textures[node->raw_tex_idx]->width * node->scale * scale,
+		h = node->pkg->textures[node->raw_tex_idx]->height * node->scale * scale;
 	struct dp_pos* pos = NULL;
 	// todo padding
 	if (w >= h) {
@@ -224,7 +224,7 @@ _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node,
 	}
 
 	struct hash_node* hn = _new_hash_rect(dtex);
-	hn->n.pkg = node->ej_pkg;
+	hn->n.pkg = node->pkg;
 	hn->n.raw_tex_idx = node->raw_tex_idx;
 	hn->n.dst_tex = texture;
 	hn->n.dst_rect = pos->r;
@@ -234,7 +234,7 @@ _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node,
 	}
 	pos->ud = &hn->n;
 
-	unsigned int idx = _hash_origin_pack(node->ej_pkg->name);
+	unsigned int idx = _hash_origin_pack(node->pkg->name);
 	hn->next_hash = dtex->hash[idx];
 	dtex->hash[idx] = hn;	
 
@@ -332,11 +332,11 @@ _draw_preload_list(struct dtex_c3* dtex, float scale, struct dtex_loader* loader
 		// load old tex
 		struct dtex_raw_tex* ori_tex = NULL;
 		if (dr->pkg->rrr_pkg) {
-			ori_tex = dtex_rrr_load_tex(dr->pkg->rrr_pkg, dr->pkg, dr->raw_tex_idx);
+//			ori_tex = dtex_rrr_load_tex(dr->pkg->rrr_pkg, dr->pkg, dr->raw_tex_idx);
 		} else if (dr->pkg->b4r_pkg) {
-			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
+//			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
-			ori_tex = dtexloader_load_epp(loader, dr->pkg, dr->raw_tex_idx);
+			dtex_load_texture(loader, dr->pkg, dr->raw_tex_idx);
 		}
 
 		// draw old tex to new 
@@ -353,7 +353,7 @@ _draw_preload_list(struct dtex_c3* dtex, float scale, struct dtex_loader* loader
 		vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
 		dtex_draw_to_texture(buf, ori_tex, vb, dr->dst_tex);
         
-        dtexloader_unload_tex(ori_tex);
+		dtex_pool_remove(ori_tex);
 
 		last_pkg = dr->pkg;
 	}
@@ -364,8 +364,8 @@ _alloc_texture(struct dtex_c3* dtex, struct dtex_buffer* buf) {
 	float area = 0;
 	for (int i = 0; i < dtex->preload_size; ++i) {
 		struct preload_node* n = dtex->preload_list[i];
-		int w = n->ej_pkg->textures[n->raw_tex_idx].width * n->scale,
-			h = n->ej_pkg->textures[n->raw_tex_idx].height * n->scale;
+		int w = n->pkg->textures[n->raw_tex_idx]->width * n->scale,
+			h = n->pkg->textures[n->raw_tex_idx]->height * n->scale;
 		area += w * h;
 	}
 	area *= TOT_AREA_SCALE;	
@@ -470,9 +470,7 @@ dtexc3_preload_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_b
 	vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
 	dtex_draw_to_texture(buf, tex, vb, dst_tex);
 
-	dtexloader_unload_tex(tex);
-
-	free(tex);
+	dtex_pool_remove(tex);
 }
 
 static inline void
@@ -490,7 +488,7 @@ _relocate_epe(struct dtex_c3* dtex, struct dtex_package* pkg) {
 		struct ej_pack_picture* ej_pic = (struct ej_pack_picture*)ej_pkg->data[id];
 		for (int j = 0; j < ej_pic->n; ++j) {
 			struct pack_quad* ej_q = &ej_pic->rect[j];
-			struct dtex_raw_tex* t = &pkg->textures[ej_q->texid];
+			struct dtex_raw_tex* t = pkg->textures[ej_q->texid];
 			// find dtex_node
 			struct dtex_node* to_node = NULL;
 			struct hash_node* hn = pkg_hn;
@@ -541,30 +539,30 @@ _query_tex_position(struct dtex_c3* dtex, const char* name, int idx, struct dtex
 	return NULL;
 }
 
-static inline void
-_relocate_rrp(struct dtex_c3* dtex, struct dtex_package* pkg) {
-	assert(pkg->rrp_pkg);
-	for (int i = 0; i < pkg->tex_size; ++i) {
-		struct dtex_rect* pos;
-		struct dtex_texture* tex = _query_tex_position(dtex, pkg->name, i, &pos);
-		assert(tex && pos);
-		dtex_rrp_relocate(pkg->rrp_pkg, i, tex, pos);
-	}
-}
+//static inline void
+//_relocate_rrp(struct dtex_c3* dtex, struct dtex_package* pkg) {
+//	assert(pkg->rrp_pkg);
+//	for (int i = 0; i < pkg->tex_size; ++i) {
+//		struct dtex_rect* pos;
+//		struct dtex_texture* tex = _query_tex_position(dtex, pkg->name, i, &pos);
+//		assert(tex && pos);
+//		dtex_rrp_relocate(pkg->rrp_pkg, i, tex, pos);
+//	}
+//}
 
 void 
 dtexc3_relocate(struct dtex_c3* dtex, struct dtex_package* pkg) {
-	if (pkg->rrr_pkg) {
-		dtex_rrr_relocate(pkg->rrr_pkg, pkg);
-	} else if (pkg->b4r_pkg) {
-		dtex_b4r_relocate(pkg->b4r_pkg, pkg);
-	}
+// 	if (pkg->rrr_pkg) {
+// 		dtex_rrr_relocate(pkg->rrr_pkg, pkg);
+// 	} else if (pkg->b4r_pkg) {
+// 		dtex_b4r_relocate(pkg->b4r_pkg, pkg);
+// 	}
 
 	_relocate_epe(dtex, pkg);
 
-	if (pkg->rrp_pkg) {
-		_relocate_rrp(dtex, pkg);
-	}
+// 	if (pkg->rrp_pkg) {
+// 		_relocate_rrp(dtex, pkg);
+// 	}
 }
 
 struct dtex_package* 

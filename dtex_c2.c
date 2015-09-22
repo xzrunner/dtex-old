@@ -6,6 +6,7 @@
 #include "dtex_loader.h"
 #include "dtex_utility.h"
 #include "dtex_rrp.h"
+#include "dtex_texture_pool.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -307,14 +308,14 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 	// rrp
 	struct rrp_picture* rrp_pic = NULL;
 	if (pn->rect.xmin < 0) {
-		struct dtex_rrp* rrp = dtexloader_query_rrp(loader, pn->ej_pkg);
-		if (rrp == NULL) {
-			return;
-		}
-		rrp_pic = dtex_rrp_get_pic(rrp, -pn->rect.xmin);
-		assert(rrp_pic);
-		w = rrp_pic->w;
-		h = rrp_pic->h;
+// 		struct dtex_rrp* rrp = dtexloader_query_rrp(loader, pn->ej_pkg);
+// 		if (rrp == NULL) {
+// 			return;
+// 		}
+// 		rrp_pic = dtex_rrp_get_pic(rrp, -pn->rect.xmin);
+// 		assert(rrp_pic);
+// 		w = rrp_pic->w;
+// 		h = rrp_pic->h;
 	}
 	struct dp_pos* pos = NULL;
 	struct dtex_texture* tex = NULL;

@@ -24,15 +24,22 @@ struct dtex_raw_tex;
 // todo remove
 #define TEXTURE4 0
 #define TEXTURE8 1
-#define DETAIL 2
+//#define DETAIL 2
 #define PVRTC  3
-#define KTX 4
-#define PKM 5
+//#define KTX 4
+//#define PKM 5
 #define PKMC 6
-#define RRP 11
-#define PTS 12
-#define RRR 13
-#define B4R 14
+//#define RRP 11
+//#define PTS 12
+//#define RRR 13
+//#define B4R 14
+
+#define FILE_EPT 0
+#define FILE_EPE 1
+#define FILE_RRP 2
+#define FILE_PTS 3
+#define FILE_RRR 4
+#define FILE_B4R 5
 
 struct dtex_package {
 	char* name;
@@ -53,8 +60,10 @@ struct dtex_loader;
 struct dtex_loader* dtexloader_create();
 void dtexloader_release(struct dtex_loader*);
 
-struct dtex_package* dtexloader_preload_pkg(struct dtex_loader*, const char* name, const char* path, int type);
-struct dtex_raw_tex* dtexloader_load_ept(struct dtex_loader*, struct dtex_package*, int idx);
+struct dtex_package* dtex_preload_pkg(struct dtex_loader*, const char* name, const char* path, int type);
+void dtex_load_texture(struct dtex_loader*, struct dtex_package*, int idx);
+
+struct dtex_package* dtex_get_pkg(struct dtex_loader*, int idx);
 
 #endif // dynamic_texture_loader_h
 

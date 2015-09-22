@@ -19,7 +19,7 @@ struct dtex_raw_tex {
 
 void dtex_pool_init();
 
-void dtex_pool_add(struct dtex_raw_tex* tex);
+struct dtex_raw_tex* dtex_pool_add();
 void dtex_pool_remove(struct dtex_raw_tex* tex);
 
 struct dtex_raw_tex* dtex_pool_query(int id);

@@ -16,7 +16,7 @@ struct dtex_fbo {
 
 struct dtex_fbo* 
 dtex_new_fbo() {
-    pf_log("dtex_fbo: new fbo\n");
+    dtex_info("dtex_fbo: new fbo\n");
 	struct dtex_fbo* fbo = (struct dtex_fbo*)malloc(sizeof(struct dtex_fbo));
 	glGenFramebuffers(1, &fbo->id);
 	fbo->tex = NULL;
@@ -35,24 +35,24 @@ _check_framebuffer_status() {
 	switch(status)
 	{
 	case GL_FRAMEBUFFER_COMPLETE:
-		pf_log("++ fbo: Framebuffer complete.\n");
+		dtex_info("++ fbo: Framebuffer complete.\n");
 		return 1;
 	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-		pf_log("++ fbo: [ERROR] Framebuffer incomplete: Attachment is NOT complete.\n");
+		dtex_info("++ fbo: [ERROR] Framebuffer incomplete: Attachment is NOT complete.\n");
 		return 0;
 	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-		pf_log("++ fbo: [ERROR] Framebuffer incomplete: No image is attached to FBO.\n");
+		dtex_info("++ fbo: [ERROR] Framebuffer incomplete: No image is attached to FBO.\n");
 		return 0;
 #ifndef _WIN32
 	case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-		pf_log("++ fbo: [ERROR] Framebuffer incomplete: Attached images have different dimensions.\n");
+		dtex_info("++ fbo: [ERROR] Framebuffer incomplete: Attached images have different dimensions.\n");
 		return 0;
 #endif
 	case GL_FRAMEBUFFER_UNSUPPORTED:
-		pf_log("++ fbo: [ERROR] Unsupported by FBO implementation.\n");
+		dtex_info("++ fbo: [ERROR] Unsupported by FBO implementation.\n");
 		return 0;
 	default:
-		pf_log("++ fbo: [ERROR] Unknow error.\n");
+		dtex_info("++ fbo: [ERROR] Unknow error.\n");
 		return 0;
 	}
 }
