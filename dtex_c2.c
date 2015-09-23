@@ -120,8 +120,8 @@ _preload_picture(struct dtex_c2* dtex, struct ej_sprite_pack* ej_pkg, struct ej_
 		struct preload_node* pn = dtex->preload_list[dtex->preload_size++];
 		pn->ej_pkg = ej_pkg;
 		pn->ej_quad = ej_q;
-		pn->tex.id = texture_glid(ej_q->texid);
-		texture_size(ej_q->texid, &pn->tex.width, &pn->tex.height);
+		pn->tex.id = ej_q->texid;
+		// todo
 		dtex_get_pic_src_rect(ej_q->texture_coord, &pn->rect);
 	}
 }
@@ -366,7 +366,7 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 	dtex->hash[idx] = hn;
 
 	if (rrp_pic) {
-		dtex_draw_rrp_to_tex(buf, &hn->n.ori_tex, rrp_pic, tex, pos, rotate);
+//		dtex_draw_rrp_to_tex(buf, &hn->n.ori_tex, rrp_pic, tex, pos, rotate);
 	} else {
 		dtex_draw_to_texture(buf, &hn->n.ori_tex, hn->n.trans_vb, tex);
 	}

@@ -99,9 +99,9 @@ dtexf_release() {
 	}
 }
 
-void
-dtexf_load_pkg(const char* name, const char* path, int type) {
-	dtex_preload_pkg(LOADER, name, path, type);
+struct dtex_package* 
+dtexf_preload_pkg(const char* name, const char* path, int type) {
+	return dtex_preload_pkg(LOADER, name, path, type);
 }
 
 //struct ej_sprite* 
@@ -121,14 +121,11 @@ dtexf_load_pkg(const char* name, const char* path, int type) {
 //	return dtex_sprite_create(dst_tex, pos);
 //}
 
-struct ej_sprite_pack* 
-dtexf_c3_load_pkg(const char* name, const char* path, float scale, int type) {
-	if (C3 == NULL) {
-		return NULL;
+void
+dtexf_c3_load_pkg(struct dtex_package* pkg, float scale) {
+	if (C3) {
+		dtexc3_preload_pkg(C3, pkg, scale);
 	}
-	struct dtex_package* pkg = dtex_preload_pkg(LOADER, name, path, type);
-	dtexc3_preload_pkg(C3, pkg, scale);
-	return pkg->ej_pkg;
 }
 
 void 

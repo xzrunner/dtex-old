@@ -6,7 +6,7 @@ extern "C"
 #ifndef dynamic_texture_utility_h
 #define dynamic_texture_utility_h
 
-#include "ejoy2d.h"
+#include <ejoy2d.h>
 
 #include <stdint.h>
 #include <stdbool.h>

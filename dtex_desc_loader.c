@@ -2,6 +2,7 @@
 #include "dtex_utility.h"
 #include "dtex_log.h"
 #include "dtex_stream_import.h"
+#include "dtex_package.h"
 
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
@@ -9,6 +10,7 @@
 #include "dtex_b4r.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 // static inline int
 // _comp_export(const void* a, const void* b) {
@@ -22,19 +24,35 @@
 // 	qsort(ep->export, ep->export_n, sizeof(struct export), _comp_export);
 // }
 
+static int
+_comp_export(const void *a, const void *b) {
+	const struct export_name* aa = a;
+	const struct export_name* bb = b;
+	return strcmp(aa->name,bb->name);
+}
+
 struct ej_sprite_pack*
-dtex_load_epe(struct dtex_import_stream* is) {
+dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg) {
 	uint16_t export_n = dtex_import_uint16(is);
 	uint16_t maxid = dtex_import_uint16(is);
 	uint16_t tex = dtex_import_uint16(is);
 	uint32_t unpack_sz = dtex_import_uint32(is);
 	uint32_t body_sz = dtex_import_uint32(is);
 
+	pkg->export_names = malloc(sizeof(struct export_name) * export_n);
+	memset(pkg->export_names, 0, sizeof(struct export_name) * export_n);
+	pkg->export_size = 0;
+
 	for (int i = 0; i < export_n; ++i) {
 		uint16_t id = dtex_import_uint16(is);
 		const char* name = dtex_import_string(is);
-		free((void*)name);		// todo
+
+		struct export_name* ep = &pkg->export_names[pkg->export_size++];
+		ep->name = name;
+		ep->id = id;
 	}
+
+	qsort(pkg->export_names, pkg->export_size, sizeof(struct export_name), _comp_export);
 
 	struct ej_sprite_pack* ej_pkg = ej_pkg_import((void*)is->stream, body_sz, tex, maxid, unpack_sz);
 	return ej_pkg;

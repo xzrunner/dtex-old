@@ -1,4 +1,4 @@
-#include "dtex_file.h"
+//#include "dtex_file.h"
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -8,7 +8,7 @@ extern "C"
 
 #include "dtex_typedef.h"
 
-#include "ejoy2d.h"
+#include <ejoy2d.h>
 
 #include <stdbool.h>
 
@@ -23,12 +23,12 @@ void dtexf_create(const char* cfg);
 void dtexf_release();
 
 // loading
-void dtexf_load_pkg(const char* name, const char* path, int type);
+struct dtex_package*  dtexf_preload_pkg(const char* name, const char* path, int type);
 // todo sort sprite list for C3
 struct ej_sprite* dtexf_create_sprite(const char* path);
 
 // C3
-struct ej_sprite_pack* dtexf_c3_load_pkg(const char* name, const char* path, float scale, int type);
+void dtexf_c3_load_pkg(struct dtex_package* pkg, float scale);
 void dtexf_c3_load_pkg_finish();
 
 //// C2

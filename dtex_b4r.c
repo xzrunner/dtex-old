@@ -9,7 +9,7 @@
 //#include "dtex_loader.h"
 //#include "dtex_gl.h"
 //
-//#include "ejoy2d.h"
+//#include <ejoy2d.h>
 //
 //#include <assert.h>
 //#include <stdlib.h>

@@ -9,6 +9,26 @@ extern "C"
 #include <stdint.h>
 #include <stdbool.h>
 
+// todo remove
+#define TEXTURE4 0
+#define TEXTURE8 1
+//#define DETAIL 2
+#define PVRTC  3
+//#define KTX 4
+//#define PKM 5
+#define PKMC 6
+//#define RRP 11
+//#define PTS 12
+//#define RRR 13
+//#define B4R 14
+
+#define FILE_EPT 0
+#define FILE_EPE 1
+#define FILE_RRP 2
+#define FILE_PTS 3
+#define FILE_RRR 4
+#define FILE_B4R 5
+
 struct draw_params {
 	int x, y;
 	int* mat;

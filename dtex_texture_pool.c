@@ -18,6 +18,9 @@ static struct texture_pool POOL;
 void 
 dtex_pool_init() {
 	memset(&POOL, 0, sizeof(POOL));
+	for (int i = 0; i < MAX_TEXTURE; ++i) {
+		POOL.tex[i].id = -1;
+	}
 }
 
 struct dtex_raw_tex*
@@ -25,7 +28,7 @@ dtex_pool_add() {
 	int idx = -1;
 	for (int i = 0; i < POOL.count; ++i) {
 		struct dtex_raw_tex* tex = &POOL.tex[i];
-		if (tex->id == 0) {
+		if (tex->id == -1) {
 			idx = i;
 			break;
 		}
@@ -61,6 +64,7 @@ _release_texture(struct dtex_raw_tex* tex) {
    }
    free(tex->filepath);
    memset(tex, 0, sizeof(*tex));
+   tex->id = -1;
 }
 
 void 

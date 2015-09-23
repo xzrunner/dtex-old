@@ -6,7 +6,7 @@ extern "C"
 #ifndef dynamic_texture_desc_loader_h
 #define dynamic_texture_desc_loader_h
 
-#include "ejoy2d.h"
+#include <ejoy2d.h>
 
 struct dtex_import_stream;
 
@@ -15,7 +15,7 @@ struct dtex_pts;
 struct dtex_rrr;
 struct dtex_b4r;
 
-struct ej_sprite_pack* dtex_load_epe(struct dtex_import_stream* is);
+struct ej_sprite_pack* dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg);
 
 struct dtex_rrp* dtex_load_rrp(struct dtex_import_stream* is);
 

@@ -6,7 +6,7 @@
 //#include "dtex_fbo.h"
 //#include "dtex_draw.h"
 //
-//#include "ejoy2d.h"
+//#include <ejoy2d.h>
 //
 //#include <assert.h>
 //#include <stdlib.h>
@@ -277,7 +277,7 @@
 //	_traverse_animation(pkg, ani, action, frame, NULL, &_draw_picture, &params);
 //
 //	// todo cache
-//	shader_texture(0);  // force commit
+//	ej_shader_texture(0);  // force commit
 //	glViewport(0, 0, scr.w, scr.h); 
 //	dtex_fbo_unbind();
 //}

@@ -3,9 +3,9 @@
 #include "dtex_gl.h"
 #include "dtex_pvr.h"
 #include "dtex_etc1.h"
-#include "dtex_loader_new.h"
 #include "dtex_stream_import.h"
 #include "dtex_texture_pool.h"
+#include "dtex_typedef.h"
 
 #include "opengl.h"
 

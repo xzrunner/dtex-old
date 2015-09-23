@@ -5,10 +5,8 @@
 #include "dtex_stream_import.h"
 #include "dtex_log.h"
 #include "dtex_file.h"
-#include "dtex_rrp.h"
-#include "dtex_pts.h"
-#include "dtex_rrr.h"
-#include "dtex_b4r.h"
+#include "dtex_package.h"
+#include "dtex_typedef.h"
 
 #include "LzmaDec.h"
 #ifdef _MSC_VER
@@ -178,7 +176,7 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 		}
 		break;
 	case FILE_EPE:
-		pkg->ej_pkg = dtex_load_epe(is);
+		pkg->ej_pkg = dtex_load_epe(is, pkg);
 		break;
 	case FILE_RRP:
 		pkg->rrp_pkg = dtex_load_rrp(is);
@@ -265,7 +263,7 @@ dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx)
 	}
 
 	struct unpack2pkg_params params;
-	params.pkg = NULL;
+	params.pkg = pkg;
 	params.file_type = FILE_EPT;
 	params.load_tex_idx = idx;
 	_unpack_file(loader, file, &_unpack_memory_to_pkg, &params);

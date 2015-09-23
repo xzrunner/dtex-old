@@ -1,7 +1,6 @@
 #include "dtex_c3.h"
 #include "dtex_packer.h"
 #include "dtex_texture.h"
-#include "dtex_loader_new.h"
 #include "dtex_draw.h"
 #include "dtex_buffer.h"
 #include "dtex_rrp.h"
@@ -10,8 +9,10 @@
 #include "dtex_file.h"
 #include "dtex_math.h"
 #include "dtex_texture_pool.h"
+#include "dtex_loader_new.h"
+#include "dtex_package.h"
 
-//#include "ejoy2d.h"
+#include <ejoy2d.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -337,6 +338,7 @@ _draw_preload_list(struct dtex_c3* dtex, float scale, struct dtex_loader* loader
 //			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
 			dtex_load_texture(loader, dr->pkg, dr->raw_tex_idx);
+			ori_tex = dr->pkg->textures[dr->raw_tex_idx];
 		}
 
 		// draw old tex to new 
