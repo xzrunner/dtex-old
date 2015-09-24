@@ -4,7 +4,7 @@
 #include "dtex_file.h"
 #include "dtex_log.h"
 
-#include "rg_etc1_for_c.h"
+#include <rg_etc1_for_c.h>
 
 #include <assert.h>
 #include <stdlib.h>
