@@ -6,6 +6,8 @@ extern "C"
 #ifndef dynamic_texture_package_h
 #define dynamic_texture_package_h
 
+#include <ejoy2d.h>
+
 struct dtex_rrp;
 struct dtex_pts;
 struct dtex_rrr;

@@ -63,47 +63,47 @@ struct dtex_c3 {
 };
 
 struct dtex_c3* 
-dtexc3_create() {
+dtex_c3_create() {
 	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
 	size_t psize = PRELOAD_SIZE * sizeof(struct preload_node);
 	size_t sz = sizeof(struct dtex_c3) + nsize + psize;
-	struct dtex_c3* dtex = (struct dtex_c3*)malloc(sz);
-	memset(dtex, 0, sz);
+	struct dtex_c3* c3 = (struct dtex_c3*)malloc(sz);
+	memset(c3, 0, sz);
 
-	dtex->freelist = (struct hash_node*)(dtex + 1);
+	c3->freelist = (struct hash_node*)(c3 + 1);
 	for (int i = 0; i < NODE_SIZE - 1; ++i) {
-		struct hash_node* hn = &dtex->freelist[i];
-		hn->next_hash = &dtex->freelist[i+1];
+		struct hash_node* hn = &c3->freelist[i];
+		hn->next_hash = &c3->freelist[i+1];
 	}
-	dtex->freelist[NODE_SIZE-1].next_hash = NULL;
+	c3->freelist[NODE_SIZE-1].next_hash = NULL;
 
-	struct preload_node* first_node = (struct preload_node*)((intptr_t)dtex->freelist + nsize);
+	struct preload_node* first_node = (struct preload_node*)((intptr_t)c3->freelist + nsize);
 	for (int i = 0; i < PRELOAD_SIZE; ++i) {
-		dtex->preload_list[i] = first_node+i;
+		c3->preload_list[i] = first_node+i;
 	}
 
-	return dtex;
+	return c3;
 }
 
-void dtexc3_release(struct dtex_c3* dtex, struct dtex_buffer* buf) {
-	for (int i = 0; i < dtex->tex_size; ++i) {
-		dtex_del_tex(buf, dtex->textures[i]);
+void dtex_c3_release(struct dtex_c3* c3, struct dtex_buffer* buf) {
+	for (int i = 0; i < c3->tex_size; ++i) {
+		dtex_del_tex(buf, c3->textures[i]);
 	}
 
-	free(dtex);
+	free(c3);
 }
 
 void 
-dtexc3_preload_pkg(struct dtex_c3* dtex, struct dtex_package* pkg, float scale) {
-	for (int i = 0; i < dtex->preload_size; ++i) {
-		if (pkg == dtex->preload_list[i]->pkg) {
+dtex_c3_load_pkg(struct dtex_c3* c3, struct dtex_package* pkg, float scale) {
+	for (int i = 0; i < c3->preload_size; ++i) {
+		if (pkg == c3->preload_list[i]->pkg) {
 			return;
 		}
 	}
 
 	for (int i = 0; i < pkg->tex_size; ++i) {
-		assert(dtex->preload_size <= MAX_TEX_SIZE);
-		struct preload_node* n = dtex->preload_list[dtex->preload_size++];
+		assert(c3->preload_size <= MAX_TEX_SIZE);
+		struct preload_node* n = c3->preload_list[c3->preload_size++];
 		n->pkg = pkg;
 		n->raw_tex_idx = i;
 		n->scale = scale;
@@ -165,14 +165,14 @@ _compare_preload_length(const void *arg1, const void *arg2) {
 }
 
 static inline void
-_unique_preload_list(struct dtex_c3* dtex) {
-	qsort((void*)dtex->preload_list, dtex->preload_size, sizeof(struct preload_node*), _compare_preload_name);
+_unique_preload_list(struct dtex_c3* c3) {
+	qsort((void*)c3->preload_list, c3->preload_size, sizeof(struct preload_node*), _compare_preload_name);
 	struct preload_node* unique[PRELOAD_SIZE];
-	unique[0] = dtex->preload_list[0];
+	unique[0] = c3->preload_list[0];
 	int unique_size = 1;
-	for (int i = 1; i < dtex->preload_size; ++i) {
+	for (int i = 1; i < c3->preload_size; ++i) {
 		struct preload_node* last = unique[unique_size-1];
-		struct preload_node* curr = dtex->preload_list[i];
+		struct preload_node* curr = c3->preload_list[i];
 		if (strcmp(curr->pkg->name, last->pkg->name) == 0 && curr->raw_tex_idx == last->raw_tex_idx) {
 			;
 		} else {
@@ -180,17 +180,17 @@ _unique_preload_list(struct dtex_c3* dtex) {
 			++unique_size;
 		}
 	}
-	memcpy(dtex->preload_list, unique, unique_size*sizeof(struct preload_node*));
-	dtex->preload_size = unique_size;	
+	memcpy(c3->preload_list, unique, unique_size*sizeof(struct preload_node*));
+	c3->preload_size = unique_size;	
 }
 
 static inline struct hash_node* 
-_new_hash_rect(struct dtex_c3* dtex) {
-	if (dtex->freelist == NULL) {
+_new_hash_rect(struct dtex_c3* c3) {
+	if (c3->freelist == NULL) {
 		return NULL;  	
 	}
-	struct hash_node* ret = dtex->freelist;
-	dtex->freelist = ret->next_hash;
+	struct hash_node* ret = c3->freelist;
+	c3->freelist = ret->next_hash;
 	assert(ret != NULL);
 	return ret;
 }
@@ -210,7 +210,7 @@ _hash_origin_pack(const char* name) {
 }
 
 static inline bool
-_pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node, struct dtex_texture* texture) {
+_pack_preload_node(struct dtex_c3* c3, float scale, struct preload_node* node, struct dtex_texture* texture) {
 	int w = node->pkg->textures[node->raw_tex_idx]->width * node->scale * scale,
 		h = node->pkg->textures[node->raw_tex_idx]->height * node->scale * scale;
 	struct dp_pos* pos = NULL;
@@ -224,7 +224,7 @@ _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node,
 		return false;
 	}
 
-	struct hash_node* hn = _new_hash_rect(dtex);
+	struct hash_node* hn = _new_hash_rect(c3);
 	hn->n.pkg = node->pkg;
 	hn->n.raw_tex_idx = node->raw_tex_idx;
 	hn->n.dst_tex = texture;
@@ -236,31 +236,31 @@ _pack_preload_node(struct dtex_c3* dtex, float scale, struct preload_node* node,
 	pos->ud = &hn->n;
 
 	unsigned int idx = _hash_origin_pack(node->pkg->name);
-	hn->next_hash = dtex->hash[idx];
-	dtex->hash[idx] = hn;	
+	hn->next_hash = c3->hash[idx];
+	c3->hash[idx] = hn;	
 
 	return true;
 }
 
 static inline bool
-_pack_preload_list_with_scale(struct dtex_c3* dtex, float scale) {
+_pack_preload_list_with_scale(struct dtex_c3* c3, float scale) {
 	// init rect packer
-	for (int i = 0; i < dtex->tex_size; ++i) {
-		struct dtex_texture* tex = dtex->textures[i];
+	for (int i = 0; i < c3->tex_size; ++i) {
+		struct dtex_texture* tex = c3->textures[i];
 		if (tex) {
 			dtexpacker_release(tex->packer);
 		}
 		// packer's capacity should larger for later inserting
-		tex->packer = dtexpacker_create(tex->width, tex->height, dtex->preload_size + 100);
+		tex->packer = dtexpacker_create(tex->width, tex->height, c3->preload_size + 100);
 	}
 	// insert
 	int tex_idx = 0;
-	for (int i = 0; i < dtex->preload_size; ++i) {
-		struct preload_node* node = dtex->preload_list[i];
+	for (int i = 0; i < c3->preload_size; ++i) {
+		struct preload_node* node = c3->preload_list[i];
 		bool success = false;
-		for (int j = tex_idx; j < tex_idx + dtex->tex_size && !success; ++j) {
-			struct dtex_texture* tex = dtex->textures[j % dtex->tex_size];
-			success = _pack_preload_node(dtex, scale, node, tex);
+		for (int j = tex_idx; j < tex_idx + c3->tex_size && !success; ++j) {
+			struct dtex_texture* tex = c3->textures[j % c3->tex_size];
+			success = _pack_preload_node(c3, scale, node, tex);
 			tex_idx = j;
 		}
 		if (!success) {
@@ -271,13 +271,13 @@ _pack_preload_list_with_scale(struct dtex_c3* dtex, float scale) {
 }
 
 static inline float
-_pack_preload_list(struct dtex_c3* dtex, float alloc_scale) {
-	qsort((void*)dtex->preload_list, dtex->preload_size, 
+_pack_preload_list(struct dtex_c3* c3, float alloc_scale) {
+	qsort((void*)c3->preload_list, c3->preload_size, 
 		sizeof(struct _pack_preload_list*), _compare_preload_length);
 
 	float scale = alloc_scale;
 	while (scale > MIN_SCALE) {
-		bool success = _pack_preload_list_with_scale(dtex, scale);
+		bool success = _pack_preload_list_with_scale(c3, scale);
 		if (!success) {
 			scale *= SCALE_EVERTIME;
         } else {
@@ -308,12 +308,39 @@ _compare_dr_ori_pkg(const void *arg1, const void *arg2) {
 // }
 
 static inline void
-_draw_preload_list(struct dtex_c3* dtex, float scale, struct dtex_loader* loader, struct dtex_buffer* buf) {
+_relocate(struct dtex_package* pkg, int src_tex_idx, int dst_tex_idx, struct dtex_rect* dst_rect) {
+	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
+	for (int id = 0; id < ej_pkg->n; ++id) {
+		int type = ej_pkg->type[id]; 
+		if (type != TYPE_PICTURE) {
+			continue;
+		}
+		struct ej_pack_picture* ej_pic = (struct ej_pack_picture*)ej_pkg->data[id];
+		for (int j = 0; j < ej_pic->n; ++j) {
+			struct pack_quad* ej_q = &ej_pic->rect[j];
+			if (ej_q->texid >= QUAD_TEXID_IN_PKG_MAX ||
+				ej_q->texid != src_tex_idx) {
+				continue;
+			}
+			struct dtex_raw_tex* src = pkg->textures[ej_q->texid];
+			ej_q->texid = dst_tex_idx + QUAD_TEXID_IN_PKG_MAX;
+			for (int i = 0; i < 4; ++i) {
+				float x = (float)ej_q->texture_coord[i*2] / src->width;
+				float y = (float)ej_q->texture_coord[i*2+1] / src->height;
+				ej_q->texture_coord[i*2] = dst_rect->xmin + (dst_rect->xmax - dst_rect->xmin) * x;
+				ej_q->texture_coord[i*2+1] = dst_rect->ymin + (dst_rect->ymax - dst_rect->ymin) * y;
+			}
+		}
+	}
+}
+
+static inline void
+_draw_preload_list(struct dtex_c3* c3, float scale, struct dtex_loader* loader, struct dtex_buffer* buf) {
 	// sort all node by its texture
 	int count = 0;
 	struct dtex_node* nodes[NODE_SIZE];
 	for (int i = 0; i < HASH_SIZE; ++i) {
-		struct hash_node* hn = dtex->hash[i];
+		struct hash_node* hn = c3->hash[i];
 		while (hn) {
 			nodes[count++] = &hn->n;
 			hn = hn->next_hash;
@@ -354,18 +381,31 @@ _draw_preload_list(struct dtex_c3* dtex, float scale, struct dtex_loader* loader
 		vb[8] = vx_max; vb[9] = vy_max; vb[10] = tx_max; vb[11] = ty_max;
 		vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
 		dtex_draw_to_texture(buf, ori_tex, vb, dr->dst_tex);
-        
+
+		_relocate(dr->pkg, dr->raw_tex_idx, dr->dst_tex->raw_tex->idx, &dr->dst_rect);
+
+		// todo: relocate rrr, b4r
+		// 	if (pkg->rrr_pkg) {
+		// 		dtex_rrr_relocate(pkg->rrr_pkg, pkg);
+		// 	} else if (pkg->b4r_pkg) {
+		// 		dtex_b4r_relocate(pkg->b4r_pkg, pkg);
+		// 	}
+		// 	if (pkg->rrp_pkg) {
+		// 		_relocate_rrp(c3, pkg);
+		// 	}
+
 		dtex_pool_remove(ori_tex);
+		dr->pkg->textures[dr->raw_tex_idx] = NULL;
 
 		last_pkg = dr->pkg;
 	}
 }
 
 static inline float
-_alloc_texture(struct dtex_c3* dtex, struct dtex_buffer* buf) {
+_alloc_texture(struct dtex_c3* c3, struct dtex_buffer* buf) {
 	float area = 0;
-	for (int i = 0; i < dtex->preload_size; ++i) {
-		struct preload_node* n = dtex->preload_list[i];
+	for (int i = 0; i < c3->preload_size; ++i) {
+		struct preload_node* n = c3->preload_list[i];
 		int w = n->pkg->textures[n->raw_tex_idx]->width * n->scale,
 			h = n->pkg->textures[n->raw_tex_idx]->height * n->scale;
 		area += w * h;
@@ -377,35 +417,43 @@ _alloc_texture(struct dtex_c3* dtex, struct dtex_buffer* buf) {
 	do {
 		struct dtex_texture* tex = dtex_new_tex(buf);
 		real += tex->width * tex->height;
-		dtex->textures[dtex->tex_size++] = tex;
+
+		struct dtex_raw_tex* rtex = dtex_pool_add();
+		rtex->id = tex->tex;
+		rtex->width = tex->width;
+		rtex->height = tex->height;
+		rtex->format = TEXTURE8;
+		tex->raw_tex = rtex;
+
+		c3->textures[c3->tex_size++] = tex;
 	} while (real < gain);
 
 	return MIN(1.0f, (float)gain / area);
 }
 
 void 
-dtexc3_preload_pkg_end(struct dtex_c3* dtex, struct dtex_loader* loader, struct dtex_buffer* buf) {
-	if (dtex->preload_size == 0) {
+dtex_c3_load_pkg_end(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf) {
+	if (c3->preload_size == 0) {
 		return;
 	}
 
-	_unique_preload_list(dtex);	
+	_unique_preload_list(c3);	
 
-	float alloc_scale = _alloc_texture(dtex, buf);
+	float alloc_scale = _alloc_texture(c3, buf);
 
-	float scale = _pack_preload_list(dtex, alloc_scale);
+	float scale = _pack_preload_list(c3, alloc_scale);
 
-	_draw_preload_list(dtex, scale, loader, buf);
-    
-    dtex->preload_size = 0;
+	_draw_preload_list(c3, scale, loader, buf);
+
+    c3->preload_size = 0;
 }
 
 struct dp_pos* 
-dtexc3_load_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_buffer* buf, struct dtex_texture** dst) {
+dtex_c3_load_tex(struct dtex_c3* c3, struct dtex_raw_tex* tex, struct dtex_buffer* buf, struct dtex_texture** dst) {
 	// todo sort
 
 	// todo select dst texture
-	struct dtex_texture* dst_tex = dtex->textures[0];
+	struct dtex_texture* dst_tex = c3->textures[0];
 	*dst = dst_tex;
 
 	// insert
@@ -445,11 +493,11 @@ dtexc3_load_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_buff
 }
 
 void 
-dtexc3_preload_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_buffer* buf) {
+dtexc3_preload_tex(struct dtex_c3* c3, struct dtex_raw_tex* tex, struct dtex_buffer* buf) {
 	// todo sort
 
 	// todo select dst texture
-	struct dtex_texture* dst_tex = dtex->textures[0];
+	struct dtex_texture* dst_tex = c3->textures[0];
 
 	// insert
 	struct dp_pos* pos = dtexpacker_add(dst_tex->packer, tex->width, tex->height, true);
@@ -472,62 +520,15 @@ dtexc3_preload_tex(struct dtex_c3* dtex, struct dtex_raw_tex* tex, struct dtex_b
 	vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
 	dtex_draw_to_texture(buf, tex, vb, dst_tex);
 
+	// todo new_tex
+
 	dtex_pool_remove(tex);
 }
 
-static inline void
-_relocate_epe(struct dtex_c3* dtex, struct dtex_package* pkg) {
-	unsigned int idx = _hash_origin_pack(pkg->name);
-	struct hash_node* pkg_hn = dtex->hash[idx];
-
-	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
-	for (int id = 0; id < ej_pkg->n; ++id) {
-		int type = ej_pkg->type[id]; 
-		if (type != TYPE_PICTURE) {
-			continue;
-		}
-
-		struct ej_pack_picture* ej_pic = (struct ej_pack_picture*)ej_pkg->data[id];
-		for (int j = 0; j < ej_pic->n; ++j) {
-			struct pack_quad* ej_q = &ej_pic->rect[j];
-			struct dtex_raw_tex* t = pkg->textures[ej_q->texid];
-			// find dtex_node
-			struct dtex_node* to_node = NULL;
-			struct hash_node* hn = pkg_hn;
-			while (hn) {
-				struct dtex_node* n = &hn->n;
-				if (strcmp(pkg->name, n->pkg->name) == 0 && ej_q->texid == n->raw_tex_idx) {
-					to_node = n;
-					break;
-				}
-				hn = hn->next_hash;
-			}
-			assert(to_node);
-
-			// map part to dest texture
-			struct dtex_raw_tex* ori_tex = dtex_pool_query(ej_q->texid);
-			if (ori_tex->id == 0) {
-				ori_tex->id = to_node->dst_tex->tex;
-				ori_tex->id_alpha = 0;
-				ori_tex->width = 1.0f /  to_node->dst_tex->width;
-				ori_tex->height = 1.0f /  to_node->dst_tex->height;	
-				ori_tex->format = TEXTURE8;			
-			}
-			struct dtex_rect* to_rect = &to_node->dst_rect;
-			for (int i = 0; i < 4; ++i) {
-				float x = (float)ej_q->texture_coord[i*2] / t->width;
-				float y = (float)ej_q->texture_coord[i*2+1] / t->height;
-				ej_q->texture_coord[i*2] = to_rect->xmin + (to_rect->xmax - to_rect->xmin) * x;
-				ej_q->texture_coord[i*2+1] = to_rect->ymin + (to_rect->ymax - to_rect->ymin) * y;
-			}
-		}
-	}
-}
-
 static inline struct dtex_texture* 
-_query_tex_position(struct dtex_c3* dtex, const char* name, int idx, struct dtex_rect** pos) {
+_query_tex_position(struct dtex_c3* c3, const char* name, int idx, struct dtex_rect** pos) {
 	unsigned int hash = _hash_origin_pack(name);
-	struct hash_node* hn = dtex->hash[hash];
+	struct hash_node* hn = c3->hash[hash];
 	while (hn) {
 		struct dtex_node* dr = &hn->n;
 		if (strcmp(name, dr->pkg->name) == 0 && idx == dr->raw_tex_idx) {
@@ -542,35 +543,20 @@ _query_tex_position(struct dtex_c3* dtex, const char* name, int idx, struct dtex
 }
 
 //static inline void
-//_relocate_rrp(struct dtex_c3* dtex, struct dtex_package* pkg) {
+//_relocate_rrp(struct dtex_c3* c3, struct dtex_package* pkg) {
 //	assert(pkg->rrp_pkg);
 //	for (int i = 0; i < pkg->tex_size; ++i) {
 //		struct dtex_rect* pos;
-//		struct dtex_texture* tex = _query_tex_position(dtex, pkg->name, i, &pos);
+//		struct dtex_texture* tex = _query_tex_position(c3, pkg->name, i, &pos);
 //		assert(tex && pos);
 //		dtex_rrp_relocate(pkg->rrp_pkg, i, tex, pos);
 //	}
 //}
 
-void 
-dtexc3_relocate(struct dtex_c3* dtex, struct dtex_package* pkg) {
-// 	if (pkg->rrr_pkg) {
-// 		dtex_rrr_relocate(pkg->rrr_pkg, pkg);
-// 	} else if (pkg->b4r_pkg) {
-// 		dtex_b4r_relocate(pkg->b4r_pkg, pkg);
-// 	}
-
-	_relocate_epe(dtex, pkg);
-
-// 	if (pkg->rrp_pkg) {
-// 		_relocate_rrp(dtex, pkg);
-// 	}
-}
-
 struct dtex_package* 
-dtexc3_query_pkg(struct dtex_c3* dtex, const char* name) {
+dtex_c3_query_pkg(struct dtex_c3* c3, const char* name) {
 	unsigned int idx = _hash_origin_pack(name);
-	struct hash_node* hn = dtex->hash[idx];
+	struct hash_node* hn = c3->hash[idx];
 	while (hn) {
 		struct dtex_node* dr = &hn->n;
 		if (strcmp(name, dr->pkg->name) == 0) {
@@ -582,9 +568,9 @@ dtexc3_query_pkg(struct dtex_c3* dtex, const char* name) {
 }
 
 void
-dtexc3_query_rect(struct dtex_c3* dtex, const char* name, struct dtex_rect** rect, int count) {
+dtex_c3_query_rect(struct dtex_c3* c3, const char* name, struct dtex_rect** rect, int count) {
 	unsigned int idx = _hash_origin_pack(name);
-	struct hash_node* hn = dtex->hash[idx];
+	struct hash_node* hn = c3->hash[idx];
 	while (hn) {
 		struct dtex_node* dr = &hn->n;
 		if (strcmp(name, dr->pkg->name) == 0) {
@@ -595,14 +581,14 @@ dtexc3_query_rect(struct dtex_c3* dtex, const char* name, struct dtex_rect** rec
 }
 
 void 
-dtexc3_debug_draw(struct dtex_c3* dtex) {
+dtex_c3_debug_draw(struct dtex_c3* c3) {
 // 	const float edge = 0.5f;
-// 	for (int i = 0; i < dtex->tex_size; ++i) {
-// 		dtex_debug_draw_with_pos(dtex->textures[i]->tex, 
+// 	for (int i = 0; i < c3->tex_size; ++i) {
+// 		dtex_debug_draw_with_pos(c3->textures[i]->tex, 
 // 			-1 + i * edge, 1 - edge, -1 + i * edge + edge, 1);
 // 	}
 
-	dtex_debug_draw(dtex->textures[0]->tex);
+	dtex_debug_draw(c3->textures[0]->tex);
 
     //dtex_debug_draw(5);
 }

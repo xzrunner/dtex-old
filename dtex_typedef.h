@@ -29,6 +29,8 @@ extern "C"
 #define FILE_RRR 4
 #define FILE_B4R 5
 
+#define QUAD_TEXID_IN_PKG_MAX 1024
+
 struct draw_params {
 	int x, y;
 	int* mat;

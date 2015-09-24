@@ -6,30 +6,27 @@ extern "C"
 #ifndef dynamic_texture_facade_h
 #define dynamic_texture_facade_h
 
-#include "dtex_typedef.h"
-
-#include <ejoy2d.h>
-
 #include <stdbool.h>
 
 // todo
 struct dtex_texture;
 struct dp_pos;
 
-struct animation;
-struct ej_texture;
+// struct animation;
+// struct ej_texture;
 
 void dtexf_create(const char* cfg);
 void dtexf_release();
 
 // loading
 struct dtex_package*  dtexf_preload_pkg(const char* name, const char* path, int type);
+void dtexf_load_texture(struct dtex_package* pkg, int idx);
 // todo sort sprite list for C3
 struct ej_sprite* dtexf_create_sprite(const char* path);
 
 // C3
 void dtexf_c3_load_pkg(struct dtex_package* pkg, float scale);
-void dtexf_c3_load_pkg_finish();
+void dtexf_c3_load_pkg_end();
 
 //// C2
 //void dtexf_c2_load_begin();
@@ -56,8 +53,8 @@ void dtexf_c3_load_pkg_finish();
 //bool dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id, 
 //	struct dp_pos* src_pos, struct draw_params* params, const int32_t part_screen[8]);
 //
-//// for debug
-//void dtexf_debug_draw();
+// for debug
+void dtexf_debug_draw();
 //void dtexf_del_texture(int tex);
 //
 //// for test

@@ -72,7 +72,7 @@ dtexf_create(const char* cfg) {
         BUF = dtexbuf_create();
     }
 	if (CFG.open_c3) {
-		C3 = dtexc3_create();	
+		C3 = dtex_c3_create();	
 	}
 // 	if (CFG.open_c1) {
 // 		C1 = dtexc1_create(BUF);		
@@ -91,7 +91,7 @@ dtexf_release() {
 // 		dtexc1_release(C1, BUF);		
 // 	}
 	if (C3) {
-		dtexc3_release(C3, BUF);		
+		dtex_c3_release(C3, BUF);		
 	}
 	dtexbuf_release(BUF);
 	if (C3) {
@@ -104,6 +104,11 @@ dtexf_preload_pkg(const char* name, const char* path, int type) {
 	return dtex_preload_pkg(LOADER, name, path, type);
 }
 
+void 
+dtexf_load_texture(struct dtex_package* pkg, int idx) {
+	dtex_load_texture(LOADER, pkg, idx);
+}
+
 //struct ej_sprite* 
 //dtexf_create_sprite(const char* path) {
 //	if (C3 == NULL) {
@@ -113,7 +118,7 @@ dtexf_preload_pkg(const char* name, const char* path, int type) {
 //	struct dtex_raw_tex* src_tex = dtexloader_load_image(path);
 //
 //	struct dtex_texture* dst_tex = NULL;
-//	struct dp_pos* pos = dtexc3_load_tex(C3, src_tex, BUF, &dst_tex);
+//	struct dp_pos* pos = dtex_c3_load_tex(C3, src_tex, BUF, &dst_tex);
 //
 //	dtexloader_unload_tex(src_tex);
 //	free(src_tex);
@@ -124,26 +129,14 @@ dtexf_preload_pkg(const char* name, const char* path, int type) {
 void
 dtexf_c3_load_pkg(struct dtex_package* pkg, float scale) {
 	if (C3) {
-		dtexc3_preload_pkg(C3, pkg, scale);
+		dtex_c3_load_pkg(C3, pkg, scale);
 	}
 }
 
 void 
-dtexf_c3_load_pkg_finish() {
-	if (C3 == NULL) {
-		return;
-	}
-
-	dtexc3_preload_pkg_end(C3, LOADER, BUF);
-
-	// relocate
-	for (int i = 0; ; ++i) {
-		struct dtex_package* pkg = dtex_get_pkg(LOADER, i);
-		if (pkg == NULL) {
-			break;
-		} else {
-			dtexc3_relocate(C3, pkg);
-		}
+dtexf_c3_load_pkg_end() {
+	if (C3) {
+		dtex_c3_load_pkg_end(C3, LOADER, BUF);
 	}
 }
 
@@ -229,10 +222,10 @@ dtexf_c3_load_pkg_finish() {
 //
 //void 
 //dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path) {
-//	struct dtex_package* pkg = dtexc3_query_pkg(C3, pkg_name);
+//	struct dtex_package* pkg = dtex_c3_query_pkg(C3, pkg_name);
 //
 //	struct dtex_rect* rect[pkg->tex_size];
-//	dtexc3_query_rect(C3, pkg_name, rect, pkg->tex_size);
+//	dtex_c3_query_rect(C3, pkg_name, rect, pkg->tex_size);
 //
 //	int spr_id = sprite_id(pkg->ej_pkg, spr_name);
 //	dtex_async_load_spr(LOADER, pkg->ej_pkg, rect, pkg->tex_size, spr_id, path);
@@ -346,8 +339,8 @@ dtexf_debug_draw() {
 		return;
 	}
 //	dtexc1_debug_draw(C1);
-	dtexc2_debug_draw(C2);
-//	dtexc3_debug_draw(C3);
+//	dtexc2_debug_draw(C2);
+	dtex_c3_debug_draw(C3);
 }
 
 void 
@@ -388,7 +381,7 @@ dtexf_test_pvr(const char* path) {
 	src_tex.id_alpha = 0;
 
 	struct dtex_texture* dst_tex = NULL;
-	dtexc3_load_tex(C3, &src_tex, BUF, &dst_tex);
+	dtex_c3_load_tex(C3, &src_tex, BUF, &dst_tex);
 }
 
 #ifndef __ANDROID__
@@ -422,7 +415,7 @@ dtexf_test_etc1(const char* path) {
 	src_tex.id_alpha = 0;
 
 	struct dtex_texture* dst_tex = NULL;
-	dtexc3_load_tex(C3, &src_tex, BUF, &dst_tex);
+	dtex_c3_load_tex(C3, &src_tex, BUF, &dst_tex);
 }
 
 #endif

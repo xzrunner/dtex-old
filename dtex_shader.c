@@ -37,7 +37,7 @@ static GLuint VERTEX_BUFFER = 0;
 static GLuint INDEX_BUFFER = 0;
 
 // todo
-static const uint32_t MULTI_COL = 0xffffff;
+static const uint32_t MULTI_COL = 0xffffffff;
 static const uint32_t ADD_COL = 0;
 
 static inline void
@@ -85,8 +85,10 @@ _compile(const char* source, int type) {
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
 	if (status == 0) {
+		char buf[1024];
+		glGetShaderInfoLog(shader, 1024, NULL, buf);
 		glDeleteShader(shader);
-		return 0;
+		dtex_fault("compile failed:%s\n, source:\n %s\n", buf, source);
 	}
 	return shader;
 }
@@ -98,7 +100,9 @@ _link(struct program* p) {
 
 	glGetProgramiv(p->prog, GL_LINK_STATUS, &status);
 	if (status == 0) {
-		dtex_fault("Can't link program");
+		char buf[1024];
+		glGetProgramInfoLog(p->prog, 1024, NULL, buf);
+		dtex_fault("link failed:%s\n", buf);
 	}
 }
 
@@ -320,7 +324,7 @@ dtex_shader_blend(int mode) {
 
 void 
 dtex_shader_texture(int id) {
-	if (RS->texture = id) {
+	if (RS->texture == id) {
 		return;
 	}
 

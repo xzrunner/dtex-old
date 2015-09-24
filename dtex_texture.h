@@ -13,6 +13,8 @@ struct dtex_texture {
 	int width, height;
 	// todo inv w & h
 
+	struct dtex_raw_tex* raw_tex;
+
 	struct dtex_packer* packer;		
 };
 
