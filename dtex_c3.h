@@ -17,8 +17,8 @@ struct dtex_rect;
 struct dtex_c3* dtex_c3_create();
 void dtex_c3_release(struct dtex_c3*, struct dtex_buffer*);
 
-void dtex_c3_load_pkg(struct dtex_c3*, struct dtex_package*, float scale);
-void dtex_c3_load_pkg_end(struct dtex_c3*, struct dtex_loader*, struct dtex_buffer*);
+void dtex_c3_load(struct dtex_c3*, struct dtex_package*, float scale);
+void dtex_c3_load_end(struct dtex_c3*, struct dtex_loader*, struct dtex_buffer*);
 
 // todo cache and sort
 struct dp_pos* dtex_c3_load_tex(struct dtex_c3*, struct dtex_raw_tex*, struct dtex_buffer*, struct dtex_texture** dst);

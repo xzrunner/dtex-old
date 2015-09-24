@@ -25,14 +25,14 @@ void dtexf_load_texture(struct dtex_package* pkg, int idx);
 struct ej_sprite* dtexf_create_sprite(const char* path);
 
 // C3
-void dtexf_c3_load_pkg(struct dtex_package* pkg, float scale);
-void dtexf_c3_load_pkg_end();
+void dtexf_c3_load(struct dtex_package* pkg, float scale);
+void dtexf_c3_load_end();
 
-//// C2
-//void dtexf_c2_load_begin();
-//void dtexf_c2_load_sprite(struct ej_package* pkg, const char* name);
-//void dtexf_c2_load_end();
-//float* dtexf_c2_lookup_texcoords(struct ej_texture* ori_tex, float* ori_vb, int* dst_tex);
+// C2
+void dtexf_c2_load_begin();
+void dtexf_c2_load(struct dtex_package* pkg, const char* name);
+void dtexf_c2_load_end();
+float* dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_tex);
 //void dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dp_pos** out_pos);
 
 //// C1

@@ -1,5 +1,6 @@
 #include "dtex_shader.h"
 #include "dtex_log.h"
+#include "dtex_statistics.h"
 
 #include <stdlib.h>
 #include <opengl.h>
@@ -281,6 +282,8 @@ _rs_commit() {
 	glDrawElements(GL_TRIANGLES, 6 * RS->object, GL_UNSIGNED_SHORT, 0);
 
 	RS->object = 0;
+
+	dtex_add_drawcall();
 }
 
 void 

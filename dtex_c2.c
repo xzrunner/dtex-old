@@ -7,6 +7,7 @@
 #include "dtex_utility.h"
 #include "dtex_rrp.h"
 #include "dtex_texture_pool.h"
+#include "dtex_package.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -23,7 +24,7 @@
 
 struct dtex_node {
 	// ori info
-	struct dtex_raw_tex ori_tex;
+	struct dtex_raw_tex* ori_tex;
 	struct dtex_rect ori_rect;
 
 	// dst info
@@ -43,7 +44,7 @@ struct hash_node {
 struct preload_node {
 	struct ej_sprite_pack* ej_pkg;
 	struct ej_pack_quad* ej_quad;
-	struct dtex_raw_tex tex;
+	struct dtex_raw_tex* ori_tex;
 
 	struct dtex_rect rect;
 };
@@ -63,7 +64,7 @@ struct dtex_c2 {
 };
 
 struct dtex_c2* 
-dtexc2_create(struct dtex_buffer* buf) {
+dtex_c2_create(struct dtex_buffer* buf) {
 	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
 	size_t psize = PRELOAD_SIZE * sizeof(struct preload_node);
 	size_t sz = sizeof(struct dtex_c2) + nsize + psize;
@@ -89,7 +90,7 @@ dtexc2_create(struct dtex_buffer* buf) {
 }
 
 void 
-dtexc2_release(struct dtex_c2* dtex, struct dtex_buffer* buf) {
+dtex_c2_release(struct dtex_c2* dtex, struct dtex_buffer* buf) {
 	for (int i = 0; i < dtex->tex_size; ++i) {
 		dtex_del_tex(buf, dtex->textures[i]);
 	}
@@ -98,13 +99,13 @@ dtexc2_release(struct dtex_c2* dtex, struct dtex_buffer* buf) {
 }
 
 void 
-dtexc2_preload_begin(struct dtex_c2* dtex) {
+dtex_c2_load_begin(struct dtex_c2* dtex) {
 	dtex->loadable++;
 }
 
 // todo hash pic for preload_list
 static inline void
-_preload_picture(struct dtex_c2* dtex, struct ej_sprite_pack* ej_pkg, struct ej_pack_picture* ej_pic, int tex_idx) {
+_preload_picture(struct dtex_c2* dtex, struct dtex_package* pkg, struct ej_pack_picture* ej_pic, int tex_idx) {
 	if (dtex->loadable == 0 || dtex->preload_size >= PRELOAD_SIZE - 1) {
 		return;
 	}
@@ -118,21 +119,24 @@ _preload_picture(struct dtex_c2* dtex, struct ej_sprite_pack* ej_pkg, struct ej_
 			continue;
 		}
 		struct preload_node* pn = dtex->preload_list[dtex->preload_size++];
-		pn->ej_pkg = ej_pkg;
+		pn->ej_pkg = pkg->ej_pkg;
 		pn->ej_quad = ej_q;
-		pn->tex.id = ej_q->texid;
-		// todo
+
+		// don't map C3
+		assert(ej_q->texid < QUAD_TEXID_IN_PKG_MAX);
+		pn->ori_tex = pkg->textures[ej_q->texid];
 		dtex_get_pic_src_rect(ej_q->texture_coord, &pn->rect);
 	}
 }
 
 // todo hash anim for preload_list
 static inline void
-_preload_complex(struct dtex_c2* dtex, struct ej_sprite_pack* ej_pkg, int spr_id, int tex_idx) {
+_preload_complex(struct dtex_c2* dtex, struct dtex_package* pkg, int spr_id, int tex_idx) {
 	if (dtex->loadable == 0 || dtex->preload_size >= PRELOAD_SIZE - 1) {
 		return;
 	}
 
+	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
 	if (spr_id < 0 || spr_id >= ej_pkg->n || spr_id == ANCHOR_ID) {
 		return;
 	}
@@ -140,32 +144,32 @@ _preload_complex(struct dtex_c2* dtex, struct ej_sprite_pack* ej_pkg, int spr_id
 	int type = ej_pkg->type[spr_id];
 	if (type == TYPE_PICTURE) {
 		struct ej_pack_picture* pic = (struct ej_pack_picture*)ej_pkg->data[spr_id];
-		_preload_picture(dtex, ej_pkg, pic, tex_idx);
+		_preload_picture(dtex, pkg, pic, tex_idx);
 	} else if (type == TYPE_ANIMATION) {
 		struct ej_pack_animation* anim = (struct ej_pack_animation*)ej_pkg->data[spr_id];		
 		for (int i = 0; i < anim->component_number; ++i) {
-			_preload_complex(dtex, ej_pkg, anim->component[i].id, tex_idx);
+			_preload_complex(dtex, pkg, anim->component[i].id, tex_idx);
 		}
 	} else if (type == TYPE_PARTICLE3D) {
 		struct ej_pack_particle3d* p3d = (struct ej_pack_particle3d*)ej_pkg->data[spr_id];
 		for (int i = 0; i < p3d->cfg.symbol_count;  ++i) {
 			uint32_t id = (uint32_t)p3d->cfg.symbols[i].ud;
-			_preload_complex(dtex, ej_pkg, id, tex_idx);
+			_preload_complex(dtex, pkg, id, tex_idx);
 		}
 	} else if (type == TYPE_PARTICLE2D) {
 		struct ej_pack_particle2d* p2d = (struct ej_pack_particle2d*)ej_pkg->data[spr_id];
 		for (int i = 0; i < p2d->cfg.symbol_count; ++i) {
 			uint32_t id = (uint32_t)p2d->cfg.symbols[i].ud;
-			_preload_complex(dtex, ej_pkg, id, tex_idx);
+			_preload_complex(dtex, pkg, id, tex_idx);
 		}
 	}
 }
 
 // todo hash sprite for preload_list
 void 
-dtexc2_preload_sprite(struct dtex_c2* dtex, struct ej_sprite_pack* ej_pkg, int spr_id, int tex_idx) {
+dtex_c2_load(struct dtex_c2* dtex, struct dtex_package* pkg, int spr_id, int tex_idx) {
 	assert(spr_id >= 0);
-	_preload_complex(dtex, ej_pkg, spr_id, tex_idx);
+	_preload_complex(dtex, pkg, spr_id, tex_idx);
 }
 
 static inline int 
@@ -187,8 +191,8 @@ _compare_bound(const void *arg1, const void *arg2) {
 	if(node1->rect.ymax < node2->rect.ymax) return -1;
 	if(node1->rect.ymax > node2->rect.ymax) return 1;
 
-	if(node1->tex.id < node2->tex.id) return -1;
-	if(node1->tex.id > node2->tex.id) return 1;
+	if(node1->ori_tex->id < node2->ori_tex->id) return -1;
+	if(node1->ori_tex->id > node2->ori_tex->id) return 1;
 
 	return 0;
 }
@@ -202,7 +206,7 @@ _unique_preload_list(struct dtex_c2* dtex) {
 	for (int i = 1; i < dtex->preload_size; ++i) {
 		struct preload_node* last = unique[unique_size-1];
 		struct preload_node* curr = dtex->preload_list[i];
-		if (curr->tex.id == last->tex.id && dtex_rect_same(&curr->rect, &last->rect)) {
+		if (curr->ori_tex->id == last->ori_tex->id && dtex_rect_same(&curr->rect, &last->rect)) {
 			;
 		} else {
 			unique[unique_size++] = curr;
@@ -263,7 +267,7 @@ _query_node(struct dtex_c2* dtex, GLuint texid, struct dtex_rect* rect) {
 	struct hash_node* hn = dtex->hash[idx];
 	while (hn) {
 		struct dtex_node* n = &hn->n;
-		if (n->ori_tex.id == texid && dtex_rect_same(&n->ori_rect, rect)) {
+		if (n->ori_tex->id == texid && dtex_rect_same(&n->ori_rect, rect)) {
 			return hn;
 		}
 		hn = hn->next_hash;
@@ -284,8 +288,8 @@ _new_hash_rect(struct dtex_c2* dtex) {
 static inline void
 _set_rect_vb(struct preload_node* pn, struct dtex_node* n, bool rotate) {
 	struct dtex_inv_size src_sz;
-	src_sz.inv_w = 1.0f / pn->tex.width;
-	src_sz.inv_h = 1.0f / pn->tex.height;
+	src_sz.inv_w = 1.0f / pn->ori_tex->width;
+	src_sz.inv_h = 1.0f / pn->ori_tex->height;
 
 	struct dtex_inv_size dst_sz;	
 	dst_sz.inv_w = 1.0f / n->dst_tex->width;
@@ -297,7 +301,7 @@ _set_rect_vb(struct preload_node* pn, struct dtex_node* n, bool rotate) {
 
 static inline void
 _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* loader, struct preload_node* pn, bool use_new_tex) {
-	struct hash_node* hn = _query_node(dtex, pn->tex.id, &pn->rect);
+	struct hash_node* hn = _query_node(dtex, pn->ori_tex->id, &pn->rect);
 	if (hn != NULL) {
 		return;
 	}
@@ -350,7 +354,7 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 		return;
 	}
 	assert(tex);
-	hn->n.ori_tex = pn->tex;
+	hn->n.ori_tex = pn->ori_tex;
 	hn->n.ori_rect = pn->rect;
 	hn->n.dst_tex = tex;
 	hn->n.dst_pos = pos;
@@ -361,19 +365,19 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 
 	_set_rect_vb(pn, &hn->n, rotate);
 
-	unsigned int idx = _hash_node(pn->tex.id, &pn->rect);
+	unsigned int idx = _hash_node(pn->ori_tex->id, &pn->rect);
 	hn->next_hash = dtex->hash[idx];
 	dtex->hash[idx] = hn;
 
 	if (rrp_pic) {
-//		dtex_draw_rrp_to_tex(buf, &hn->n.ori_tex, rrp_pic, tex, pos, rotate);
+//		dtex_draw_rrp_to_tex(buf, hn->n.ori_tex, rrp_pic, tex, pos, rotate);
 	} else {
-		dtex_draw_to_texture(buf, &hn->n.ori_tex, hn->n.trans_vb, tex);
+		dtex_draw_to_texture(buf, hn->n.ori_tex, hn->n.trans_vb, tex);
 	}
 }
 
 void 
-dtexc2_preload_end(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* loader, bool use_only_one_texture) {
+dtex_c2_load_end(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* loader, bool use_only_one_texture) {
 	if (--dtex->loadable > 0 || dtex->preload_size == 0) {
 		return;
 	}
@@ -425,7 +429,7 @@ dtexc2_change_key(struct dtex_c2* dtex, int src_texid, struct dtex_rect* src_rec
 	struct hash_node* curr = dtex->hash[idx];
 	while (curr) {
 		struct dtex_node* n = &curr->n;
-		if (n->ori_tex.id == src_texid && dtex_rect_same(&n->ori_rect, src_rect)) {
+		if (n->ori_tex->id == src_texid && dtex_rect_same(&n->ori_rect, src_rect)) {
 			break;
 		}
 		last = curr;
@@ -438,7 +442,7 @@ dtexc2_change_key(struct dtex_c2* dtex, int src_texid, struct dtex_rect* src_rec
 	}
 	assert(curr);
 
-	curr->n.ori_tex.id = dst_texid;
+	curr->n.ori_tex->id = dst_texid;
 	curr->n.ori_rect = *dst_rect;
 
 	if (last) {

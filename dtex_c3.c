@@ -94,7 +94,7 @@ void dtex_c3_release(struct dtex_c3* c3, struct dtex_buffer* buf) {
 }
 
 void 
-dtex_c3_load_pkg(struct dtex_c3* c3, struct dtex_package* pkg, float scale) {
+dtex_c3_load(struct dtex_c3* c3, struct dtex_package* pkg, float scale) {
 	for (int i = 0; i < c3->preload_size; ++i) {
 		if (pkg == c3->preload_list[i]->pkg) {
 			return;
@@ -432,7 +432,7 @@ _alloc_texture(struct dtex_c3* c3, struct dtex_buffer* buf) {
 }
 
 void 
-dtex_c3_load_pkg_end(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf) {
+dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf) {
 	if (c3->preload_size == 0) {
 		return;
 	}

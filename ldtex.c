@@ -39,7 +39,7 @@ lc3_load_pkg(lua_State* L) {
 
 static int
 lc3_load_pkg_finish(lua_State* L) {
-	dtexf_c3_load_pkg_end();
+	dtexf_c3_load_end();
 	return 0;
 }
 

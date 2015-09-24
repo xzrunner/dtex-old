@@ -18,6 +18,7 @@
 #include "dtex_file.h"
 #include "dtex_log.h"
 #include "dtex_texture_pool.h"
+#include "dtex_package.h"
 
 #include "sprite.h"
 
@@ -78,14 +79,14 @@ dtexf_create(const char* cfg) {
 // 		C1 = dtexc1_create(BUF);		
 // 	}
  	if (CFG.open_c2) {
- 		C2 = dtexc2_create(BUF);		
+ 		C2 = dtex_c2_create(BUF);		
  	}
 }
 
 void 
 dtexf_release() {
  	if (C2) {
- 		dtexc2_release(C2, BUF);		
+ 		dtex_c2_release(C2, BUF);		
  	}
 // 	if (C1) {
 // 		dtexc1_release(C1, BUF);		
@@ -127,68 +128,70 @@ dtexf_load_texture(struct dtex_package* pkg, int idx) {
 //}
 
 void
-dtexf_c3_load_pkg(struct dtex_package* pkg, float scale) {
+dtexf_c3_load(struct dtex_package* pkg, float scale) {
 	if (C3) {
-		dtex_c3_load_pkg(C3, pkg, scale);
+		dtex_c3_load(C3, pkg, scale);
 	}
 }
 
 void 
-dtexf_c3_load_pkg_end() {
+dtexf_c3_load_end() {
 	if (C3) {
-		dtex_c3_load_pkg_end(C3, LOADER, BUF);
+		dtex_c3_load_end(C3, LOADER, BUF);
 	}
 }
 
-//void 
-//dtexf_c2_load_begin() {
-//	if (C2) {
-//		dtexc2_preload_begin(C2);		
-//	}
-//}
-//
-//void 
-//dtexf_c2_load_sprite(struct ej_package* pkg, const char* name) {
-//	if (C2) {
-//		int id = sprite_id(pkg, name);
-//		dtexc2_preload_sprite(C2, pkg, id, -1);		
-//	}
-//}
-//
-//void 
-//dtexf_c2_load_end() {
-//	if (C2) {
-//		dtexc2_preload_end(C2, BUF, LOADER, true);
-//	}
-//}
-//
-//static inline void
-//_get_pic_ori_rect(int ori_w, int ori_h, float* ori_vb, struct dtex_rect* rect) {
-//	float xmin = 1, ymin = 1, xmax = 0, ymax = 0;
-//	for (int i = 0; i < 4; ++i) {
-//		if (ori_vb[i*4+2] < xmin) xmin = ori_vb[i*4+2];
-//		if (ori_vb[i*4+2] > xmax) xmax = ori_vb[i*4+2];
-//		if (ori_vb[i*4+3] < ymin) ymin = ori_vb[i*4+3];
-//		if (ori_vb[i*4+3] > ymax) ymax = ori_vb[i*4+3];
-//	}
-//	rect->xmin = ori_w * xmin;
-//	rect->ymin = ori_h * ymin;
-//	rect->xmax = ori_w * xmax;
-//	rect->ymax = ori_h * ymax;
-//}
-//
-//float* 
-//dtexf_c2_lookup_texcoords(struct ej_texture* ori_tex, float* ori_vb, int* dst_tex) {
-//	if (C2 == NULL) {
-//		return NULL;
-//	}
-//
-//	struct dtex_rect rect;
-//	_get_pic_ori_rect(1/ori_tex->width, 1/ori_tex->height, ori_vb, &rect);
-//
-//	return dtexc2_lookup_texcoords(C2, ori_tex->id, &rect, dst_tex);
-//}
-//
+void 
+dtexf_c2_load_begin() {
+	if (C2) {
+		dtex_c2_load_begin(C2);		
+	}
+}
+
+void 
+dtexf_c2_load(struct dtex_package* pkg, const char* name) {
+	if (C2) {
+		int id = dtex_get_spr_id(pkg, name);
+		dtex_c2_load(C2, pkg, id, -1);		
+	}
+}
+
+void 
+dtexf_c2_load_end() {
+	if (C2) {
+		dtex_c2_load_end(C2, BUF, LOADER, true);
+	}
+}
+
+static inline void
+_get_pic_ori_rect(int ori_w, int ori_h, float* ori_vb, struct dtex_rect* rect) {
+	float xmin = 1, ymin = 1, xmax = 0, ymax = 0;
+	for (int i = 0; i < 4; ++i) {
+		if (ori_vb[i*4+2] < xmin) xmin = ori_vb[i*4+2];
+		if (ori_vb[i*4+2] > xmax) xmax = ori_vb[i*4+2];
+		if (ori_vb[i*4+3] < ymin) ymin = ori_vb[i*4+3];
+		if (ori_vb[i*4+3] > ymax) ymax = ori_vb[i*4+3];
+	}
+	rect->xmin = ori_w * xmin;
+	rect->ymin = ori_h * ymin;
+	rect->xmax = ori_w * xmax;
+	rect->ymax = ori_h * ymax;
+}
+
+float* 
+dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_tex) {
+	dtex_info("zztest");
+
+	if (C2 == NULL) {
+		return NULL;
+	}
+
+	struct dtex_rect rect;
+	_get_pic_ori_rect(ori_tex->width, ori_tex->height, ori_vb, &rect);
+
+	return dtexc2_lookup_texcoords(C2, ori_tex->id, &rect, dst_tex);
+}
+
 //void 
 //dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, 
 //	struct dtex_texture** out_tex, struct dp_pos** out_pos) {
@@ -257,7 +260,7 @@ _on_load_spr_task(struct ej_sprite_pack* ej_pkg, struct dtex_rect* rect, int spr
 	struct int_array* array = dtex_get_picture_id_set(ej_pkg, spr_id);
 
 	dtex_relocate_spr(ej_pkg, array, tex_idx, &ori_pos, &dst_pos);
-	dtexc2_preload_sprite(C2, ej_pkg, spr_id, tex_idx);
+	dtex_c2_load(C2, ej_pkg, spr_id, tex_idx);
 	dtex_relocate_spr(ej_pkg, array, tex_idx, &dst_pos, &ori_pos);
 
 	free(array);
@@ -339,8 +342,8 @@ dtexf_debug_draw() {
 		return;
 	}
 //	dtexc1_debug_draw(C1);
-//	dtexc2_debug_draw(C2);
-	dtex_c3_debug_draw(C3);
+	dtexc2_debug_draw(C2);
+//	dtex_c3_debug_draw(C3);
 }
 
 void 

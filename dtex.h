@@ -7,3 +7,5 @@
 
 #include "dtex_shader.h"
 #include "dtex_screen.h"	// todo
+
+#include "dtex_statistics.h"
