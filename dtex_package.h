@@ -41,6 +41,8 @@ struct dtex_package {
 
 int dtex_get_spr_id(struct dtex_package* pkg, const char* name);
 
+void dtex_package_release_textures(struct dtex_package* pkg);
+
 #endif // dynamic_texture_package_h
 
 #ifdef __cplusplus

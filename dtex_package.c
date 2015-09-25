@@ -1,6 +1,7 @@
 #include "dtex_package.h"
+#include "dtex_texture_pool.h"
 
-#include "string.h"
+#include <string.h>
 
 int 
 dtex_get_spr_id(struct dtex_package* pkg, const char* name) {
@@ -18,4 +19,11 @@ dtex_get_spr_id(struct dtex_package* pkg, const char* name) {
 		}
 	}
 	return -1;
+}
+
+void 
+dtex_package_release_textures(struct dtex_package* pkg) {
+	for (int i = 0; i < pkg->tex_size; ++i) {
+		dtex_pool_remove(pkg->textures[i]);
+	}
 }
