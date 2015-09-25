@@ -11,6 +11,7 @@
 #include "dtex_texture_pool.h"
 #include "dtex_loader_new.h"
 #include "dtex_package.h"
+#include "dtex_ej_utility.h"
 
 #include <ejoy2d.h>
 
@@ -307,29 +308,29 @@ _compare_dr_ori_pkg(const void *arg1, const void *arg2) {
 // 	return node1->dst_tex < node2->dst_tex;
 // }
 
+struct relocate_pic_data {
+	struct dtex_package* pkg;
+	int src_tex_idx;
+	int dst_tex_idx;
+	struct dtex_rect* dst_rect;
+};
+
 static inline void
-_relocate(struct dtex_package* pkg, int src_tex_idx, int dst_tex_idx, struct dtex_rect* dst_rect) {
-	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
-	for (int id = 0; id < ej_pkg->n; ++id) {
-		int type = ej_pkg->type[id]; 
-		if (type != TYPE_PICTURE) {
-			continue;
-		}
-		struct ej_pack_picture* ej_pic = (struct ej_pack_picture*)ej_pkg->data[id];
-		for (int j = 0; j < ej_pic->n; ++j) {
-			struct pack_quad* ej_q = &ej_pic->rect[j];
-			if (ej_q->texid >= QUAD_TEXID_IN_PKG_MAX ||
-				ej_q->texid != src_tex_idx) {
+_relocate_pic(struct ej_pack_picture* ej_pic, void* ud) {
+	struct dtex_node* dr = (struct dtex_node*)ud;
+	for (int i = 0; i < ej_pic->n; ++i) {
+		struct pack_quad* ej_q = &ej_pic->rect[i];
+		if (ej_q->texid >= QUAD_TEXID_IN_PKG_MAX ||
+			ej_q->texid != dr->raw_tex_idx) {
 				continue;
-			}
-			struct dtex_raw_tex* src = pkg->textures[ej_q->texid];
-			ej_q->texid = dst_tex_idx + QUAD_TEXID_IN_PKG_MAX;
-			for (int i = 0; i < 4; ++i) {
-				float x = (float)ej_q->texture_coord[i*2] / src->width;
-				float y = (float)ej_q->texture_coord[i*2+1] / src->height;
-				ej_q->texture_coord[i*2] = dst_rect->xmin + (dst_rect->xmax - dst_rect->xmin) * x;
-				ej_q->texture_coord[i*2+1] = dst_rect->ymin + (dst_rect->ymax - dst_rect->ymin) * y;
-			}
+		}
+		struct dtex_raw_tex* src = dr->pkg->textures[ej_q->texid];
+		ej_q->texid = dr->dst_tex->raw_tex->idx + QUAD_TEXID_IN_PKG_MAX;
+		for (int j = 0; j < 4; ++j) {
+			float x = (float)ej_q->texture_coord[j*2] / src->width;
+			float y = (float)ej_q->texture_coord[j*2+1] / src->height;
+			ej_q->texture_coord[j*2] = dr->dst_rect.xmin + (dr->dst_rect.xmax - dr->dst_rect.xmin) * x;
+			ej_q->texture_coord[j*2+1] = dr->dst_rect.ymin + (dr->dst_rect.ymax - dr->dst_rect.ymin) * y;
 		}
 	}
 }
@@ -364,7 +365,7 @@ _draw_preload_list(struct dtex_c3* c3, float scale, struct dtex_loader* loader, 
 		} else if (dr->pkg->b4r_pkg) {
 //			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
-			dtex_load_texture(loader, dr->pkg, dr->raw_tex_idx);
+			dtex_load_texture(loader, dr->pkg, dr->raw_tex_idx, 1);
 			ori_tex = dr->pkg->textures[dr->raw_tex_idx];
 		}
 
@@ -382,7 +383,7 @@ _draw_preload_list(struct dtex_c3* c3, float scale, struct dtex_loader* loader, 
 		vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
 		dtex_draw_to_texture(buf, ori_tex, vb, dr->dst_tex);
 
-		_relocate(dr->pkg, dr->raw_tex_idx, dr->dst_tex->raw_tex->idx, &dr->dst_rect);
+		dtex_ej_pkg_traverse(dr->pkg->ej_pkg, _relocate_pic, dr);
 
 		// todo: relocate rrr, b4r
 		// 	if (pkg->rrr_pkg) {

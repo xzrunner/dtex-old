@@ -8,6 +8,7 @@
 #include "dtex_rrp.h"
 #include "dtex_texture_pool.h"
 #include "dtex_package.h"
+#include "dtex_ej_utility.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -104,72 +105,54 @@ dtex_c2_load_begin(struct dtex_c2* dtex) {
 }
 
 // todo hash pic for preload_list
+
+struct preload_picture_params {
+	struct dtex_c2* c2;
+	struct dtex_package* pkg;
+	int tex_idx;
+};
+
 static inline void
-_preload_picture(struct dtex_c2* dtex, struct dtex_package* pkg, struct ej_pack_picture* ej_pic, int tex_idx) {
-	if (dtex->loadable == 0 || dtex->preload_size >= PRELOAD_SIZE - 1) {
+_preload_picture(struct ej_pack_picture* ej_pic, void* ud) {
+	struct preload_picture_params* params = (struct preload_picture_params*)ud;
+
+	if (params->c2->loadable == 0 || params->c2->preload_size >= PRELOAD_SIZE - 1) {
 		return;
 	}
 
 	for (int i = 0; i < ej_pic->n; ++i) {
-		if (dtex->preload_size == PRELOAD_SIZE - 1) {
+		if (params->c2->preload_size == PRELOAD_SIZE - 1) {
 			break;
 		}
 		struct ej_pack_quad* ej_q = &ej_pic->rect[i];
-		if (tex_idx != -1 && ej_q->texid != tex_idx) {
+		if (params->tex_idx != -1 && ej_q->texid != params->tex_idx) {
 			continue;
 		}
-		struct preload_node* pn = dtex->preload_list[dtex->preload_size++];
-		pn->ej_pkg = pkg->ej_pkg;
+		struct preload_node* pn = params->c2->preload_list[params->c2->preload_size++];
+		pn->ej_pkg = params->pkg->ej_pkg;
 		pn->ej_quad = ej_q;
 
 		// don't map C3
 		assert(ej_q->texid < QUAD_TEXID_IN_PKG_MAX);
-		pn->ori_tex = pkg->textures[ej_q->texid];
+		pn->ori_tex = params->pkg->textures[ej_q->texid];
 		dtex_get_pic_src_rect(ej_q->texture_coord, &pn->rect);
-	}
-}
-
-// todo hash anim for preload_list
-static inline void
-_preload_complex(struct dtex_c2* dtex, struct dtex_package* pkg, int spr_id, int tex_idx) {
-	if (dtex->loadable == 0 || dtex->preload_size >= PRELOAD_SIZE - 1) {
-		return;
-	}
-
-	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
-	if (spr_id < 0 || spr_id >= ej_pkg->n || spr_id == ANCHOR_ID) {
-		return;
-	}
-	
-	int type = ej_pkg->type[spr_id];
-	if (type == TYPE_PICTURE) {
-		struct ej_pack_picture* pic = (struct ej_pack_picture*)ej_pkg->data[spr_id];
-		_preload_picture(dtex, pkg, pic, tex_idx);
-	} else if (type == TYPE_ANIMATION) {
-		struct ej_pack_animation* anim = (struct ej_pack_animation*)ej_pkg->data[spr_id];		
-		for (int i = 0; i < anim->component_number; ++i) {
-			_preload_complex(dtex, pkg, anim->component[i].id, tex_idx);
-		}
-	} else if (type == TYPE_PARTICLE3D) {
-		struct ej_pack_particle3d* p3d = (struct ej_pack_particle3d*)ej_pkg->data[spr_id];
-		for (int i = 0; i < p3d->cfg.symbol_count;  ++i) {
-			uint32_t id = (uint32_t)p3d->cfg.symbols[i].ud;
-			_preload_complex(dtex, pkg, id, tex_idx);
-		}
-	} else if (type == TYPE_PARTICLE2D) {
-		struct ej_pack_particle2d* p2d = (struct ej_pack_particle2d*)ej_pkg->data[spr_id];
-		for (int i = 0; i < p2d->cfg.symbol_count; ++i) {
-			uint32_t id = (uint32_t)p2d->cfg.symbols[i].ud;
-			_preload_complex(dtex, pkg, id, tex_idx);
-		}
 	}
 }
 
 // todo hash sprite for preload_list
 void 
-dtex_c2_load(struct dtex_c2* dtex, struct dtex_package* pkg, int spr_id, int tex_idx) {
+dtex_c2_load(struct dtex_c2* c2, struct dtex_package* pkg, int spr_id, int tex_idx) {
 	assert(spr_id >= 0);
-	_preload_complex(dtex, pkg, spr_id, tex_idx);
+
+	if (c2->loadable == 0 || c2->preload_size >= PRELOAD_SIZE - 1) {
+		return;
+	}
+
+	struct preload_picture_params params;
+	params.c2 = c2;
+	params.pkg = pkg;
+	params.tex_idx = tex_idx;
+	dtex_ej_spr_traverse(pkg->ej_pkg, spr_id, _preload_picture, &params);
 }
 
 static inline int 
