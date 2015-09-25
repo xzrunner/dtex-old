@@ -1,5 +1,6 @@
 #include "dtex_texture_pool.h"
 #include "dtex_loader.h"
+#include "dtex_statistics.h"
 
 #include "opengl.h"
 

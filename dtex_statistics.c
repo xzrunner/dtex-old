@@ -65,7 +65,7 @@ dtex_stat_add_texture(int texid, int width, int height) {
 void 
 dtex_stat_delete_texture(int texid, int width, int height) {
 	for (int i = 0; i < STAT.texture_count; ++i) {
-		struct stat_texture* tex = &STAT.textures[STAT.texture_count++];
+		struct stat_texture* tex = &STAT.textures[i];
 		if (tex->id == texid && tex->w == width && tex->h == height) {
 			STAT.textures[i] = STAT.textures[--STAT.texture_count];			
 			return;

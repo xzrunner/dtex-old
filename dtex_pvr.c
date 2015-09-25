@@ -2,6 +2,7 @@
 #include "dtex_math.h"
 #include "dtex_gl.h"
 #include "dtex_file.h"
+#include "dtex_log.h"
 
 #include "opengl.h"
 

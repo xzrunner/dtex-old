@@ -3,6 +3,7 @@
 #include "dtex_packer.h"
 #include "dtex_fbo.h"
 #include "dtex_file.h"
+#include "dtex_statistics.h"
 
 #include "opengl.h"
 #include "shader.h"

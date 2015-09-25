@@ -6,6 +6,7 @@
 #include "dtex_stream_import.h"
 #include "dtex_texture_pool.h"
 #include "dtex_typedef.h"
+#include "dtex_statistics.h"
 
 #include "opengl.h"
 

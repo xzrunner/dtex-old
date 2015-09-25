@@ -19,6 +19,7 @@
 #include "dtex_log.h"
 #include "dtex_texture_pool.h"
 #include "dtex_package.h"
+#include "dtex_statistics.h"
 
 #include "sprite.h"
 
@@ -254,19 +255,19 @@ _prepare_trans_pos(struct dtex_rect* rect, int tex_idx, struct dtex_raw_tex* dst
 	dst_pos->rect.ymax = dst_tex->height;	
 }
 
-static inline void
-_on_load_spr_task(struct ej_sprite_pack* ej_pkg, struct dtex_rect* rect, int spr_id, int tex_idx, struct dtex_raw_tex* dst_tex) {
-	struct dtex_img_pos ori_pos, dst_pos;
-	_prepare_trans_pos(rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
-
-	struct int_array* array = dtex_get_picture_id_set(ej_pkg, spr_id);
-
-	dtex_relocate_spr(ej_pkg, array, tex_idx, &ori_pos, &dst_pos);
-	dtex_c2_load(C2, ej_pkg, spr_id, tex_idx);
-	dtex_relocate_spr(ej_pkg, array, tex_idx, &dst_pos, &ori_pos);
-
-	free(array);
-}
+//static inline void
+//_on_load_spr_task(struct ej_sprite_pack* ej_pkg, struct dtex_rect* rect, int spr_id, int tex_idx, struct dtex_raw_tex* dst_tex) {
+//	struct dtex_img_pos ori_pos, dst_pos;
+//	_prepare_trans_pos(rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
+//
+//	struct int_array* array = dtex_get_picture_id_set(ej_pkg, spr_id);
+//
+//	dtex_relocate_spr(ej_pkg, array, tex_idx, &ori_pos, &dst_pos);
+//	dtex_c2_load(C2, ej_pkg, spr_id, tex_idx);
+//	dtex_relocate_spr(ej_pkg, array, tex_idx, &dst_pos, &ori_pos);
+//
+//	free(array);
+//}
 
 //static inline void
 //_after_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id, int tex_idx, struct dtex_raw_tex* dst_tex) {
@@ -340,12 +341,15 @@ _on_load_spr_task(struct ej_sprite_pack* ej_pkg, struct dtex_rect* rect, int spr
 
 void 
 dtexf_debug_draw() {
-	if (/*!C1 && */!C2 && !C3) {
-		return;
+// 	if (C1) {
+// 		dtexc1_debug_draw(C1);
+// 	}
+	if (C2) {
+		dtexc2_debug_draw(C2);
 	}
-//	dtexc1_debug_draw(C1);
-	dtexc2_debug_draw(C2);
-//	dtex_c3_debug_draw(C3);
+	if (C3) {
+		dtex_c3_debug_draw(C3);
+	}
 }
 
 void 
