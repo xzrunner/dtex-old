@@ -166,7 +166,7 @@ _compare_preload_length(const void *arg1, const void *arg2) {
 }
 
 static inline void
-_unique_preload_list(struct dtex_c3* c3) {
+_unique_nodes(struct dtex_c3* c3) {
 	qsort((void*)c3->preload_list, c3->preload_size, sizeof(struct preload_node*), _compare_preload_name);
 	struct preload_node* unique[PRELOAD_SIZE];
 	unique[0] = c3->preload_list[0];
@@ -272,9 +272,9 @@ _pack_preload_list_with_scale(struct dtex_c3* c3, float scale) {
 }
 
 static inline float
-_pack_preload_list(struct dtex_c3* c3, float alloc_scale) {
+_pack_nodes(struct dtex_c3* c3, float alloc_scale) {
 	qsort((void*)c3->preload_list, c3->preload_size, 
-		sizeof(struct _pack_preload_list*), _compare_preload_length);
+		sizeof(struct _pack_nodes*), _compare_preload_length);
 
 	float scale = alloc_scale;
 	while (scale > MIN_SCALE) {
@@ -336,7 +336,7 @@ _relocate_pic(struct ej_pack_picture* ej_pic, void* ud) {
 }
 
 static inline void
-_draw_preload_list(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf) {
+_map_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf) {
 	// sort all node by its texture
 	int count = 0;
 	struct dtex_node* nodes[NODE_SIZE];
@@ -359,6 +359,8 @@ _draw_preload_list(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_b
 		}
 
 		// load old tex
+
+		bool tex_loaded = false;
 		struct dtex_raw_tex* ori_tex = NULL;
 		if (dr->pkg->rrr_pkg) {
 //			ori_tex = dtex_rrr_load_tex(dr->pkg->rrr_pkg, dr->pkg, dr->raw_tex_idx);
@@ -366,7 +368,12 @@ _draw_preload_list(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_b
 //			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
 			ori_tex = dr->pkg->textures[dr->raw_tex_idx];
-			dtex_load_texture(loader, buf, dr->pkg, dr->raw_tex_idx, ori_tex->scale);
+			if (ori_tex->id == 0) {
+				tex_loaded = false;
+				dtex_load_texture(loader, buf, dr->pkg, dr->raw_tex_idx, ori_tex->scale);
+			} else {
+				tex_loaded = true;
+			}
 		}
 
 		// draw old tex to new 
@@ -395,8 +402,10 @@ _draw_preload_list(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_b
 		// 		_relocate_rrp(c3, pkg);
 		// 	}
 
-		dtex_pool_remove(ori_tex);
-		dr->pkg->textures[dr->raw_tex_idx] = NULL;
+		if (!tex_loaded) {
+ 			dtex_pool_remove(ori_tex);
+ 			dr->pkg->textures[dr->raw_tex_idx] = NULL;
+		}
 
 		last_pkg = dr->pkg;
 	}
@@ -438,13 +447,13 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buf
 		return;
 	}
 
-	_unique_preload_list(c3);	
+	_unique_nodes(c3);
 
 	float alloc_scale = _alloc_texture(c3, buf);
 
-	float scale = _pack_preload_list(c3, alloc_scale);
+	/*float scale = */_pack_nodes(c3, alloc_scale);
 
-	_draw_preload_list(c3, loader, buf);
+	_map_nodes(c3, loader, buf);
 
     c3->preload_size = 0;
 }

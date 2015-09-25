@@ -181,7 +181,7 @@ _compare_bound(const void *arg1, const void *arg2) {
 }
 
 static inline void
-_unique_preload_list(struct dtex_c2* dtex) {
+_unique_nodes(struct dtex_c2* dtex) {
 	qsort((void*)dtex->preload_list, dtex->preload_size, sizeof(struct preload_node*), _compare_bound);
 	struct preload_node* unique[PRELOAD_SIZE];
 	unique[0] = dtex->preload_list[0];
@@ -364,7 +364,7 @@ dtex_c2_load_end(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_load
 	if (--dtex->loadable > 0 || dtex->preload_size == 0) {
 		return;
 	}
-	_unique_preload_list(dtex);
+	_unique_nodes(dtex);
 
 	// todo scale
 	if (use_only_one_texture) {
