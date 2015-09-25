@@ -167,7 +167,7 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 			assert(params->load_tex_idx < pkg->tex_size);
 			struct dtex_raw_tex* tex = pkg->textures[params->load_tex_idx];
 			assert(tex);
-			dtex_load_texture_all(params->buf, is, tex, params->scale);
+			dtex_load_texture_all(params->buf, is, tex);
 		} else {
 			struct dtex_raw_tex* tex = dtex_pool_add();
 			if (!tex) {

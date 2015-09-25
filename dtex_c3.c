@@ -336,7 +336,7 @@ _relocate_pic(struct ej_pack_picture* ej_pic, void* ud) {
 }
 
 static inline void
-_draw_preload_list(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf, float scale) {
+_draw_preload_list(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf) {
 	// sort all node by its texture
 	int count = 0;
 	struct dtex_node* nodes[NODE_SIZE];
@@ -365,8 +365,8 @@ _draw_preload_list(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_b
 		} else if (dr->pkg->b4r_pkg) {
 //			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
-			dtex_load_texture(loader, buf, dr->pkg, dr->raw_tex_idx, 1);
 			ori_tex = dr->pkg->textures[dr->raw_tex_idx];
+			dtex_load_texture(loader, buf, dr->pkg, dr->raw_tex_idx, ori_tex->scale);
 		}
 
 		// draw old tex to new 
@@ -444,7 +444,7 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buf
 
 	float scale = _pack_preload_list(c3, alloc_scale);
 
-	_draw_preload_list(c3, loader, buf, scale);
+	_draw_preload_list(c3, loader, buf);
 
     c3->preload_size = 0;
 }

@@ -11,7 +11,7 @@ extern "C"
 struct dtex_import_stream;
 
 void dtex_load_texture_desc(struct dtex_import_stream* is, struct dtex_raw_tex* tex, float scale);
-void dtex_load_texture_all(struct dtex_buffer*, struct dtex_import_stream* is, struct dtex_raw_tex* tex, float scale);
+void dtex_load_texture_all(struct dtex_buffer*, struct dtex_import_stream* is, struct dtex_raw_tex* tex);
 
 #endif // dynamic_texture_texture_loader_h
 

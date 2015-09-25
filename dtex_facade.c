@@ -181,8 +181,6 @@ _get_pic_ori_rect(int ori_w, int ori_h, float* ori_vb, struct dtex_rect* rect) {
 
 float* 
 dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_tex) {
-	dtex_info("zztest");
-
 	if (C2 == NULL) {
 		return NULL;
 	}

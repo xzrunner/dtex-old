@@ -21,6 +21,8 @@ dtex_pool_init() {
 	memset(&POOL, 0, sizeof(POOL));
 	for (int i = 0; i < MAX_TEXTURE; ++i) {
 		POOL.tex[i].id = -1;
+		POOL.tex[i].scale = 1;
+		POOL.tex[i].idx = i;
 	}
 }
 
@@ -65,9 +67,12 @@ _release_texture(struct dtex_raw_tex* tex) {
 		dtex_stat_delete_texture(tex->id_alpha, tex->width, tex->height);
 		tex->id_alpha = 0;
    }
+
    free(tex->filepath);
    memset(tex, 0, sizeof(*tex));
+
    tex->id = -1;
+   tex->scale = 1;
 }
 
 void 

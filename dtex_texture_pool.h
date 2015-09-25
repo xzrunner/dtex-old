@@ -15,6 +15,8 @@ struct dtex_raw_tex {
 
 	char* filepath;	// cache for reopen
 	int idx;		// in pool
+
+	float scale;
 };
 
 void dtex_pool_init();

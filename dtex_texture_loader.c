@@ -111,6 +111,8 @@ dtex_load_texture_desc(struct dtex_import_stream* is, struct dtex_raw_tex* tex, 
 	tex->width = floor(w + 0.5f);
 	tex->height = floor(h + 0.5f);
 
+	tex->scale = scale;
+
 	tex->id = tex->id_alpha = 0;
 }
 
@@ -159,26 +161,30 @@ _scale_texture(struct dtex_buffer* buf, struct dtex_raw_tex* tex, float scale) {
 }
 
 void 
-dtex_load_texture_all(struct dtex_buffer* buf, struct dtex_import_stream* is, struct dtex_raw_tex* tex, float scale) {
-	tex->format = dtex_import_uint8(is);
-	
-	tex->width = dtex_import_uint16(is);
-	tex->height = dtex_import_uint16(is);
+dtex_load_texture_all(struct dtex_buffer* buf, struct dtex_import_stream* is, struct dtex_raw_tex* tex) {
+	int format = dtex_import_uint8(is);
+	int width = dtex_import_uint16(is),
+		height = dtex_import_uint16(is);
+	assert(tex->format == format 
+		&& tex->width == floor(width * tex->scale + 0.5f)
+		&& tex->height == floor(height * tex->scale + 0.5f));
+	tex->width = width;
+	tex->height = height;
 
 	switch (tex->format) {
 	case TEXTURE4: case TEXTURE8:
-		tex->id = _texture_create(is, tex->format, tex->width, tex->height);
+		tex->id = _texture_create(is, format, width, height);
 		break;
 	case PVRTC:
 		// todo
-//		tex->id = _pvr_texture_create(buf+5, sz-5, internal_format, tex->width, tex->height);
+//		tex->id = _pvr_texture_create(buf+5, sz-5, internal_format, width, height);
 		break;
 	case PKMC:
-		_etc1_texture_create(is, tex->width, tex->height, &tex->id, &tex->id_alpha);
+		_etc1_texture_create(is, width, height, &tex->id, &tex->id_alpha);
 		break;
 	}
 
-	if (scale != 1 && (tex->format == TEXTURE4 || tex->format == TEXTURE8)) {
-		_scale_texture(buf, tex, scale);
+	if (tex->scale != 1 && (tex->format == TEXTURE4 || tex->format == TEXTURE8)) {
+		_scale_texture(buf, tex, tex->scale);
 	}
 }
