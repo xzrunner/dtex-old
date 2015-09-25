@@ -55,7 +55,7 @@
 //};
 //
 //struct dtex_c1* 
-//dtexc1_create(struct dtex_buffer* buf) {
+//dtex_c1_create(struct dtex_buffer* buf) {
 //	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
 //	size_t psize = PRELOAD_SIZE * sizeof(struct preload_node);
 //	size_t sz = sizeof(struct dtex_c1) + nsize + psize;
@@ -85,7 +85,7 @@
 //}
 //
 //void 
-//dtexc1_release(struct dtex_c1* dtex, struct dtex_buffer* buf) {
+//dtex_c1_release(struct dtex_c1* dtex, struct dtex_buffer* buf) {
 //	dtex_del_tex(buf, dtex->texture);
 //
 //	dtexbuf_return_fbo(buf, dtex->fbo0);
@@ -312,7 +312,7 @@
 //}
 //
 //void 
-//dtexc1_load_anim(struct dtex_c1* dtex, struct ej_sprite_pack* pkg, struct animation* ani, int action) {
+//dtex_c1_load_anim(struct dtex_c1* dtex, struct ej_sprite_pack* pkg, struct animation* ani, int action) {
 //	struct hash_node* hn = _query_anim(dtex, ani, action);
 //	if (hn != NULL) {
 //		return;
@@ -372,7 +372,7 @@
 //}
 //
 //bool 
-//dtexc1_draw_anim(struct dtex_c1* dtex, struct ej_sprite_pack* pkg, struct animation* ani, int action, int frame, struct draw_params* params) {
+//dtex_c1_draw_anim(struct dtex_c1* dtex, struct ej_sprite_pack* pkg, struct animation* ani, int action, int frame, struct draw_params* params) {
 //	struct hash_node* hn = _query_anim(dtex, ani, action);
 //	// need dtexc1_load_anim() first
 //	if (hn == NULL) {
@@ -442,6 +442,6 @@
 //}
 //
 //void 
-//dtexc1_debug_draw(struct dtex_c1* dtex) {
+//dtex_c1_debug_draw(struct dtex_c1* dtex) {
 //	dtex_debug_draw(dtex->texture->tex);
 //}

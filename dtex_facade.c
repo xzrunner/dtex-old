@@ -188,7 +188,7 @@ dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_
 	struct dtex_rect rect;
 	_get_pic_ori_rect(ori_tex->width, ori_tex->height, ori_vb, &rect);
 
-	return dtexc2_lookup_texcoords(C2, ori_tex->id, &rect, dst_tex);
+	return dtex_c2_lookup_texcoords(C2, ori_tex->id, &rect, dst_tex);
 }
 
 //void 
@@ -205,23 +205,23 @@ dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_
 //	dtexc2_lookup_node(C2, ori_tex->id, &rect, out_tex, out_pos);
 //}
 
-//void 
-//dtexf_c1_load_anim(struct ej_package* pkg, struct animation* ani, int action) {
-//	if (C1) {
-//		dtexc1_load_anim(C1, pkg, ani, action);		
-//	}
-//}
+void 
+dtexf_c1_load_anim(struct ej_package* pkg, struct animation* ani, int action) {
+	if (C1) {
+		dtex_c1_load_anim(C1, pkg, ani, action);		
+	}
+}
 
-//bool 
-//dtexf_c1_draw_anim(struct ej_package* pkg, struct animation* ani, int action, 
-//	int frame, struct draw_params* params) {
-//    if (C1 == NULL) {
-//        return false;
-//    }
-//    frame /= 2;
-//	return dtexc1_draw_anim(C1, pkg, ani, action, frame, params);
-//}
-//
+bool 
+dtexf_c1_draw_anim(struct ej_package* pkg, struct animation* ani, int action, 
+	int frame, struct draw_params* params) {
+   if (C1 == NULL) {
+       return false;
+   }
+   frame /= 2;
+	return dtex_c1_draw_anim(C1, pkg, ani, action, frame, params);
+}
+
 //void 
 //dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path) {
 //	struct dtex_package* pkg = dtex_c3_query_pkg(C3, pkg_name);
@@ -341,7 +341,7 @@ dtexf_debug_draw() {
 // 		dtexc1_debug_draw(C1);
 // 	}
 	if (C2) {
-		dtexc2_debug_draw(C2);
+		dtex_c2_debug_draw(C2);
 	}
 	if (C3) {
 		dtex_c3_debug_draw(C3);

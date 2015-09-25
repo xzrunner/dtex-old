@@ -382,7 +382,7 @@ dtex_c2_load_end(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_load
 }
 
 float* 
-dtexc2_lookup_texcoords(struct dtex_c2* dtex, int texid, struct dtex_rect* rect, int* out_texid) {
+dtex_c2_lookup_texcoords(struct dtex_c2* dtex, int texid, struct dtex_rect* rect, int* out_texid) {
 	struct hash_node* hn = _query_node(dtex, texid, rect);
 	if (hn == NULL) {
 		return NULL;
@@ -440,7 +440,7 @@ dtexc2_change_key(struct dtex_c2* dtex, int src_texid, struct dtex_rect* src_rec
 }
 
 void 
-dtexc2_debug_draw(struct dtex_c2* dtex) {
+dtex_c2_debug_draw(struct dtex_c2* dtex) {
 	dtex_debug_draw(dtex->textures[0]->tex);
 
 	// const float edge = 0.5f;
