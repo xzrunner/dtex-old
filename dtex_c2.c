@@ -131,10 +131,11 @@ _preload_picture(struct ej_pack_picture* ej_pic, void* ud) {
 		struct preload_node* pn = params->c2->preload_list[params->c2->preload_size++];
 		pn->ej_pkg = params->pkg->ej_pkg;
 		pn->ej_quad = ej_q;
-
-		// don't map C3
-		assert(ej_q->texid < QUAD_TEXID_IN_PKG_MAX);
-		pn->ori_tex = params->pkg->textures[ej_q->texid];
+		if (ej_q->texid < QUAD_TEXID_IN_PKG_MAX) {
+			pn->ori_tex = params->pkg->textures[ej_q->texid];
+		} else {
+			pn->ori_tex = dtex_pool_query(ej_q->texid - QUAD_TEXID_IN_PKG_MAX);
+		}
 		dtex_get_pic_src_rect(ej_q->texture_coord, &pn->rect);
 	}
 }
