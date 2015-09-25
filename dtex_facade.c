@@ -60,6 +60,8 @@ _config(const char* str) {
 
 void 
 dtexf_create(const char* cfg) {
+	dtex_stat_init();
+
 	CFG.open_c1 = true;
 	CFG.open_c2 = true;
 	CFG.open_c3 = true;
@@ -350,6 +352,7 @@ void
 dtexf_del_texture(int tex) {
 	GLuint id = tex; 
 	glDeleteTextures(1, &id);
+//	dtex_stat_delete_texture(id, buf->tex_edge, buf->tex_edge);
 }
 
 void 
@@ -369,6 +372,7 @@ dtexf_test_pvr(const char* path) {
 	free(new_compressed);
 #else
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_uncompressed);
+	dtex_stat_add_texture(tex, width, height);
 #endif
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR){
@@ -403,6 +407,7 @@ dtexf_test_etc1(const char* path) {
 	// todo
 #else
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_uncompressed);
+	dtex_stat_add_texture(tex, width, height);
 #endif
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR){

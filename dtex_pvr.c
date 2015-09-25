@@ -737,10 +737,10 @@ dtex_pvr_gen_texture(uint8_t* data, int internal_format, int width, int height) 
 	int sz = width * height * 8 * internal_format / 16;
 	glCompressedTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, sz, data);	
 #else
-	tex = dtex_prepare_texture(GL_TEXTURE0);
 	uint8_t* uncompressed = dtex_pvr_decode(data, width, height);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, uncompressed);		
 	free(uncompressed);
+	dtex_stat_add_texture(tex, width, height);
 #endif // __APPLE__
 	return tex;
 }

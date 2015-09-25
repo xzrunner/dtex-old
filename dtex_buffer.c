@@ -3,6 +3,8 @@
 #include "dtex_gl.h"
 #include "dtex_file.h"
 #include "dtex_math.h"
+#include "dtex_log.h"
+#include "dtex_statistics.h"
 
 #include "opengl.h"
 
@@ -68,13 +70,16 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
 		if (err != GL_NO_ERROR) {
 			// return 1 tex
 			--buf->end_tex;
-			buf->tex_pool[buf->end_tex] = 0;
 			glDeleteTextures(1, &buf->tex_pool[buf->end_tex]);
+			dtex_stat_delete_texture(buf->tex_pool[buf->end_tex], buf->tex_edge, buf->tex_edge);
+			buf->tex_pool[buf->end_tex] = 0;
 			break;
 		}
 
         buf->tex_pool[i] = tex;
         ++buf->end_tex;
+
+		dtex_stat_add_texture(tex, edge, edge);
 	}
 
 	free(empty_data);
@@ -105,6 +110,7 @@ void
 dtexbuf_release(struct dtex_buffer* buf) {
 	// glActiveTexture(GL_TEXTURE0);
 	glDeleteTextures(buf->end_tex, &buf->tex_pool[0]);
+	dtex_stat_delete_texture(buf->tex_pool[0], buf->tex_edge, buf->tex_edge);
 	buf->next_tex = buf->end_tex = 0;
 
 	for (int i = 0; i < buf->fbo_size; ++i) {

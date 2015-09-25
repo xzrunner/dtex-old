@@ -215,7 +215,7 @@ dtex_shader_load() {
 		"{  \n"  
 
 		// todo
-		"  v_texcoord.y = 1 - v_texcoord.y;  \n"
+//		"  v_texcoord.y = 1 - v_texcoord.y;  \n"
 
 		"  vec4 tmp = texture2D(texture0, v_texcoord);  \n"
 		"  tmp.w = texture2D(texture1, v_texcoord).r;  \n"
@@ -283,7 +283,7 @@ _rs_commit() {
 
 	RS->object = 0;
 
-	dtex_add_drawcall();
+	dtex_stat_add_drawcall();
 }
 
 void 

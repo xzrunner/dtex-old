@@ -54,12 +54,14 @@ _release_texture(struct dtex_raw_tex* tex) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(1, &tex->id);
+		dtex_stat_delete_texture(tex->id, tex->width, tex->height);
 		tex->id = 0;
 	}
    if (tex->id_alpha != 0) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(1, &tex->id_alpha);
+		dtex_stat_delete_texture(tex->id_alpha, tex->width, tex->height);
 		tex->id_alpha = 0;
    }
    free(tex->filepath);

@@ -3,6 +3,7 @@
 #include "dtex_gl.h"
 #include "dtex_file.h"
 #include "dtex_log.h"
+#include "dtex_statistics.h"
 
 #include <rg_etc1_for_c.h>
 
@@ -114,10 +115,12 @@ dtex_etc1_gen_texture(uint8_t* data, int width, int height, GLuint* id_rgb, GLui
 	uint8_t* buf_rgb = dtex_etc1_decode(data, width, height);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_rgb);
 	free(buf_rgb);
+	dtex_stat_add_texture(*id_rgb, width, height);
 
 	*id_alpha = dtex_prepare_texture(GL_TEXTURE1);
 	uint8_t* buf_alpha = dtex_etc1_decode(data + sz, width, height);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_alpha);
 	free(buf_alpha);
+	dtex_stat_add_texture(*id_alpha, width, height);
 #endif // __ANDROID__
 }

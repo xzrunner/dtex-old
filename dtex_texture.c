@@ -45,7 +45,8 @@ dtex_del_tex(struct dtex_buffer* buf, struct dtex_texture* tex) {
 	assert(tex);
 	if (!dtexbuf_return_texid(buf, tex->tex)) {
 		// glActiveTexture(GL_TEXTURE0);
-		glDeleteTextures(1, &tex->tex); tex->tex = 0;		
+		glDeleteTextures(1, &tex->tex); tex->tex = 0;
+		dtex_stat_delete_texture(tex->tex, tex->width, tex->height);
 	}
 
 	if (tex->packer != NULL) {

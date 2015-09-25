@@ -25,9 +25,11 @@ _texture_create(struct dtex_import_stream* is, int format, int width, int height
 	switch(format) {
 	case TEXTURE8:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		dtex_stat_add_texture(texid, width, height);
 		break;
 	case TEXTURE4:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, data);
+		dtex_stat_add_texture(texid, width, height);
 		break;
 	default:
 		return 0;
@@ -47,6 +49,7 @@ _pvr_texture_create(uint8_t* data, size_t sz, int internal_format, int width, in
 		uint8_t* uncompressed = dtex_pvr_decode(ptr+4, width, height);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, uncompressed);		
 		free(uncompressed);
+		dtex_stat_add_texture(texid, width, height);
 #endif
 		ptr += 4 + ori_sz;
 	}
@@ -67,10 +70,12 @@ _etc1_texture_create(struct dtex_import_stream* is, int width, int height, GLuin
 	uint8_t* buf_rgb = dtex_etc1_decode(data, width, height);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_rgb);
 	free(buf_rgb);
+	dtex_stat_add_texture(*id_rgb, width, height);
 
 	uint8_t* buf_alpha = dtex_etc1_decode(data + sz, width, height);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_alpha);
 	free(buf_alpha);
+	dtex_stat_add_texture(*id_alpha, width, height);
 #endif
 }
 
