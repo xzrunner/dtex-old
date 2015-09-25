@@ -189,11 +189,11 @@ _before_draw(int format) {
 //}
 
 static inline void 
-_before_fbo_draw(struct dtex_buffer* buf, struct dtex_raw_tex* src, 
-	struct dtex_texture* dst, struct dtex_fbo** fbo, float* scr_w, float* scr_h) {
+_before_fbo_draw(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dtex_texture* dst, 
+				 struct dtex_fbo** fbo, float* scr_w, float* scr_h) {
 
 	*fbo = dtexbuf_fetch_fbo(buf);
-	dtex_fbo_bind_texture(*fbo, dst);
+	dtex_fbo_bind_texture(*fbo, dst->tex);
 	dtex_fbo_bind(*fbo);
 
 	float s;
@@ -213,10 +213,11 @@ _after_fbo_draw(struct dtex_buffer* buf, struct dtex_fbo* fbo, float scr_w, floa
 	glViewport(0, 0, scr_w, scr_h);
 
 	dtex_fbo_unbind();  
+
 	dtexbuf_return_fbo(buf, fbo);
 }
 
-void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, const float vb[16], struct dtex_texture* dst) {
+void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dtex_texture* dst, const float vb[16]) {
 	struct dtex_fbo* fbo = NULL;
 	float scr_w, scr_h;
 	_before_fbo_draw(buf, src, dst, &fbo, &scr_w, &scr_h);
@@ -295,7 +296,7 @@ void dtex_debug_draw(unsigned int texid) {
 
 void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin, 
 							  float xmax, float ymax) {
-	//assert(glIsTexture(texid));
+	assert(glIsTexture(texid));
 
 	dtex_shader_program(PROGRAM_NORMAL);
 

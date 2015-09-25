@@ -355,7 +355,7 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 	if (rrp_pic) {
 //		dtex_draw_rrp_to_tex(buf, hn->n.ori_tex, rrp_pic, tex, pos, rotate);
 	} else {
-		dtex_draw_to_texture(buf, hn->n.ori_tex, hn->n.trans_vb, tex);
+		dtex_draw_to_texture(buf, hn->n.ori_tex, tex, hn->n.trans_vb);
 	}
 }
 

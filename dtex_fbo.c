@@ -13,22 +13,22 @@
 #include <assert.h>
 
 struct dtex_fbo {
-	GLuint id;
-	struct dtex_texture* tex;
+	GLuint target_id;
+	GLuint texture_id;
 };
 
 struct dtex_fbo* 
 dtex_new_fbo() {
     dtex_info("dtex_fbo: new fbo\n");
 	struct dtex_fbo* fbo = (struct dtex_fbo*)malloc(sizeof(struct dtex_fbo));
-	glGenFramebuffers(1, &fbo->id);
-	fbo->tex = NULL;
+	glGenFramebuffers(1, &fbo->target_id);
+	fbo->texture_id = 0;
 	return fbo;
 }
 
 void 
 dtex_del_fbo(struct dtex_fbo* fbo) {
-	glDeleteFramebuffers(1, &fbo->id);
+	glDeleteFramebuffers(1, &fbo->target_id);
 	free(fbo);
 }
 
@@ -62,28 +62,28 @@ _check_framebuffer_status() {
 
 void 
 dtex_shader_fbo(struct dtex_fbo* fbo) {
-	dtex_shader_target(fbo->id);
+	dtex_shader_target(fbo->target_id);
 }
 
 void 
-dtex_fbo_bind_texture(struct dtex_fbo* fbo, struct dtex_texture* tex) {
-	if (fbo->tex == tex) {
+dtex_fbo_bind_texture(struct dtex_fbo* fbo, int texid) {
+	if (fbo->texture_id == texid) {
 		return;
 	}
 
 	dtex_fbo_bind(fbo);
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex->tex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texid, 0);
 	int status = _check_framebuffer_status();
 	assert(status);
-	fbo->tex = tex;
+	fbo->texture_id = texid;
 
 	dtex_fbo_unbind();
 }
 
 void 
 dtex_fbo_bind(struct dtex_fbo* fbo) {
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo->id);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo->target_id);
 }
 
 void 

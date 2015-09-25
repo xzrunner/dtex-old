@@ -72,9 +72,7 @@ dtexf_create(const char* cfg) {
 
 	LOADER = dtexloader_create();
 
-    if (CFG.open_c1 || CFG.open_c2 || CFG.open_c3) {
-        BUF = dtexbuf_create();
-    }
+	BUF = dtexbuf_create();
 	if (CFG.open_c3) {
 		C3 = dtex_c3_create();	
 	}
@@ -104,13 +102,13 @@ dtexf_release() {
 }
 
 struct dtex_package* 
-dtexf_preload_pkg(const char* name, const char* path, int type) {
-	return dtex_preload_pkg(LOADER, name, path, type);
+dtexf_preload_pkg(const char* name, const char* path, int type, float scale) {
+	return dtex_preload_pkg(LOADER, name, path, type, scale);
 }
 
 void 
-dtexf_load_texture(struct dtex_package* pkg, int idx) {
-	dtex_load_texture(LOADER, pkg, idx);
+dtexf_load_texture(struct dtex_package* pkg, int idx, float scale) {
+	dtex_load_texture(LOADER, BUF, pkg, idx, scale);
 }
 
 //struct ej_sprite* 
@@ -350,6 +348,8 @@ dtexf_debug_draw() {
 	if (C3) {
 		dtex_c3_debug_draw(C3);
 	}
+
+//	dtex_debug_draw(4);
 }
 
 void 

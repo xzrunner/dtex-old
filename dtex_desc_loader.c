@@ -3,6 +3,7 @@
 #include "dtex_log.h"
 #include "dtex_stream_import.h"
 #include "dtex_package.h"
+#include "dtex_ej_utility.h"
 
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
@@ -31,8 +32,23 @@ _comp_export(const void *a, const void *b) {
 	return strcmp(aa->name,bb->name);
 }
 
+static inline void
+_scale_pic(struct ej_pack_picture* ej_pic, void* ud) {
+	float scale = *(float*)ud;
+	
+	for (int i = 0; i < ej_pic->n; ++i) {
+		struct pack_quad* ej_q = &ej_pic->rect[i];
+		for (int j = 0; j < 4; ++j) {
+			float x = ej_q->texture_coord[j*2] * scale;
+			float y = ej_q->texture_coord[j*2+1] * scale;
+			ej_q->texture_coord[j*2] = floor(x + 0.5f);
+			ej_q->texture_coord[j*2+1] = floor(y + 0.5f);
+		}
+	}
+}
+
 struct ej_sprite_pack*
-dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg) {
+dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float scale) {
 	uint16_t export_n = dtex_import_uint16(is);
 	uint16_t maxid = dtex_import_uint16(is);
 	uint16_t tex = dtex_import_uint16(is);
@@ -55,6 +71,7 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg) {
 	qsort(pkg->export_names, pkg->export_size, sizeof(struct export_name), _comp_export);
 
 	struct ej_sprite_pack* ej_pkg = ej_pkg_import((void*)is->stream, body_sz, tex, maxid, unpack_sz);
+	dtex_ej_pkg_traverse(ej_pkg, _scale_pic, &scale);
 	return ej_pkg;
 }
 

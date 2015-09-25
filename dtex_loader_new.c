@@ -105,7 +105,7 @@ _buf_reserve(struct dtex_loader* loader, uint32_t sz) {
 }
 
 static inline void
-_unpack_file(struct dtex_loader* loader, struct dtex_file* file, void (*unpack_func)(), void* ud) {
+_unpack_file(struct dtex_loader* loader, struct dtex_file* file, void (*unpack_func)(struct dtex_import_stream* is, void* ud), void* ud) {
 	int32_t sz = 0;
 	dtex_file_read(file, &sz, sizeof(sz));
 	if (sz < 0) {
@@ -151,6 +151,8 @@ struct unpack2pkg_params {
 	struct dtex_package* pkg;
 	int file_type;
 	int load_tex_idx;
+	float scale;
+	struct dtex_buffer* buf;
 };
 
 static inline void
@@ -165,18 +167,18 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 			assert(params->load_tex_idx < pkg->tex_size);
 			struct dtex_raw_tex* tex = pkg->textures[params->load_tex_idx];
 			assert(tex);
-			dtex_load_texture_all(is, tex);
+			dtex_load_texture_all(params->buf, is, tex, params->scale);
 		} else {
 			struct dtex_raw_tex* tex = dtex_pool_add();
 			if (!tex) {
 				dtex_fault("_unpack_memory_to_pkg dtex_pool_add err.");
 			}
-			dtex_load_texture_desc(is, tex);
+			dtex_load_texture_desc(is, tex, params->scale);
 			pkg->textures[pkg->tex_size++] = tex;
 		}
 		break;
 	case FILE_EPE:
-		pkg->ej_pkg = dtex_load_epe(is, pkg);
+		pkg->ej_pkg = dtex_load_epe(is, pkg, params->scale);
 		break;
 	case FILE_RRP:
 		pkg->rrp_pkg = dtex_load_rrp(is);
@@ -219,7 +221,7 @@ _new_package(struct dtex_loader* loader, const char* name) {
 }
 
 struct dtex_package* 
-dtex_preload_pkg(struct dtex_loader* loader, const char* name, const char* path, int type) {
+dtex_preload_pkg(struct dtex_loader* loader, const char* name, const char* path, int type, float scale) {
 	struct dtex_file* file = dtex_file_open(path, "rb");
 	if (!file) {
 		dtex_fault("dtexloader_preload_pkg: can't open file %s\n", path);
@@ -234,6 +236,8 @@ dtex_preload_pkg(struct dtex_loader* loader, const char* name, const char* path,
 	params.pkg = pkg;
 	params.file_type = type;
 	params.load_tex_idx = -1;
+	params.scale = scale;
+	params.buf = NULL;
 	_unpack_file(loader, file, &_unpack_memory_to_pkg, &params);
 
 	dtex_file_close(file);
@@ -248,7 +252,7 @@ dtex_preload_pkg(struct dtex_loader* loader, const char* name, const char* path,
 }
 
 void 
-dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx) {
+dtex_load_texture(struct dtex_loader* loader, struct dtex_buffer* buf, struct dtex_package* pkg, int idx, float scale) {
 	assert(idx < pkg->tex_size);
 	struct dtex_raw_tex* tex = pkg->textures[idx];
 	assert(tex);
@@ -266,6 +270,8 @@ dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx)
 	params.pkg = pkg;
 	params.file_type = FILE_EPT;
 	params.load_tex_idx = idx;
+	params.scale = scale;
+	params.buf = buf;
 	_unpack_file(loader, file, &_unpack_memory_to_pkg, &params);
 
 	dtex_file_close(file);

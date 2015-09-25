@@ -19,8 +19,8 @@ void dtexf_create(const char* cfg);
 void dtexf_release();
 
 // loading
-struct dtex_package*  dtexf_preload_pkg(const char* name, const char* path, int type);
-void dtexf_load_texture(struct dtex_package* pkg, int idx);
+struct dtex_package*  dtexf_preload_pkg(const char* name, const char* path, int type, float scale);
+void dtexf_load_texture(struct dtex_package* pkg, int idx, float scale);
 // todo sort sprite list for C3
 struct ej_sprite* dtexf_create_sprite(const char* path);
 

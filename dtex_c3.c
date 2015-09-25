@@ -336,7 +336,7 @@ _relocate_pic(struct ej_pack_picture* ej_pic, void* ud) {
 }
 
 static inline void
-_draw_preload_list(struct dtex_c3* c3, float scale, struct dtex_loader* loader, struct dtex_buffer* buf) {
+_draw_preload_list(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf, float scale) {
 	// sort all node by its texture
 	int count = 0;
 	struct dtex_node* nodes[NODE_SIZE];
@@ -365,7 +365,7 @@ _draw_preload_list(struct dtex_c3* c3, float scale, struct dtex_loader* loader, 
 		} else if (dr->pkg->b4r_pkg) {
 //			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
-			dtex_load_texture(loader, dr->pkg, dr->raw_tex_idx, 1);
+			dtex_load_texture(loader, buf, dr->pkg, dr->raw_tex_idx, 1);
 			ori_tex = dr->pkg->textures[dr->raw_tex_idx];
 		}
 
@@ -381,7 +381,7 @@ _draw_preload_list(struct dtex_c3* c3, float scale, struct dtex_loader* loader, 
 		vb[4] = vx_min; vb[5] = vy_max; vb[6] = tx_min; vb[7] = ty_max;
 		vb[8] = vx_max; vb[9] = vy_max; vb[10] = tx_max; vb[11] = ty_max;
 		vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
-		dtex_draw_to_texture(buf, ori_tex, vb, dr->dst_tex);
+		dtex_draw_to_texture(buf, ori_tex, dr->dst_tex, vb);
 
 		dtex_ej_pkg_traverse(dr->pkg->ej_pkg, _relocate_pic, dr);
 
@@ -444,7 +444,7 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buf
 
 	float scale = _pack_preload_list(c3, alloc_scale);
 
-	_draw_preload_list(c3, scale, loader, buf);
+	_draw_preload_list(c3, loader, buf, scale);
 
     c3->preload_size = 0;
 }
@@ -488,7 +488,7 @@ dtex_c3_load_tex(struct dtex_c3* c3, struct dtex_raw_tex* tex, struct dtex_buffe
 		vb[14] = tx_max; vb[15] = ty_min;
 	}
 
-	dtex_draw_to_texture(buf, tex, vb, dst_tex);
+	dtex_draw_to_texture(buf, tex, dst_tex, vb);
 
 	return pos;
 }
@@ -519,7 +519,7 @@ dtexc3_preload_tex(struct dtex_c3* c3, struct dtex_raw_tex* tex, struct dtex_buf
 	vb[4] = vx_min; vb[5] = vy_max; vb[6] = tx_min; vb[7] = ty_max;
 	vb[8] = vx_max; vb[9] = vy_max; vb[10] = tx_max; vb[11] = ty_max;
 	vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
-	dtex_draw_to_texture(buf, tex, vb, dst_tex);
+	dtex_draw_to_texture(buf, tex, dst_tex, vb);
 
 	// todo new_tex
 

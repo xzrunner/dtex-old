@@ -15,7 +15,7 @@ struct dtex_pts;
 struct dtex_rrr;
 struct dtex_b4r;
 
-struct ej_sprite_pack* dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg);
+struct ej_sprite_pack* dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float scale);
 
 struct dtex_rrp* dtex_load_rrp(struct dtex_import_stream* is);
 
