@@ -1,7 +1,7 @@
 #include "dtex_draw.h"
 #include "dtex_texture.h"
 #include "dtex_loader.h"
-#include "dtex_fbo.h"
+#include "dtex_target.h"
 #include "dtex_buffer.h"
 #include "dtex_typedef.h"
 #include "dtex_rrp.h"
@@ -189,12 +189,12 @@ _before_draw(int format) {
 //}
 
 static inline void 
-_before_fbo_draw(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dtex_texture* dst, 
-				 struct dtex_fbo** fbo, float* scr_w, float* scr_h) {
+_before_target_draw(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dtex_texture* dst, 
+				 struct dtex_target** target, float* scr_w, float* scr_h) {
 
-	*fbo = dtexbuf_fetch_fbo(buf);
-	dtex_fbo_bind_texture(*fbo, dst->tex);
-	dtex_fbo_bind(*fbo);
+	*target = dtex_buf_fetch_target(buf);
+	dtex_target_bind_texture(*target, dst->tex);
+	dtex_target_bind(*target);
 
 	float s;
 	dtex_get_screen(scr_w, scr_h, &s);
@@ -204,7 +204,7 @@ _before_fbo_draw(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dtex_
 }
 
 static inline void
-_after_fbo_draw(struct dtex_buffer* buf, struct dtex_fbo* fbo, float scr_w, float scr_h) {
+_after_target_draw(struct dtex_buffer* buf, struct dtex_target* target, float scr_w, float scr_h) {
 	// // glActiveTexture(GL_TEXTURE0);
 	// // glBindTexture(GL_TEXTURE_2D, 0);
 	// // todo
@@ -212,19 +212,19 @@ _after_fbo_draw(struct dtex_buffer* buf, struct dtex_fbo* fbo, float scr_w, floa
 
 	glViewport(0, 0, scr_w, scr_h);
 
-	dtex_fbo_unbind();  
+	dtex_target_unbind();  
 
-	dtexbuf_return_fbo(buf, fbo);
+	dtex_buf_return_target(buf, target);
 }
 
 void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dtex_texture* dst, const float vb[16]) {
-	struct dtex_fbo* fbo = NULL;
+	struct dtex_target* target = NULL;
 	float scr_w, scr_h;
-	_before_fbo_draw(buf, src, dst, &fbo, &scr_w, &scr_h);
+	_before_target_draw(buf, src, dst, &target, &scr_w, &scr_h);
 
 	_draw(vb, src);
 
-	_after_fbo_draw(buf, fbo, scr_w, scr_h);
+	_after_target_draw(buf, target, scr_w, scr_h);
 }
 
 //void 
@@ -241,9 +241,9 @@ void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, str
 //	dst_sz.inv_w = 1.0f / dst->width;
 //	dst_sz.inv_h = 1.0f / dst->height;
 //
-//	struct dtex_fbo* fbo = NULL;
+//	struct dtex_target* target = NULL;
 //	struct ej_screen scr;
-//	_before_fbo_draw(buf, src, dst, &fbo, &scr);
+//	_before_target_draw(buf, src, dst, &target, &scr);
 //
 //	for (int i = 0; i < pic->part_sz; ++i) {
 //		struct rrp_part* part = &pic->rect[i];
@@ -287,7 +287,7 @@ void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, str
 //		_draw(trans_vb, src);
 //	}
 //
-//	_after_fbo_draw(buf, fbo, &scr);
+//	_after_target_draw(buf, target, &scr);
 //}
 
 void dtex_debug_draw(unsigned int texid) {

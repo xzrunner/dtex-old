@@ -3,7 +3,7 @@
 //#include "dtex_texture.h"
 //#include "dtex_packer.h"
 //#include "dtex_buffer.h"
-//#include "dtex_fbo.h"
+//#include "dtex_target.h"
 //#include "dtex_draw.h"
 //
 //#include <ejoy2d.h>
@@ -44,7 +44,7 @@
 //struct dtex_c1 {
 //	struct dtex_texture* texture;
 //
-//	struct dtex_fbo *fbo0, *fbo1;
+//	struct dtex_target *fbo0, *fbo1;
 //	bool is_fbo0_front;
 //
 //	struct hash_node* freelist;
@@ -245,11 +245,11 @@
 //
 //static inline void
 //_draw_animation(struct dtex_c1* dtex, struct ej_sprite_pack* pkg, struct animation* ani, int action, int frame, 
-//				struct dp_pos* pos, struct dtex_rect* rect, bool need_clear, struct dtex_fbo* fbo) {
+//				struct dp_pos* pos, struct dtex_rect* rect, bool need_clear, struct dtex_target* fbo) {
 //	struct dtex_texture* tex = dtex->texture;
 //
-//	dtex_fbo_bind_texture(fbo, tex);
-//	dtex_fbo_bind(fbo);
+//	dtex_target_bind_texture(fbo, tex);
+//	dtex_target_bind(fbo);
 //
 //	struct ej_screen scr;
 //	ejoy_get_screen(&scr);
@@ -279,7 +279,7 @@
 //	// todo cache
 //	ej_shader_texture(0);  // force commit
 //	glViewport(0, 0, scr.w, scr.h); 
-//	dtex_fbo_unbind();
+//	dtex_target_unbind();
 //}
 //
 //static inline unsigned int
@@ -429,9 +429,9 @@
 //	}
 //
 //	if (dtex->is_fbo0_front) {
-//		dtex_fbo_bind_texture(dtex->fbo0, dtex->texture);
+//		dtex_target_bind_texture(dtex->fbo0, dtex->texture);
 //	} else {
-//		dtex_fbo_bind_texture(dtex->fbo1, dtex->texture);
+//		dtex_target_bind_texture(dtex->fbo1, dtex->texture);
 //	}
 //
 //	shader_program(PROGRAM_SPRITE);

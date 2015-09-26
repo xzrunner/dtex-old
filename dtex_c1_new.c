@@ -1,7 +1,7 @@
 #include "dtex_c1_new.h"
 #include "dtex_buffer.h"
 #include "dtex_texture.h"
-#include "dtex_fbo.h"
+#include "dtex_target.h"
 #include "dtex_screen.h"
 #include "dtex_shader.h"
 #include "dtex_ej_sprite.h"
@@ -14,7 +14,7 @@
 
 struct dtex_c1 {
 	struct dtex_texture* texture;
-	struct dtex_fbo* target;
+	struct dtex_target* target;
 };
 
 struct dtex_c1* 
@@ -25,9 +25,9 @@ dtex_c1_create(struct dtex_buffer* buf) {
 	dtexbuf_reserve(buf, 1);
 	c1->texture = dtex_new_tex(buf);
 
-	c1->target = dtexbuf_fetch_fbo(buf);
+	c1->target = dtex_buf_fetch_target(buf);
 
-	dtex_fbo_bind_texture(c1->target, c1->texture->tex);
+	dtex_target_bind_texture(c1->target, c1->texture->tex);
 
 	return c1;
 }
@@ -35,13 +35,13 @@ dtex_c1_create(struct dtex_buffer* buf) {
 void 
 dtex_c1_release(struct dtex_c1* c1, struct dtex_buffer* buf) {
 	dtex_del_tex(buf, c1->texture);
-	dtexbuf_return_fbo(buf, c1->target);
+	dtex_buf_return_target(buf, c1->target);
 	free(c1);
 }
 
 void 
 dtex_c1_update(struct dtex_c1* c1, struct dtex_c2* c2, struct dtex_package* pkg, struct ej_sprite* spr) {
-	dtex_fbo_bind(c1->target);
+	dtex_target_bind(c1->target);
 
 //	float w, h, s;
 //	dtex_get_screen(&w, &h, &s);
@@ -56,7 +56,7 @@ dtex_c1_update(struct dtex_c1* c1, struct dtex_c2* c2, struct dtex_package* pkg,
 	dtex_shader_flush();
 //	glViewport(0, 0, w, h);
 
-	dtex_fbo_unbind();
+	dtex_target_unbind();
 }
 
 void 

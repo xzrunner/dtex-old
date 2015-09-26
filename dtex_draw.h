@@ -23,7 +23,7 @@ struct pts_picture;
 // void dtex_draw_pts(struct dtex_texture* src_tex, struct dp_pos* src_pos, struct pts_picture* src_pts_pic,
 // 	struct draw_params* params, const int32_t part_screen[8]);
 
-// todo 应该是批量的在一个fbo上画完再切到下一个fbo
+// todo 应该是批量的在一个target上画完再切到下一个target
 void dtex_draw_to_texture(struct dtex_buffer*, struct dtex_raw_tex* src, struct dtex_texture* dst, const float vb[16]);
 //// todo 一个pic的part可能位于不同的tex中
 //void dtex_draw_rrp_to_tex(struct dtex_buffer*, struct dtex_raw_tex* src, struct rrp_picture* pic, 

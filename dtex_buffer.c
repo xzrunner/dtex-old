@@ -1,5 +1,5 @@
 #include "dtex_buffer.h"
-#include "dtex_fbo.h"
+#include "dtex_target.h"
 #include "dtex_gl.h"
 #include "dtex_file.h"
 #include "dtex_math.h"
@@ -25,8 +25,8 @@ struct dtex_buffer {
 	int next_tex, end_tex;
 	unsigned int tex_edge;
 
-	struct dtex_fbo* fbo_pool[MAX_FBO_COUNT];
-	int fbo_size;
+	struct dtex_target* target_pool[MAX_FBO_COUNT];
+	int target_size;
 };
 
 static inline int 
@@ -113,10 +113,10 @@ dtexbuf_release(struct dtex_buffer* buf) {
 	dtex_stat_delete_texture(buf->tex_pool[0], buf->tex_edge, buf->tex_edge);
 	buf->next_tex = buf->end_tex = 0;
 
-	for (int i = 0; i < buf->fbo_size; ++i) {
-		dtex_del_fbo(buf->fbo_pool[i]);
+	for (int i = 0; i < buf->target_size; ++i) {
+		dtex_del_target(buf->target_pool[i]);
 	}
-	buf->fbo_size = 0;
+	buf->target_size = 0;
 
 	free(buf);
 }
@@ -149,22 +149,22 @@ dtexbuf_get_tex_edge(struct dtex_buffer* buf) {
 	return buf->tex_edge;
 }
 
-struct dtex_fbo* 
-dtexbuf_fetch_fbo(struct dtex_buffer* buf) {
-	if (buf->fbo_size == 0) {
-		return dtex_new_fbo();
+struct dtex_target* 
+dtex_buf_fetch_target(struct dtex_buffer* buf) {
+	if (buf->target_size == 0) {
+		return dtex_new_target();
 	} else {
-		struct dtex_fbo* fbo = buf->fbo_pool[buf->fbo_size - 1];
-		--buf->fbo_size;
-		return fbo;
+		struct dtex_target* target = buf->target_pool[buf->target_size - 1];
+		--buf->target_size;
+		return target;
 	}
 }
 
 void 
-dtexbuf_return_fbo(struct dtex_buffer* buf, struct dtex_fbo* fbo) {
-	if (buf->fbo_size == MAX_FBO_COUNT) {
-		dtex_del_fbo(fbo);
+dtex_buf_return_target(struct dtex_buffer* buf, struct dtex_target* target) {
+	if (buf->target_size == MAX_FBO_COUNT) {
+		dtex_del_target(target);
 	} else {
-		buf->fbo_pool[buf->fbo_size++] = fbo;
+		buf->target_pool[buf->target_size++] = target;
 	}
 }

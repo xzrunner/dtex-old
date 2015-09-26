@@ -1,7 +1,7 @@
 #include "dtex_texture.h"
 #include "dtex_buffer.h"
 #include "dtex_packer.h"
-#include "dtex_fbo.h"
+#include "dtex_target.h"
 #include "dtex_file.h"
 #include "dtex_statistics.h"
 
@@ -62,13 +62,13 @@ void
 dtex_clear_tex(struct dtex_texture* tex, struct dtex_buffer* buf) {
 	assert(tex);
 
-	struct dtex_fbo* fbo = dtexbuf_fetch_fbo(buf);
-	dtex_fbo_bind_texture(fbo, tex->tex);
-	dtex_fbo_bind(fbo);
+	struct dtex_target* target = dtex_buf_fetch_target(buf);
+	dtex_target_bind_texture(target, tex->tex);
+	dtex_target_bind(target);
 
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	dtex_fbo_unbind();
-	dtexbuf_return_fbo(buf, fbo);
+	dtex_target_unbind();
+	dtex_buf_return_target(buf, target);
 }
