@@ -4,7 +4,7 @@
 #include "dtex_log.h"
 #include "dtex_shader.h"
 
-#include "opengl.h"
+#include <opengl.h>
 
 #include <ejoy2d.h>
 
@@ -88,9 +88,11 @@ dtex_fbo_bind(struct dtex_fbo* fbo) {
 
 void 
 dtex_fbo_unbind() {
-#ifdef _WIN32
-	glBindFramebuffer(GL_FRAMEBUFFER, 1);
-#else
 	glBindFramebuffer(GL_FRAMEBUFFER, dtex_shader_get_target());
-#endif
+
+// #ifdef _WIN32
+// 	glBindFramebuffer(GL_FRAMEBUFFER, 1);
+// #else
+// 	glBindFramebuffer(GL_FRAMEBUFFER, dtex_shader_get_target());
+// #endif
 }

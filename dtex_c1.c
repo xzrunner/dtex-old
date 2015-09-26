@@ -12,7 +12,7 @@
 //#include <stdlib.h>
 //#include <limits.h>
 //#include <string.h>
-//#include "opengl.h"
+//#include <opengl.h>
 //
 //#define NODE_SIZE 64
 //#define HASH_SIZE 101

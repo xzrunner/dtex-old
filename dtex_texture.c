@@ -5,7 +5,7 @@
 #include "dtex_file.h"
 #include "dtex_statistics.h"
 
-#include "opengl.h"
+#include <opengl.h>
 #include "shader.h"
 
 #include <assert.h>
@@ -63,7 +63,7 @@ dtex_clear_tex(struct dtex_texture* tex, struct dtex_buffer* buf) {
 	assert(tex);
 
 	struct dtex_fbo* fbo = dtexbuf_fetch_fbo(buf);
-	dtex_fbo_bind_texture(fbo, tex);
+	dtex_fbo_bind_texture(fbo, tex->tex);
 	dtex_fbo_bind(fbo);
 
 	glClearColor(0, 0, 0, 0);

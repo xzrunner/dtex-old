@@ -2,7 +2,7 @@
 #include "dtex_file.h"
 #include "dtex_log.h"
 
-#include "opengl.h"
+#include <opengl.h>
 
 #include <stdlib.h>
 #include <stdbool.h>

@@ -1,6 +1,6 @@
 #include "dtex_gl.h"
 
-#include "opengl.h"
+#include <opengl.h>
 
 GLuint 
 dtex_prepare_texture(int texture) {

@@ -6,7 +6,7 @@
 #include "dtex_log.h"
 #include "dtex_statistics.h"
 
-#include "opengl.h"
+#include <opengl.h>
 
 #include <stdint.h>
 #include <string.h>

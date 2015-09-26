@@ -15,6 +15,9 @@ struct dp_pos;
 void dtexf_create(const char* cfg);
 void dtexf_release();
 
+// draw
+void dtexf_sprite_draw(struct dtex_package*, struct ej_sprite*, struct ej_srt*);
+
 // loading
 struct dtex_package*  dtexf_preload_pkg(const char* name, const char* path, int type, float scale);
 void dtexf_load_texture(struct dtex_package* pkg, int idx, float scale);
@@ -32,10 +35,10 @@ void dtexf_c2_load_end();
 float* dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_tex);
 //void dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dp_pos** out_pos);
 
-// C1
-void dtexf_c1_load_anim(struct dtex_package* pkg, struct animation* ani, int action);
-bool dtexf_c1_draw_anim(struct dtex_package* pkg, struct animation* ani, int action, 
-	int frame, struct draw_params* params);
+//// C1
+//void dtexf_c1_load_anim(struct dtex_package* pkg, struct animation* ani, int action);
+//bool dtexf_c1_draw_anim(struct dtex_package* pkg, struct animation* ani, int action, 
+//	int frame, struct draw_params* params);
 
 //// async loading
 //void dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path);

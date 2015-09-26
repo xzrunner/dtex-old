@@ -2,7 +2,7 @@
 #include "dtex_loader.h"
 #include "dtex_statistics.h"
 
-#include "opengl.h"
+#include <opengl.h>
 
 #include <string.h>
 #include <stdlib.h>

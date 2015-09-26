@@ -6,7 +6,7 @@
 //#ifndef dynamic_texture_loader_h
 //#define dynamic_texture_loader_h
 //
-//#include "opengl.h"
+//#include <opengl.h>
 //
 //#include <ejoy2d.h>
 //

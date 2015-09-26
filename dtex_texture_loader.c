@@ -10,7 +10,7 @@
 #include "dtex_texture.h"
 #include "dtex_draw.h"
 
-#include "opengl.h"
+#include <opengl.h>
 
 #include <stdlib.h>
 #include <assert.h>

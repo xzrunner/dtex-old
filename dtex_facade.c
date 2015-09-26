@@ -20,10 +20,10 @@
 #include "dtex_texture_pool.h"
 #include "dtex_package.h"
 #include "dtex_statistics.h"
+#include "dtex_ej_sprite.h"
 
-#include "sprite.h"
-
-#include "cJSON.h"
+#include <cJSON.h>
+#include <ejoy2d.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -99,6 +99,11 @@ dtexf_release() {
 	if (C3) {
 		dtexloader_release(LOADER);		
 	}
+}
+
+void 
+dtexf_sprite_draw(struct dtex_package* pkg, struct ej_sprite* spr, struct ej_srt* srt) {
+	dtex_ej_sprite_draw(pkg, C2, spr, srt);
 }
 
 struct dtex_package* 
@@ -205,22 +210,22 @@ dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_
 //	dtexc2_lookup_node(C2, ori_tex->id, &rect, out_tex, out_pos);
 //}
 
-void 
-dtexf_c1_load_anim(struct ej_package* pkg, struct animation* ani, int action) {
-	if (C1) {
-		dtex_c1_load_anim(C1, pkg, ani, action);		
-	}
-}
-
-bool 
-dtexf_c1_draw_anim(struct ej_package* pkg, struct animation* ani, int action, 
-	int frame, struct draw_params* params) {
-   if (C1 == NULL) {
-       return false;
-   }
-   frame /= 2;
-	return dtex_c1_draw_anim(C1, pkg, ani, action, frame, params);
-}
+//void 
+//dtexf_c1_load_anim(struct ej_package* pkg, struct animation* ani, int action) {
+//	if (C1) {
+//		dtex_c1_load_anim(C1, pkg, ani, action);		
+//	}
+//}
+//
+//bool 
+//dtexf_c1_draw_anim(struct ej_package* pkg, struct animation* ani, int action, 
+//	int frame, struct draw_params* params) {
+//   if (C1 == NULL) {
+//       return false;
+//   }
+//   frame /= 2;
+//	return dtex_c1_draw_anim(C1, pkg, ani, action, frame, params);
+//}
 
 //void 
 //dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path) {

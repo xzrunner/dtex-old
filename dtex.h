@@ -9,3 +9,5 @@
 #include "dtex_screen.h"	// todo
 
 #include "dtex_statistics.h"
+
+#include "dtex_ej_sprite.h"

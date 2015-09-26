@@ -8,7 +8,7 @@ extern "C"
 #ifndef dynamic_texture_etc1_h
 #define dynamic_texture_etc1_h
 
-#include "opengl.h"
+#include <opengl.h>
 
 uint8_t* dtex_etc1_decode(const uint8_t* buf, int width, int height);
 uint8_t* dtex_etc1_encode(const uint8_t* buf, int width, int height);
