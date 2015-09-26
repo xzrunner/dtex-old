@@ -70,5 +70,6 @@ dtex_clear_tex(struct dtex_texture* tex, struct dtex_buffer* buf) {
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	dtex_target_unbind();
+	dtex_target_unbind_texture(target);
 	dtex_buf_return_target(buf, target);
 }

@@ -150,6 +150,8 @@ _scale_texture(struct dtex_buffer* buf, struct dtex_raw_tex* tex, float scale) {
 	dtex_stat_delete_texture(tex->id, tex->width, tex->height);
 	dtex_stat_add_texture(texid, new_w, new_h);
 
+	dtex_shader_texture(0);
+
 	GLuint id = tex->id; 
 	glDeleteTextures(1, &id);
 

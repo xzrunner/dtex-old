@@ -1,4 +1,5 @@
 #include "dtex_gl.h"
+#include "dtex_shader.h"
 
 #include <opengl.h>
 
@@ -9,7 +10,7 @@ dtex_prepare_texture(int texture) {
 	glActiveTexture(texture);
 	glGenTextures(1, &texid);
 
-	glBindTexture(GL_TEXTURE_2D, texid);
+	dtex_shader_texture(texid);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

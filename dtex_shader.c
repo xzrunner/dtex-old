@@ -295,12 +295,11 @@ dtex_shader_program(int n) {
 	_rs_commit();
 	RS->activeprog = n;
 
-	if (n == -1) {
-		glUseProgram(0);
+	glUseProgram(PROG[n].prog);
+
+	if (n == PROGRAM_NULL) {
 		return;
 	}
-
-	glUseProgram(PROG[n].prog);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);

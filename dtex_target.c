@@ -77,6 +77,11 @@ dtex_target_bind_texture(struct dtex_target* target, int texid) {
 }
 
 void 
+dtex_target_unbind_texture(struct dtex_target* target) {
+	target->texture_id = 0;
+}
+
+void 
 dtex_target_bind(struct dtex_target* target) {
 	glBindFramebuffer(GL_FRAMEBUFFER, target->target_id);
 }
@@ -84,10 +89,4 @@ dtex_target_bind(struct dtex_target* target) {
 void 
 dtex_target_unbind() {
 	glBindFramebuffer(GL_FRAMEBUFFER, dtex_shader_get_target());
-
-// #ifdef _WIN32
-// 	glBindFramebuffer(GL_FRAMEBUFFER, 1);
-// #else
-// 	glBindFramebuffer(GL_FRAMEBUFFER, dtex_shader_get_target());
-// #endif
 }

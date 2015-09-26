@@ -6,8 +6,9 @@ extern "C"
 #ifndef dynamic_texture_shader_h
 #define dynamic_texture_shader_h
 
-#define PROGRAM_NORMAL	0
-#define PROGRAM_ETC1	1
+#define PROGRAM_NULL	0
+#define PROGRAM_NORMAL	1
+#define PROGRAM_ETC1	2
 
 void dtex_shader_load();
 void dtex_shader_unload();

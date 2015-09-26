@@ -213,6 +213,7 @@ _after_target_draw(struct dtex_buffer* buf, struct dtex_target* target, float sc
 	glViewport(0, 0, scr_w, scr_h);
 
 	dtex_target_unbind();  
+	dtex_target_unbind_texture(target);
 
 	dtex_buf_return_target(buf, target);
 }

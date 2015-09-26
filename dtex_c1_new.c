@@ -34,6 +34,7 @@ dtex_c1_create(struct dtex_buffer* buf) {
 
 void 
 dtex_c1_release(struct dtex_c1* c1, struct dtex_buffer* buf) {
+	dtex_target_unbind_texture(c1->target);
 	dtex_del_tex(buf, c1->texture);
 	dtex_buf_return_target(buf, c1->target);
 	free(c1);
