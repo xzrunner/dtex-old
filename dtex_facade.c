@@ -3,6 +3,7 @@
 #include "dtex_c3.h"
 #include "dtex_c2.h"
 #include "dtex_c1.h"
+#include "dtex_c1_new.h"
 #include "dtex_buffer.h"
 #include "dtex_async.h"
 #include "dtex_utility.h"
@@ -23,7 +24,6 @@
 #include "dtex_ej_sprite.h"
 
 #include <cJSON.h>
-#include <ejoy2d.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -32,11 +32,11 @@
 
 #define MAX_PACKAGE 512
 
-struct dtex_loader* LOADER = NULL;
-struct dtex_c3* C3 = NULL;
-struct dtex_c2* C2 = NULL;
-// struct dtex_c1* C1 = NULL;
-struct dtex_buffer*	BUF = NULL;
+static struct dtex_loader* LOADER = NULL;
+static struct dtex_c3* C3 = NULL;
+static struct dtex_c2* C2 = NULL;
+static struct dtex_c1* C1 = NULL;
+static struct dtex_buffer*	BUF = NULL;
 
 struct dtex_config {
 	bool open_c1;
@@ -76,9 +76,9 @@ dtexf_create(const char* cfg) {
 	if (CFG.open_c3) {
 		C3 = dtex_c3_create();	
 	}
-// 	if (CFG.open_c1) {
-// 		C1 = dtexc1_create(BUF);		
-// 	}
+ 	if (CFG.open_c1) {
+ 		C1 = dtex_c1_create(BUF);		
+ 	}
  	if (CFG.open_c2) {
  		C2 = dtex_c2_create(BUF);		
  	}
@@ -209,6 +209,11 @@ dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_
 //
 //	dtexc2_lookup_node(C2, ori_tex->id, &rect, out_tex, out_pos);
 //}
+
+void 
+dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
+	dtex_c1_update(C1, C2, pkg, spr);
+}
 
 //void 
 //dtexf_c1_load_anim(struct ej_package* pkg, struct animation* ani, int action) {
@@ -342,9 +347,9 @@ _prepare_trans_pos(struct dtex_rect* rect, int tex_idx, struct dtex_raw_tex* dst
 
 void 
 dtexf_debug_draw() {
-// 	if (C1) {
-// 		dtexc1_debug_draw(C1);
-// 	}
+  	if (C1) {
+  		dtex_c1_debug_draw(C1);
+  	}
 	if (C2) {
 		dtex_c2_debug_draw(C2);
 	}

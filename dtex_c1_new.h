@@ -6,12 +6,14 @@ extern "C"
 #ifndef dynamic_texture_cache1_h
 #define dynamic_texture_cache1_h
 
+#include <ejoy2d.h>
+
 struct dtex_c1;
 
 struct dtex_c1* dtex_c1_create(struct dtex_buffer*);
 void dtex_c1_release(struct dtex_c1*, struct dtex_buffer*);
 
-void dtex_c1_update(struct dtex_c1*, struct dtex_package*, int spr_id);
+void dtex_c1_update(struct dtex_c1*, struct dtex_c2*, struct dtex_package*, struct ej_sprite* spr);
 
 void dtex_c1_debug_draw(struct dtex_c1*);
 

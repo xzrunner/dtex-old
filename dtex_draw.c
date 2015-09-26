@@ -208,7 +208,7 @@ _after_fbo_draw(struct dtex_buffer* buf, struct dtex_fbo* fbo, float scr_w, floa
 	// // glActiveTexture(GL_TEXTURE0);
 	// // glBindTexture(GL_TEXTURE_2D, 0);
 	// // todo
-	dtex_shader_texture(0);	// force to commit
+	dtex_shader_flush();	// force to commit
 
 	glViewport(0, 0, scr_w, scr_h);
 

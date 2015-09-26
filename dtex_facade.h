@@ -6,6 +6,8 @@ extern "C"
 #ifndef dynamic_texture_facade_h
 #define dynamic_texture_facade_h
 
+#include <ejoy2d.h>
+
 #include <stdbool.h>
 
 // todo
@@ -35,7 +37,8 @@ void dtexf_c2_load_end();
 float* dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_tex);
 //void dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dp_pos** out_pos);
 
-//// C1
+// C1
+void dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr);
 //void dtexf_c1_load_anim(struct dtex_package* pkg, struct animation* ani, int action);
 //bool dtexf_c1_draw_anim(struct dtex_package* pkg, struct animation* ani, int action, 
 //	int frame, struct draw_params* params);
