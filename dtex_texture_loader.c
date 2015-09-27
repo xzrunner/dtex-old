@@ -1,5 +1,4 @@
 #include "dtex_texture_loader.h"
-#include "dtex_math.h"
 #include "dtex_gl.h"
 #include "dtex_pvr.h"
 #include "dtex_etc1.h"
@@ -10,79 +9,29 @@
 #include "dtex_texture.h"
 #include "dtex_draw.h"
 
-#include <opengl.h>
-
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
 #include <string.h>
 
-static inline GLuint
-_texture_create(struct dtex_import_stream* is, int format, int width, int height) {
-	if ((format == TEXTURE8) || (IS_POT(width) && IS_POT(height))) {
-		glPixelStorei(GL_UNPACK_ALIGNMENT,4);
-	} else {
-		glPixelStorei(GL_UNPACK_ALIGNMENT,1);
-	}
-
-	const char* data = (char*)is->stream;
-	GLuint texid = dtex_prepare_texture(GL_TEXTURE0);
-	switch(format) {
-	case TEXTURE8:
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		dtex_stat_add_texture(texid, width, height);
-		break;
-	case TEXTURE4:
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, data);
-		dtex_stat_add_texture(texid, width, height);
-		break;
-	default:
-		return 0;
-	}
-	return texid;
-}
-
-static inline GLuint
-_pvr_texture_create(uint8_t* data, size_t sz, int internal_format, int width, int height) {
-	GLuint texid = dtex_prepare_texture(GL_TEXTURE0);
-	uint8_t* ptr = data;
-	for (int i = 0; ptr - data < sz; ++i) {
-		int ori_sz = ptr[0] | ptr[1] << 8 | ptr[2] << 16 | ptr[3] << 24;
-#ifdef __APPLE__
-		glCompressedTexImage2D(GL_TEXTURE_2D, i, internal_format, width, height, 0, ori_sz, ptr+4);
-#else
-		uint8_t* uncompressed = dtex_pvr_decode(ptr+4, width, height);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, uncompressed);		
-		free(uncompressed);
-		dtex_stat_add_texture(texid, width, height);
-#endif
-		ptr += 4 + ori_sz;
-	}
-	return texid;
-}
-
-static inline void
-_etc1_texture_create(struct dtex_import_stream* is, int width, int height, GLuint* id_rgb, GLuint* id_alpha) {
-	size_t sz = (width * height) >> 1;
-	*id_rgb = dtex_prepare_texture(GL_TEXTURE0);
-	*id_alpha = dtex_prepare_texture(GL_TEXTURE1);
-#ifdef __ANDROID__
-	glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES, width, height, 0, sz, data);	
-	glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES, width, height, 0, sz, data+sz);
-#else
-	const char* data = (char*)is->stream;
-
-	uint8_t* buf_rgb = dtex_etc1_decode(data, width, height);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_rgb);
-	free(buf_rgb);
-	dtex_stat_add_texture(*id_rgb, width, height);
-
-	uint8_t* buf_alpha = dtex_etc1_decode(data + sz, width, height);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_alpha);
-	free(buf_alpha);
-	dtex_stat_add_texture(*id_alpha, width, height);
-#endif
-}
+// static inline GLuint
+// _pvr_texture_create(uint8_t* data, size_t sz, int internal_format, int width, int height) {
+// 	GLuint texid = dtex_prepare_texture(GL_TEXTURE0);
+// 	uint8_t* ptr = data;
+// 	for (int i = 0; ptr - data < sz; ++i) {
+// 		int ori_sz = ptr[0] | ptr[1] << 8 | ptr[2] << 16 | ptr[3] << 24;
+// #ifdef __APPLE__
+// 		glCompressedTexImage2D(GL_TEXTURE_2D, i, internal_format, width, height, 0, ori_sz, ptr+4);
+// #else
+// 		uint8_t* uncompressed = dtex_pvr_decode(ptr+4, width, height);
+// 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, uncompressed);		
+// 		free(uncompressed);
+// 		dtex_stat_add_texture(texid, width, height);
+// #endif
+// 		ptr += 4 + ori_sz;
+// 	}
+// 	return texid;
+// }
 
 // void 
 // dtex_load_pvr(struct dtex_import_stream* is, struct dtex_raw_tex* tex) {
@@ -123,9 +72,7 @@ _scale_texture(struct dtex_buffer* buf, struct dtex_raw_tex* tex, float scale) {
 	
 	uint8_t* empty_data = (uint8_t*)malloc(new_w*new_h*4);
 	memset(empty_data, 0, new_w*new_h*4);
-
-	GLuint texid = dtex_prepare_texture(GL_TEXTURE0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)new_w, (GLsizei)new_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, empty_data);
+	unsigned int texid = dtex_gl_create_texture(TEXTURE_RGBA8, new_w, new_h, empty_data, 0);
 	free(empty_data);
 
 	float vb[16];
@@ -147,13 +94,7 @@ _scale_texture(struct dtex_buffer* buf, struct dtex_raw_tex* tex, float scale) {
 
 	dtex_draw_to_texture(buf, tex, &dst, vb);
 
-	dtex_stat_delete_texture(tex->id, tex->width, tex->height);
-	dtex_stat_add_texture(texid, new_w, new_h);
-
-	dtex_shader_texture(0);
-
-	GLuint id = tex->id; 
-	glDeleteTextures(1, &id);
+	dtex_gl_release_texture(tex->id, 0);
 
 	tex->format = TEXTURE8;
 	tex->id = texid;
@@ -174,15 +115,20 @@ dtex_load_texture_all(struct dtex_buffer* buf, struct dtex_import_stream* is, st
 	tex->height = height;
 
 	switch (tex->format) {
-	case TEXTURE4: case TEXTURE8:
-		tex->id = _texture_create(is, format, width, height);
+	case TEXTURE4: 
+		tex->id = dtex_gl_create_texture(TEXTURE_RGBA4, width, height, is->stream, 0);
+		break;
+	case TEXTURE8:
+		tex->id = dtex_gl_create_texture(TEXTURE_RGBA8, width, height, is->stream, 0);
 		break;
 	case PVRTC:
+		tex->id = dtex_gl_create_texture(TEXTURE_PVR4, width, height, is->stream, 0);
 		// todo
 //		tex->id = _pvr_texture_create(buf+5, sz-5, internal_format, width, height);
 		break;
 	case PKMC:
-		_etc1_texture_create(is, width, height, &tex->id, &tex->id_alpha);
+		tex->id = dtex_gl_create_texture(TEXTURE_ETC1, width, height, is->stream, 0);
+		tex->id_alpha = dtex_gl_create_texture(TEXTURE_ETC1, width, height, is->stream + ((width * height) >> 1), 1);
 		break;
 	}
 

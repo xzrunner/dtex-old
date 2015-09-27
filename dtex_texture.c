@@ -4,9 +4,7 @@
 #include "dtex_target.h"
 #include "dtex_file.h"
 #include "dtex_statistics.h"
-
-#include <opengl.h>
-#include "shader.h"
+#include "dtex_gl.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -45,9 +43,7 @@ void
 dtex_del_tex(struct dtex_buffer* buf, struct dtex_texture* tex) {
 	assert(tex);
 	if (!dtexbuf_return_texid(buf, tex->tex)) {
-		// glActiveTexture(GL_TEXTURE0);
-		glDeleteTextures(1, &tex->tex); tex->tex = 0;
-		dtex_stat_delete_texture(tex->tex, tex->width, tex->height);
+		dtex_gl_release_texture(tex->tex, 0);
 	}
 
 	if (tex->packer != NULL) {
@@ -66,8 +62,7 @@ dtex_clear_tex(struct dtex_texture* tex, struct dtex_buffer* buf) {
 	dtex_target_bind_texture(target, tex->tex);
 	dtex_target_bind(target);
 
-	glClearColor(0, 0, 0, 0);
-	glClear(GL_COLOR_BUFFER_BIT);
+	dtex_gl_clear_color(0, 0, 0, 0);
 
 	dtex_target_unbind();
 	dtex_target_unbind_texture(target);

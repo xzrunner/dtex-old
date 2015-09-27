@@ -5,8 +5,6 @@
 #include "dtex_log.h"
 #include "dtex_statistics.h"
 
-#include <opengl.h>
-
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -730,19 +728,4 @@ dtex_pvr_init_blank(int edge) {
 //	memset(buf, 0xaa, sz);
 
 	return buf;
-}
-
-GLuint 
-dtex_pvr_gen_texture(uint8_t* data, int internal_format, int width, int height) {
-	GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
-#ifdef __APPLE__
-	int sz = width * height * 8 * internal_format / 16;
-	glCompressedTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, sz, data);	
-#else
-	uint8_t* uncompressed = dtex_pvr_decode(data, width, height);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, uncompressed);		
-	free(uncompressed);
-	dtex_stat_add_texture(tex, width, height);
-#endif // __APPLE__
-	return tex;
 }

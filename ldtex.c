@@ -86,13 +86,6 @@ lc3_load_pkg_finish(lua_State* L) {
 //}
 //
 //static int
-//ldel_texture(lua_State* L) {
-//	int tex = luaL_checkinteger(L, 1);
-//	dtexf_del_texture(tex);
-//	return 0;
-//}
-//
-//static int
 //ltest_pvr(lua_State* L) {
 //	const char* path = luaL_checkstring(L, 1);
 //	dtexf_test_pvr(path);
@@ -123,9 +116,6 @@ lualib_dtex(lua_State* L) {
 // 		// async loading
 // 		{ "async_load_spr", lasync_load_spr },
 // 		{ "update", lupdate },
-// 
-// 		// debug
-// 		{ "del_texture", ldel_texture },
 // 
 // 		// test
 // 		{ "test_pvr", ltest_pvr },

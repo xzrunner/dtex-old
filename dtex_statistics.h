@@ -22,7 +22,7 @@ struct stat_texture {
 };
 
 void dtex_stat_add_texture(int texid, int width, int height);
-void dtex_stat_delete_texture(int texid, int width, int height);
+void dtex_stat_delete_texture(int texid);
 void dtex_stat_get_texture(int* count, struct stat_texture** list);
 
 #endif // dynamic_texture_statistics_h

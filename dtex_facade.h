@@ -58,7 +58,6 @@ void dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr);
 //
 // for debug
 void dtexf_debug_draw();
-//void dtexf_del_texture(int tex);
 //
 //// for test
 //void dtexf_test_pvr(const char* path);

@@ -1,8 +1,7 @@
 #include "dtex_texture_pool.h"
 #include "dtex_loader.h"
 #include "dtex_statistics.h"
-
-#include <opengl.h>
+#include "dtex_gl.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -54,17 +53,11 @@ dtex_pool_add() {
 static inline void
 _release_texture(struct dtex_raw_tex* tex) {
 	if (tex->id != 0) {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glDeleteTextures(1, &tex->id);
-		dtex_stat_delete_texture(tex->id, tex->width, tex->height);
+		dtex_gl_release_texture(tex->id, 0);
 		tex->id = 0;
 	}
    if (tex->id_alpha != 0) {
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glDeleteTextures(1, &tex->id_alpha);
-		dtex_stat_delete_texture(tex->id_alpha, tex->width, tex->height);
+		dtex_gl_release_texture(tex->id_alpha, 1);
 		tex->id_alpha = 0;
    }
 

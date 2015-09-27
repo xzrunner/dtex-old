@@ -2,8 +2,9 @@
 #include "dtex_log.h"
 #include "dtex_statistics.h"
 
-#include <stdlib.h>
 #include <opengl.h>
+
+#include <stdlib.h>
 #include <stdint.h>
 
 #define ATTRIB_VERTEX 0

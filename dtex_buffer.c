@@ -5,8 +5,7 @@
 #include "dtex_math.h"
 #include "dtex_log.h"
 #include "dtex_statistics.h"
-
-#include <opengl.h>
+#include "dtex_typedef.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -21,7 +20,7 @@
 #define MAX_TEXTURE_SIZE 2048
 
 struct dtex_buffer {
-	GLuint tex_pool[MAX_TEX_COUNT];
+	unsigned int tex_pool[MAX_TEX_COUNT];
 	int next_tex, end_tex;
 	unsigned int tex_edge;
 
@@ -31,16 +30,11 @@ struct dtex_buffer {
 
 static inline int 
 _get_max_texture_size() {
-	int max;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
-	return MIN(max, MAX_TEXTURE_SIZE);
+	return MIN(dtex_gl_get_max_texture_size(), MAX_TEXTURE_SIZE);
 }
 
 static inline int 
 _alloc_buffer(struct dtex_buffer* buf, int area_need) {
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-	glActiveTexture(GL_TEXTURE0);
-
 	int edge = buf->tex_edge;
 	uint8_t* empty_data = (uint8_t*)malloc(edge*edge*4);
 
@@ -63,23 +57,17 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
 	for (int i = end; i < end + max_count; ++i) {
         dtex_info("dtex_buffer: new texture %d\n", edge);
         
-		GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)edge, (GLsizei)edge, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);		
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (GLsizei)edge, (GLsizei)edge, GL_RGBA, GL_UNSIGNED_BYTE, &empty_data[0]);
-		GLenum err = glGetError();
-		if (err != GL_NO_ERROR) {
+		unsigned int tex = dtex_gl_create_texture(TEXTURE_RGBA8, edge, edge, empty_data, 0);
+		if (dtex_gl_out_of_memory()) {
 			// return 1 tex
 			--buf->end_tex;
-			glDeleteTextures(1, &buf->tex_pool[buf->end_tex]);
-			dtex_stat_delete_texture(buf->tex_pool[buf->end_tex], buf->tex_edge, buf->tex_edge);
+			dtex_gl_release_texture(buf->tex_pool[buf->end_tex], 0);
 			buf->tex_pool[buf->end_tex] = 0;
 			break;
 		}
 
         buf->tex_pool[i] = tex;
         ++buf->end_tex;
-
-		dtex_stat_add_texture(tex, edge, edge);
 	}
 
 	free(empty_data);
@@ -108,9 +96,9 @@ dtexbuf_reserve(struct dtex_buffer* buf, int area_need) {
 
 void 
 dtexbuf_release(struct dtex_buffer* buf) {
-	// glActiveTexture(GL_TEXTURE0);
-	glDeleteTextures(buf->end_tex, &buf->tex_pool[0]);
-	dtex_stat_delete_texture(buf->tex_pool[0], buf->tex_edge, buf->tex_edge);
+	for (int i = 0; i < buf->end_tex; ++i) {
+		dtex_gl_release_texture(buf->tex_pool[i], 0);
+	}
 	buf->next_tex = buf->end_tex = 0;
 
 	for (int i = 0; i < buf->target_size; ++i) {

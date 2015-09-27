@@ -1,8 +1,7 @@
 #include "dtex_png.h"
 #include "dtex_file.h"
 #include "dtex_log.h"
-
-#include <opengl.h>
+#include "dtex_typedef.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -85,25 +84,25 @@ dtex_png_read(const char* filepath, int* width, int* height, int* channels, int*
 		{
 		case PNG_COLOR_TYPE_PALETTE:
 			png_set_palette_to_rgb(lPngPtr);
-			*format = lTransparency ? GL_RGBA : GL_RGB;
+			*format = lTransparency ? PIXEL_RGBA : PIXEL_RGB;
 			*channels = lTransparency ? 4 : 3;
 			break;
 		case PNG_COLOR_TYPE_RGB:
-			*format = lTransparency ? GL_RGBA : GL_RGB;
+			*format = lTransparency ? PIXEL_RGBA : PIXEL_RGB;
 			*channels = lTransparency ? 4 : 3;
 			break;
 		case PNG_COLOR_TYPE_RGBA:
-			*format = GL_RGBA;
+			*format = PIXEL_RGBA;
 			*channels = 4;
 			break;
 		case PNG_COLOR_TYPE_GRAY:
 			png_set_expand_gray_1_2_4_to_8(lPngPtr);
-			*format = lTransparency ? GL_LUMINANCE_ALPHA : GL_LUMINANCE;
+			*format = lTransparency ? PIXEL_LUMINANCE_ALPHA : PIXEL_LUMINANCE;
 			*channels = 1;
 			break;
 		case PNG_COLOR_TYPE_GA:
 			png_set_expand_gray_1_2_4_to_8(lPngPtr);
-			*format = GL_LUMINANCE_ALPHA;
+			*format = PIXEL_LUMINANCE_ALPHA;
 			*channels = 1;
 			break;
 		}

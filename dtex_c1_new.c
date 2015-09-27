@@ -6,8 +6,7 @@
 #include "dtex_shader.h"
 #include "dtex_ej_sprite.h"
 #include "dtex_draw.h"
-
-#include <opengl.h>
+#include "dtex_gl.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -48,8 +47,7 @@ dtex_c1_update(struct dtex_c1* c1, struct dtex_c2* c2, struct dtex_package* pkg,
 //	dtex_get_screen(&w, &h, &s);
 //	glViewport(0, 0, c1->texture->width, c1->texture->height);
 
-	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
+	dtex_gl_clear_color(0, 0, 0, 1);
 
 	dtex_shader_program(PROGRAM_NORMAL);
 	dtex_ej_sprite_draw(pkg, c2, spr, NULL);

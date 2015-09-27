@@ -11,13 +11,13 @@
 #include "dtex_texture_pool.h"
 #include "dtex_shader.h"
 #include "dtex_screen.h"
+#include "dtex_gl.h"
 
 #include <ejoy2d.h>
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <opengl.h>
 
 static inline void
 _draw(const float vb[16], struct dtex_raw_tex* src) {
@@ -198,19 +198,16 @@ _before_target_draw(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dt
 
 	float s;
 	dtex_get_screen(scr_w, scr_h, &s);
-	glViewport(0, 0, dst->width, dst->height);
+	dtex_gl_viewport(0, 0, dst->width, dst->height);
 
 	_before_draw(src->format);
 }
 
 static inline void
 _after_target_draw(struct dtex_buffer* buf, struct dtex_target* target, float scr_w, float scr_h) {
-	// // glActiveTexture(GL_TEXTURE0);
-	// // glBindTexture(GL_TEXTURE_2D, 0);
-	// // todo
-	dtex_shader_flush();	// force to commit
+	dtex_shader_flush();
 
-	glViewport(0, 0, scr_w, scr_h);
+	dtex_gl_viewport(0, 0, scr_w, scr_h);
 
 	dtex_target_unbind();  
 	dtex_target_unbind_texture(target);
@@ -297,7 +294,7 @@ void dtex_debug_draw(unsigned int texid) {
 
 void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin, 
 							  float xmax, float ymax) {
-	assert(glIsTexture(texid));
+	assert(dtex_gl_istexture(texid));
 
 	dtex_shader_program(PROGRAM_NORMAL);
 

@@ -361,13 +361,6 @@ dtexf_debug_draw() {
 }
 
 void 
-dtexf_del_texture(int tex) {
-	GLuint id = tex; 
-	glDeleteTextures(1, &id);
-//	dtex_stat_delete_texture(id, buf->tex_edge, buf->tex_edge);
-}
-
-void 
 dtexf_test_pvr(const char* path) {
 	uint32_t width, height;
 	uint8_t* buf_compressed = dtex_pvr_read_file(path, &width, &height);
@@ -376,20 +369,14 @@ dtexf_test_pvr(const char* path) {
 	uint8_t* buf_uncompressed = dtex_pvr_decode(buf_compressed, width, height);
 	free(buf_compressed);
 
-	GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
+	unsigned int tex;
 #ifdef __APPLE__
 	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
-    size_t sz = width * height / 2;
-    glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, width, height, 0, sz, new_compressed);
+	tex = dtex_gl_create_texture(TEXTURE_PVR4, width, height, new_compressed, 0);
 	free(new_compressed);
 #else
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_uncompressed);
-	dtex_stat_add_texture(tex, width, height);
+	tex = dtex_gl_create_texture(TEXTURE_RGBA8, width, height, buf_uncompressed, 0);
 #endif
-	GLenum err = glGetError();
-	if (err != GL_NO_ERROR){
-		printf("Error uploading compressed texture level: 0. glError: 0x%04X", err);
-	}
 	free(buf_uncompressed);
 
 	struct dtex_raw_tex src_tex;
@@ -414,17 +401,14 @@ dtexf_test_etc1(const char* path) {
 	uint8_t* buf_uncompressed = dtex_etc1_decode(buf_compressed, width, height);
 	free(buf_compressed);
 
-	GLuint tex = dtex_prepare_texture(GL_TEXTURE0);
+	unsigned int tex;
 #ifdef __ANDROID__
-	// todo
+	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
+	tex = dtex_gl_create_texture(TEXTURE_ETC1, width, height, new_compressed, 0);
+	free(new_compressed);
 #else
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)width, (GLsizei)height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf_uncompressed);
-	dtex_stat_add_texture(tex, width, height);
+	tex = dtex_gl_create_texture(TEXTURE_RGBA8, width, height, buf_uncompressed, 0);
 #endif
-	GLenum err = glGetError();
-	if (err != GL_NO_ERROR){
-		printf("Error uploading compressed texture level: 0. glError: 0x%04X", err);
-	}
 	free(buf_uncompressed);
 
 	struct dtex_raw_tex src_tex;
