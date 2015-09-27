@@ -89,9 +89,9 @@ dtexf_release() {
  	if (C2) {
  		dtex_c2_release(C2, BUF);		
  	}
-// 	if (C1) {
-// 		dtexc1_release(C1, BUF);		
-// 	}
+	if (C1) {
+		dtex_c1_release(C1, BUF);		
+	}
 	if (C3) {
 		dtex_c3_release(C3, BUF);		
 	}
