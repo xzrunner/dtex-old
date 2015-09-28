@@ -7,7 +7,7 @@
 
 struct dtex_stat {
 	int draw_call;
-	int max_draw_call;
+	int last_draw_call;
 
 	struct stat_texture textures[MAX_TEXTURES];
 	int texture_count;
@@ -29,11 +29,10 @@ dtex_stat_draw_start() {
 
 void 
 dtex_stat_draw_end() {
-	if (STAT.draw_call > STAT.max_draw_call) {
-		STAT.max_draw_call = STAT.draw_call;
+	if (STAT.draw_call != 0) {
+		STAT.last_draw_call = STAT.draw_call;
+		STAT.draw_call = 0;
 	}
-	STAT.draw_call = 0;
-
 	STAT.in_draw = false;
 }
 
@@ -46,7 +45,7 @@ dtex_stat_add_drawcall() {
 
 int 
 dtex_stat_get_drawcall() {
-	return STAT.max_draw_call;
+	return STAT.last_draw_call;
 }
 
 void 
