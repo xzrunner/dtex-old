@@ -64,6 +64,16 @@ struct dtex_c2 {
 	int preload_size;
 };
 
+void
+_reset_preload_list(struct dtex_c2* c2) {
+	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
+	struct preload_node* first_node = (struct preload_node*)((intptr_t)c2->freelist + nsize);
+	for (int i = 0; i < PRELOAD_SIZE; ++i) {
+		c2->preload_list[i] = first_node+i;
+	}
+	c2->preload_size = 0;
+}
+
 struct dtex_c2* 
 dtex_c2_create(struct dtex_buffer* buf) {
 	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
@@ -82,10 +92,7 @@ dtex_c2_create(struct dtex_buffer* buf) {
 	}
 	dtex->freelist[NODE_SIZE-1].next_hash = NULL;
 
-	struct preload_node* first_node = (struct preload_node*)((intptr_t)dtex->freelist + nsize);
-	for (int i = 0; i < PRELOAD_SIZE; ++i) {
-		dtex->preload_list[i] = first_node+i;
-	}
+	_reset_preload_list(dtex);
 
 	return dtex;
 }
@@ -136,6 +143,7 @@ _preload_picture(struct ej_pack_picture* ej_pic, void* ud) {
 		} else {
 			pn->ori_tex = dtex_pool_query(ej_q->texid - QUAD_TEXID_IN_PKG_MAX);
 		}
+
 		dtex_get_pic_src_rect(ej_q->texture_coord, &pn->rect);
 	}
 }
@@ -184,6 +192,7 @@ _compare_bound(const void *arg1, const void *arg2) {
 static inline void
 _unique_nodes(struct dtex_c2* dtex) {
 	qsort((void*)dtex->preload_list, dtex->preload_size, sizeof(struct preload_node*), _compare_bound);
+
 	struct preload_node* unique[PRELOAD_SIZE];
 	unique[0] = dtex->preload_list[0];
 	int unique_size = 1;
@@ -378,7 +387,7 @@ dtex_c2_load_end(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_load
 		_insert_node(dtex, buf, loader, dtex->preload_list[i], !use_only_one_texture);
 	}
 
-	dtex->preload_size = 0;
+	_reset_preload_list(dtex);
 }
 
 float* 
