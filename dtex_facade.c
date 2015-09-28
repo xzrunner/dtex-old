@@ -147,9 +147,9 @@ dtexf_c3_load(struct dtex_package* pkg, float scale) {
 }
 
 void 
-dtexf_c3_load_end() {
+dtexf_c3_load_end(bool async) {
 	if (C3) {
-		dtex_c3_load_end(C3, LOADER, BUF);
+		dtex_c3_load_end(C3, LOADER, BUF, async);
 	}
 }
 

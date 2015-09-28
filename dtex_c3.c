@@ -12,6 +12,8 @@
 #include "dtex_loader_new.h"
 #include "dtex_package.h"
 #include "dtex_ej_utility.h"
+#include "dtex_texture_loader.h"
+#include "dtex_async_loader.h"
 
 #include <ejoy2d.h>
 
@@ -335,8 +337,67 @@ _relocate_pic(struct ej_pack_picture* ej_pic, void* ud) {
 	}
 }
 
+// todo other format: rrr, b4r
+
+struct relocate_nodes_params {
+	struct dtex_buffer* buf;
+	struct dtex_node* node;
+};
+
 static inline void
-_map_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf) {
+_relocate_node(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dtex_node* dst) {
+	// draw old tex to new 
+	float tx_min = 0, tx_max = 1,
+		ty_min = 0, ty_max = 1;
+	float vx_min = (float)dst->dst_rect.xmin / dst->dst_tex->width * 2 - 1,
+		vx_max = (float)dst->dst_rect.xmax / dst->dst_tex->width * 2 - 1,
+		vy_min = (float)dst->dst_rect.ymin / dst->dst_tex->height * 2 - 1,
+		vy_max = (float)dst->dst_rect.ymax / dst->dst_tex->height * 2 - 1;
+	float vb[16];
+	vb[0] = vx_min; vb[1] = vy_min; vb[2] = tx_min; vb[3] = ty_min;
+	vb[4] = vx_min; vb[5] = vy_max; vb[6] = tx_min; vb[7] = ty_max;
+	vb[8] = vx_max; vb[9] = vy_max; vb[10] = tx_max; vb[11] = ty_max;
+	vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
+	dtex_draw_to_texture(buf, src, dst->dst_tex, vb);
+
+	dtex_ej_pkg_traverse(dst->pkg->ej_pkg, _relocate_pic, dst);
+
+	// todo: relocate rrr, b4r
+	// 	if (pkg->rrr_pkg) {
+	// 		dtex_rrr_relocate(pkg->rrr_pkg, pkg);
+	// 	} else if (pkg->b4r_pkg) {
+	// 		dtex_b4r_relocate(pkg->b4r_pkg, pkg);
+	// 	}
+	// 	if (pkg->rrp_pkg) {
+	// 		_relocate_rrp(c3, pkg);
+	// 	}
+
+}
+
+static inline void
+_relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
+	// todo: check file type: rrr, b4r
+	struct relocate_nodes_params* params = (struct relocate_nodes_params*)ud;	
+	struct dtex_raw_tex* texture = params->node->pkg->textures[params->node->raw_tex_idx];
+
+	bool tex_loaded = false;
+	if (texture->id == 0) {
+		tex_loaded = false;
+		dtex_load_texture_all(params->buf, is, texture);
+	} else {
+		tex_loaded = true;
+	}
+	_relocate_node(params->buf, texture, params->node);
+	if (!tex_loaded) {
+		dtex_pool_remove(texture);
+		params->node->pkg->textures[params->node->raw_tex_idx] = NULL;
+	}
+
+	free(params);
+}
+
+static inline void
+_relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf, bool async) {
 	// sort all node by its texture
 	int count = 0;
 	struct dtex_node* nodes[NODE_SIZE];
@@ -368,44 +429,28 @@ _map_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* b
 //			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
 			ori_tex = dr->pkg->textures[dr->raw_tex_idx];
-			if (ori_tex->id == 0) {
-				tex_loaded = false;
-				dtex_load_texture(loader, buf, dr->pkg, dr->raw_tex_idx, ori_tex->scale);
+			if (!async) {
+				if (ori_tex->id == 0) {
+					tex_loaded = false;
+					dtex_load_texture(loader, buf, dr->pkg, dr->raw_tex_idx, ori_tex->scale);
+				} else {
+					tex_loaded = true;
+				}
 			} else {
-				tex_loaded = true;
-			}
+ 				struct relocate_nodes_params* params = (struct relocate_nodes_params*)malloc(sizeof(*params));
+ 				params->buf = buf;
+ 				params->node = dr;
+ 				dtex_async_load_file(ori_tex->filepath, _relocate_nodes_cb, params);
+ 			}
 		}
 
-		// draw old tex to new 
-		float tx_min = 0, tx_max = 1,
-		      ty_min = 0, ty_max = 1;
-		float vx_min = (float)dr->dst_rect.xmin / dr->dst_tex->width * 2 - 1,
-		      vx_max = (float)dr->dst_rect.xmax / dr->dst_tex->width * 2 - 1,
-		      vy_min = (float)dr->dst_rect.ymin / dr->dst_tex->height * 2 - 1,
-		      vy_max = (float)dr->dst_rect.ymax / dr->dst_tex->height * 2 - 1;
-		float vb[16];
-		vb[0] = vx_min; vb[1] = vy_min; vb[2] = tx_min; vb[3] = ty_min;
-		vb[4] = vx_min; vb[5] = vy_max; vb[6] = tx_min; vb[7] = ty_max;
-		vb[8] = vx_max; vb[9] = vy_max; vb[10] = tx_max; vb[11] = ty_max;
-		vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
-		dtex_draw_to_texture(buf, ori_tex, dr->dst_tex, vb);
-
-		dtex_ej_pkg_traverse(dr->pkg->ej_pkg, _relocate_pic, dr);
-
-		// todo: relocate rrr, b4r
-		// 	if (pkg->rrr_pkg) {
-		// 		dtex_rrr_relocate(pkg->rrr_pkg, pkg);
-		// 	} else if (pkg->b4r_pkg) {
-		// 		dtex_b4r_relocate(pkg->b4r_pkg, pkg);
-		// 	}
-		// 	if (pkg->rrp_pkg) {
-		// 		_relocate_rrp(c3, pkg);
-		// 	}
-
-		if (!tex_loaded) {
- 			dtex_pool_remove(ori_tex);
- 			dr->pkg->textures[dr->raw_tex_idx] = NULL;
-		}
+ 		if (!async) {
+ 			_relocate_node(buf, ori_tex, dr);
+ 			if (!tex_loaded) {
+ 				dtex_pool_remove(ori_tex);
+ 				dr->pkg->textures[dr->raw_tex_idx] = NULL;
+ 			}
+ 		}
 
 		last_pkg = dr->pkg;
 	}
@@ -442,7 +487,7 @@ _alloc_texture(struct dtex_c3* c3, struct dtex_buffer* buf) {
 }
 
 void 
-dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf) {
+dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buffer* buf, bool async) {
 	if (c3->preload_size == 0) {
 		return;
 	}
@@ -453,7 +498,7 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buf
 
 	/*float scale = */_pack_nodes(c3, alloc_scale);
 
-	_map_nodes(c3, loader, buf);
+	_relocate_nodes(c3, loader, buf, async);
 
     c3->preload_size = 0;
 }

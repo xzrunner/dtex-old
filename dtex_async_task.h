@@ -10,6 +10,8 @@ void dtex_async_load_texture(struct dtex_buffer* buf, struct dtex_package* pkg, 
 
 void dtex_async_load_texture_with_c2(struct dtex_buffer* buf, struct dtex_package* pkg, int* sprite_ids, int sprite_count);
 
+void dtex_async_load_texture_with_c3(struct dtex_buffer* buf, struct dtex_package* pkg);
+
 #endif // dynamic_texture_async_task_h
 
 #ifdef __cplusplus
