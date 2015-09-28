@@ -32,7 +32,7 @@ void dtexf_c3_load_end();
 
 // C2
 void dtexf_c2_load_begin();
-void dtexf_c2_load(struct dtex_package* pkg, const char* name);
+void dtexf_c2_load(struct dtex_package* pkg, int spr_id);
 void dtexf_c2_load_end();
 float* dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_tex);
 //void dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dp_pos** out_pos);
@@ -45,8 +45,8 @@ void dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr);
 
 // async loading
 //void dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path);
-
-void dtexf_async_load_texture(const char* filepath, struct dtex_package* pkg, int idx, float scale);
+void dtexf_async_load_texture(struct dtex_package* pkg, int idx);
+void dtexf_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count);
 void dtexf_update();
 
 //

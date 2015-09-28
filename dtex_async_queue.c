@@ -24,19 +24,19 @@ _job_queue_init(struct dtex_async_queue* queue)
 }
 
 struct dtex_async_queue* 
-dtex_job_queue_create() {
-	struct dtex_async_queue* qp = (struct dtex_async_queue*)malloc(sizeof(*qp));
-	_job_queue_init(qp);
-	return qp;
+dtex_async_queue_create() {
+	struct dtex_async_queue* queue = (struct dtex_async_queue*)malloc(sizeof(*queue));
+	_job_queue_init(queue);
+	return queue;
 }
 
 void 
-dtex_job_queue_release(struct dtex_async_queue* qp) {
-	free(qp);
+dtex_async_queue_release(struct dtex_async_queue* queue) {
+	free(queue);
 }
 
 struct dtex_async_job* 
-dtex_job_queue_front_and_pop(struct dtex_async_queue* queue) {
+dtex_async_queue_front_and_pop(struct dtex_async_queue* queue) {
 	struct dtex_async_job* front = NULL;	
 	pthread_rwlock_wrlock(&queue->lock);
 	front = queue->head;
@@ -48,7 +48,7 @@ dtex_job_queue_front_and_pop(struct dtex_async_queue* queue) {
 }
 
 void 
-dtex_job_queue_push(struct dtex_async_queue* queue, struct dtex_async_job* job) {
+dtex_async_queue_push(struct dtex_async_queue* queue, struct dtex_async_job* job) {
 	pthread_rwlock_wrlock(&queue->lock);
 	job->next = NULL;
 	if (queue->head == NULL) {
@@ -78,3 +78,11 @@ dtex_job_queue_push(struct dtex_async_queue* queue, struct dtex_async_job* job) 
 //	pthread_rwlock_unlock(&queue->lock);
 //	return job;
 //}
+
+bool 
+dtex_async_queue_empty(struct dtex_async_queue* queue) {
+	bool empty;
+	pthread_rwlock_rdlock(&queue->lock);
+	empty = (queue->head == NULL);
+	return empty;
+}

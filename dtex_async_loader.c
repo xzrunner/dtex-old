@@ -31,14 +31,14 @@ struct parse_data_params {
 
 void 
 dtex_async_loader_init() {
-	load_queue = dtex_job_queue_create();
-	parse_queue = dtex_job_queue_create();
+	load_queue = dtex_async_queue_create();
+	parse_queue = dtex_async_queue_create();
 }
 
 void 
 dtex_async_loader_release() {
-	dtex_job_queue_release(parse_queue);
-	dtex_job_queue_release(load_queue);
+	dtex_async_queue_release(parse_queue);
+	dtex_async_queue_release(load_queue);
 }
 
 static inline void
@@ -58,12 +58,12 @@ _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 	struct dtex_async_job* job = (struct dtex_async_job*)malloc(sizeof(*job));
 	job->type = JOB_PARSER_DATA;
 	job->ud = params;
-	dtex_job_queue_push(parse_queue, job);
+	dtex_async_queue_push(parse_queue, job);
 }
 
 static inline void*
 _load_file(void* arg) {
-	struct dtex_async_job* job = dtex_job_queue_front_and_pop(load_queue);
+	struct dtex_async_job* job = dtex_async_queue_front_and_pop(load_queue);
 	if (!job) {
 		return NULL;
 	}
@@ -92,14 +92,14 @@ dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream*
 	struct dtex_async_job* job = (struct dtex_async_job*)malloc(sizeof(*job));
 	job->type = JOB_LOAD_FILE;
 	job->ud = params;
-	dtex_job_queue_push(load_queue, job);
+	dtex_async_queue_push(load_queue, job);
 
 	pthread_create(&job->id, NULL, _load_file, NULL);
 }
 
 void 
 dtex_async_loader_update() {
-	struct dtex_async_job* job = dtex_job_queue_front_and_pop(parse_queue);
+	struct dtex_async_job* job = dtex_async_queue_front_and_pop(parse_queue);
 	if (!job) {
 		return;
 	}
@@ -115,4 +115,10 @@ dtex_async_loader_update() {
 	free(params->data);
 	free(params);
 	free(job);
+}
+
+bool 
+dtex_async_loader_empty() {
+	return dtex_async_queue_empty(load_queue) 
+		&& dtex_async_queue_empty(parse_queue);
 }

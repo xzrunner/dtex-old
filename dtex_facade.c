@@ -161,10 +161,9 @@ dtexf_c2_load_begin() {
 }
 
 void 
-dtexf_c2_load(struct dtex_package* pkg, const char* name) {
+dtexf_c2_load(struct dtex_package* pkg, int spr_id) {
 	if (C2) {
-		int id = dtex_get_spr_id(pkg, name);
-		dtex_c2_load(C2, pkg, id, -1);		
+		dtex_c2_load(C2, pkg, spr_id, -1);		
 	}
 }
 
@@ -309,8 +308,13 @@ _prepare_trans_pos(struct dtex_rect* rect, int tex_idx, struct dtex_raw_tex* dst
 //
 
 void 
-dtexf_async_load_texture(const char* filepath, struct dtex_package* pkg, int idx, float scale) {
-	dtex_async_load_texture(BUF, filepath, pkg, idx, scale);
+dtexf_async_load_texture(struct dtex_package* pkg, int idx) {
+	dtex_async_load_texture(BUF, pkg, idx);
+}
+
+void 
+dtexf_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
+	dtex_async_load_texture_with_c2(BUF, pkg, sprite_ids, sprite_count);
 }
 
 void 
