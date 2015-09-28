@@ -2,6 +2,7 @@
 #include "dtex_typedef.h"
 
 #include "dtex_package.h"
+#include "dtex_async_loader.h"
 
 #include "dtex_texture_pool.h"
 

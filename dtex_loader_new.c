@@ -110,29 +110,52 @@ _unpack_file(struct dtex_loader* loader, struct dtex_file* file, void (*unpack_f
 	dtex_file_read(file, &sz, sizeof(sz));
 	if (sz < 0) {
 		sz = -sz;
-		_buf_reserve(loader, sz);
-		if (dtex_file_read(file, loader->buf, sz) != 1) {
+		char* buf = NULL;
+		if (loader) {
+			_buf_reserve(loader, sz);
+			buf = loader->buf;
+		} else {
+			buf = (char*)malloc(sz);
+			if (!buf) {
+				dtex_fault("_unpack_file malloc fail.\n");
+			}
+		}
+		if (dtex_file_read(file, buf, sz) != 1) {
+			if (!loader) { free(buf); }
 			dtex_fault("Invalid uncompress data source\n");
 		}
 
 		struct dtex_import_stream is;
-		is.stream = loader->buf;
+		is.stream = buf;
 		is.size = sz;
 		unpack_func(&is, ud);
+
+		if (!loader) { free(buf); }
 	} else {
 		uint8_t ori_sz_arr[4];
 		dtex_file_read(file, ori_sz_arr, sizeof(ori_sz_arr));
 		dtex_file_seek_from_cur(file, -sizeof(ori_sz_arr));
 		size_t ori_sz = ori_sz_arr[0] << 24 | ori_sz_arr[1] << 16 | ori_sz_arr[2] << 8 | ori_sz_arr[3];
 		size_t need_sz = sz + 7 + ori_sz;
-		_buf_reserve(loader, need_sz);
 
-		struct block* block = (struct block*)loader->buf;
+		char* buf = NULL;
+		if (loader) {
+			_buf_reserve(loader, need_sz);
+			buf = loader->buf;
+		} else {
+			buf = (char*)malloc(need_sz);
+			if (!buf) {
+				dtex_fault("_unpack_file malloc fail.\n");
+			}
+		}
+
+		struct block* block = (struct block*)buf;
 		if (sz <= 4 + LZMA_PROPS_SIZE || dtex_file_read(file, block, sz) != 1) {
+			if (!loader) { free(buf); }
 			dtex_fault("Invalid compress data source\n");
 		}
 
-		unsigned char* buffer = (unsigned char*)(loader->buf + ((sz + 3) & ~3));
+		unsigned char* buffer = (unsigned char*)(buf + ((sz + 3) & ~3));
 		size_t compressed_sz = sz - sizeof(block->size) - LZMA_PROPS_SIZE;
 
 		int r = _lzma_uncompress(buffer, &ori_sz, block->data, &compressed_sz, block->prop, LZMA_PROPS_SIZE);
@@ -143,7 +166,9 @@ _unpack_file(struct dtex_loader* loader, struct dtex_file* file, void (*unpack_f
 		struct dtex_import_stream is;
 		is.stream = buffer;
 		is.size = ori_sz;
-		unpack_func(&is, ud);		
+		unpack_func(&is, ud);
+
+		if (!loader) { free(buf); }
 	}
 }
 
@@ -276,6 +301,18 @@ dtex_load_texture(struct dtex_loader* loader, struct dtex_buffer* buf, struct dt
 
 	dtex_file_close(file);
 
+}
+
+void 
+dtex_load_file(const char* filepath, void (*unpack_func)(struct dtex_import_stream* is, void* ud), void* ud) {
+	struct dtex_file* file = dtex_file_open(filepath, "rb");
+	if (!file) {
+		dtex_fault("dtexloader_preload_pkg: can't open file %s\n", filepath);
+	}
+
+	_unpack_file(NULL, file, unpack_func, ud);
+
+	dtex_file_close(file);
 }
 
 struct dtex_package* 

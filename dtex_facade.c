@@ -22,6 +22,7 @@
 #include "dtex_package.h"
 #include "dtex_statistics.h"
 #include "dtex_ej_sprite.h"
+#include "dtex_async_loader.h"
 
 #include <cJSON.h>
 
@@ -70,6 +71,8 @@ dtexf_create(const char* cfg) {
 		_config(cfg);		
 	}
 
+	dtex_async_loader_init();
+
 	LOADER = dtexloader_create();
 
 	BUF = dtexbuf_create();
@@ -96,9 +99,11 @@ dtexf_release() {
 		dtex_c3_release(C3, BUF);		
 	}
 	dtexbuf_release(BUF);
-	if (C3) {
+	if (LOADER) {
 		dtexloader_release(LOADER);		
 	}
+
+	dtex_async_loader_release();
 }
 
 void 
@@ -301,10 +306,12 @@ _prepare_trans_pos(struct dtex_rect* rect, int tex_idx, struct dtex_raw_tex* dst
 //	dtexloader_after_do_task(LOADER, &_after_load_spr_task);	
 //}
 //
-//void 
-//dtexf_update() {
+void 
+dtexf_update() {
 //	_do_load_task();
-//}
+
+	dtex_async_loader_update(BUF);
+}
 //
 //bool 
 //dtexf_draw_rrp(struct ej_package* pkg, struct ej_texture* tex, int id, 

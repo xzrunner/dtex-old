@@ -1,111 +1,118 @@
 #include "dtex_async_loader.h"
+#include "dtex_job_queue.h"
+#include "dtex_loader_new.h"
+#include "dtex_stream_import.h"
+#include "dtex_typedef.h"
+#include "dtex_package.h"
+#include "dtex_texture_loader.h"
 
 #include <stdlib.h>
-#include <pthread.h>
+#include <string.h>
+#include <assert.h>
 
-struct job {
-	struct job *j_next;
-	struct job *j_prev;
-	pthread_t   j_id;   /* tells which thread handles this job */
-	/* ... more stuff here ... */
+static struct dtex_job_queue* load_queue;
+static struct dtex_job_queue* parse_queue;
+
+enum JOB_TYPE {
+	JOB_INVALID = 0,
+	JOB_LOAD_FILE,
+	JOB_PARSER_DATA	
 };
 
-struct queue {
-	struct job      *q_head;
-	struct job      *q_tail;
-	pthread_rwlock_t q_lock;
+struct pkg_dst_params {
+	int filetype;
+	struct dtex_package* pkg;
+	int idx;
+	float scale;
 };
 
-/*
- * Initialize a queue.
- */
-int
-queue_init(struct queue *qp)
-{
-	int err;
+struct load_file_params {
+	char* filepath;
+	struct pkg_dst_params dst;
+};
 
-	qp->q_head = NULL;
-	qp->q_tail = NULL;
-	err = pthread_rwlock_init(&qp->q_lock, NULL);
-	if (err != 0)
-		return(err);
+struct parse_data_params {
+// 	char* data;
+// 	size_t size;
+	struct dtex_import_stream is;
+	struct pkg_dst_params dst;
+};
 
-	/* ... continue initialization ... */
-
-	return(0);
+void 
+dtex_async_loader_init() {
+	load_queue = dtex_job_queue_create();
+	parse_queue = dtex_job_queue_create();
 }
 
-/*
- * Insert a job at the head of the queue.
- */
-void
-job_insert(struct queue *qp, struct job *jp)
-{
-	pthread_rwlock_wrlock(&qp->q_lock);
-	jp->j_next = qp->q_head;
-	jp->j_prev = NULL;
-	if (qp->q_head != NULL)
-		qp->q_head->j_prev = jp;
-	else
-		qp->q_tail = jp;	/* list was empty */
-	qp->q_head = jp;
-	pthread_rwlock_unlock(&qp->q_lock);
+void 
+dtex_async_loader_release() {
+	dtex_job_queue_release(parse_queue);
+	dtex_job_queue_release(load_queue);
 }
 
-/*
- * Append a job on the tail of the queue.
- */
-void
-job_append(struct queue *qp, struct job *jp)
-{
-	pthread_rwlock_wrlock(&qp->q_lock);
-	jp->j_next = NULL;
-	jp->j_prev = qp->q_tail;
-	if (qp->q_tail != NULL)
-		qp->q_tail->j_next = jp;
-	else
-		qp->q_head = jp;	/* list was empty */
-	qp->q_tail = jp;
-	pthread_rwlock_unlock(&qp->q_lock);
+static inline void
+_unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
+	struct parse_data_params* params = (struct parse_data_params*)malloc(sizeof(*params));
+
+	size_t sz = is->size;
+	char* buf = (char*)malloc(sz);
+	memcpy(buf, is->stream, sz);
+
+	params->is.size = sz;
+	params->is.stream = buf;
+
+	params->dst = *((struct pkg_dst_params*)ud);
+
+	struct dtex_job* job = (struct dtex_job*)malloc(sizeof(*job));
+	job->type = JOB_PARSER_DATA;
+	job->ud = params;
+	dtex_job_queue_push(parse_queue, job);
 }
 
-/*
- * Remove the given job from a queue.
- */
-void
-job_remove(struct queue *qp, struct job *jp)
-{
-	pthread_rwlock_wrlock(&qp->q_lock);
-	if (jp == qp->q_head) {
-		qp->q_head = jp->j_next;
-		if (qp->q_tail == jp)
-			qp->q_tail = NULL;
-	} else if (jp == qp->q_tail) {
-		qp->q_tail = jp->j_prev;
-		if (qp->q_head == jp)
-			qp->q_head = NULL;
-	} else {
-		jp->j_prev->j_next = jp->j_next;
-		jp->j_next->j_prev = jp->j_prev;
+static inline void*
+_load_file(void* arg) {
+	struct dtex_job* job = dtex_job_queue_front_and_pop(load_queue);
+	if (!job) {
+		return NULL;
 	}
-	pthread_rwlock_unlock(&qp->q_lock);
+
+	struct load_file_params* params = (struct load_file_params*)job->ud;
+	dtex_load_file(params->filepath, &_unpack_memory_to_job, &params->dst);
+
+	return NULL;
 }
 
-/*
- * Find a job for the given thread ID.
- */
-struct job *
-job_find(struct queue *qp, pthread_t id)
-{
-	struct job *jp;
+void 
+dtex_async_load_file(const char* filepath, int filetype, struct dtex_package* pkg, int idx, float scale) {
+	struct load_file_params* params = (struct load_file_params*)malloc(sizeof(*params));
+	params->filepath = (char*)malloc(strlen(filepath) + 1);
+	strcpy(params->filepath, filepath);
+	params->filepath[strlen(filepath)] = 0;
+	params->dst.filetype = filetype;
+	params->dst.pkg = pkg;
+	params->dst.idx = idx;
+	params->dst.scale = scale;
 
-	if (pthread_rwlock_rdlock(&qp->q_lock) != 0)
-		return(NULL);
+	struct dtex_job* job = (struct dtex_job*)malloc(sizeof(*job));
+	job->type = JOB_LOAD_FILE;
+	job->ud = params;
+	dtex_job_queue_push(load_queue, job);
 
-	for (jp = qp->q_head; jp != NULL; jp = jp->j_next)
-		if (pthread_equal(jp->j_id, id))
-			break;
+	pthread_create(&job->id, NULL, _load_file, NULL);
+}
 
-	pthread_rwlock_unlock(&qp->q_lock);
-	return(jp);
+void 
+dtex_async_loader_update(struct dtex_buffer* buf) {
+	struct dtex_job* job = dtex_job_queue_front_and_pop(parse_queue);
+	if (!job) {
+		return;
+	}
+
+	struct parse_data_params* params = (struct parse_data_params*)job->ud;
+	struct pkg_dst_params* dst = &params->dst;
+	if (dst->filetype == FILE_EPT) {
+		struct dtex_raw_tex* tex = dst->pkg->textures[dst->idx];
+		assert(tex);
+		dtex_load_texture_all(buf, &params->is, tex);
+	}
 }
