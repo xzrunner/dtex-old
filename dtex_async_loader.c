@@ -23,7 +23,8 @@ struct load_file_params {
 };
 
 struct parse_data_params {
-	struct dtex_import_stream is;
+	char* data;
+	size_t size;
 	void (*cb)(struct dtex_import_stream* is, void* ud);
 	void* ud;
 };
@@ -48,8 +49,8 @@ _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 	char* buf = (char*)malloc(sz);
 	memcpy(buf, is->stream, sz);
 
-	params->is.size = sz;
-	params->is.stream = buf;
+	params->size = sz;
+	params->data = buf;
 
 	params->cb = ((struct load_file_params*)ud)->cb;
 	params->ud = ((struct load_file_params*)ud)->ud;
@@ -69,6 +70,10 @@ _load_file(void* arg) {
 
 	struct load_file_params* params = (struct load_file_params*)job->ud;
 	dtex_load_file(params->filepath, &_unpack_memory_to_job, params);
+	
+	free(params->filepath);
+	free(params);
+	free(job);
 
 	return NULL;
 }
@@ -101,6 +106,13 @@ dtex_async_loader_update() {
 
 	struct parse_data_params* params = (struct parse_data_params*)job->ud;
 	if (params->cb) {
-		params->cb(&params->is, params->ud);
+		struct dtex_import_stream is;
+		is.stream = params->data;
+		is.size = params->size;
+		params->cb(&is, params->ud);
 	}
+
+	free(params->data);
+	free(params);
+	free(job);
 }

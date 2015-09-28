@@ -22,6 +22,8 @@ _load_texture_func(struct dtex_import_stream* is, void* ud) {
  	struct dtex_raw_tex* tex = params->pkg->textures[params->idx];
  	assert(tex);
  	dtex_load_texture_all(params->buf, is, tex);
+
+	free(params);
 }
 
 void 
