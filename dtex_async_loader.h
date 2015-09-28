@@ -9,9 +9,9 @@ extern "C"
 void dtex_async_loader_init();
 void dtex_async_loader_release();
 
-void dtex_async_load_file(const char* filepath, int filetype, struct dtex_package*, int idx, float scale);
+void dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream* is, void* ud), void* ud);
 
-void dtex_async_loader_update(struct dtex_buffer*);
+void dtex_async_loader_update();
 
 #endif // dynamic_texture_async_loader_h
 

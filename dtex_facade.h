@@ -45,6 +45,8 @@ void dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr);
 
 // async loading
 //void dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path);
+
+void dtexf_async_load_texture(const char* filepath, struct dtex_package* pkg, int idx, float scale);
 void dtexf_update();
 
 //

@@ -1,16 +1,16 @@
-#include "dtex_job_queue.h"
+#include "dtex_async_queue.h"
 
 #include <stdlib.h>
 #include <assert.h>
 
-struct dtex_job_queue {
-	struct dtex_job* head;
-	struct dtex_job* tail;
+struct dtex_async_queue {
+	struct dtex_async_job* head;
+	struct dtex_async_job* tail;
 	pthread_rwlock_t lock;
 };
 
 static inline int
-_job_queue_init(struct dtex_job_queue* queue)
+_job_queue_init(struct dtex_async_queue* queue)
 {
 	int err;
 
@@ -23,21 +23,21 @@ _job_queue_init(struct dtex_job_queue* queue)
 	return 0;
 }
 
-struct dtex_job_queue* 
+struct dtex_async_queue* 
 dtex_job_queue_create() {
-	struct dtex_job_queue* qp = (struct dtex_job_queue*)malloc(sizeof(*qp));
+	struct dtex_async_queue* qp = (struct dtex_async_queue*)malloc(sizeof(*qp));
 	_job_queue_init(qp);
 	return qp;
 }
 
 void 
-dtex_job_queue_release(struct dtex_job_queue* qp) {
+dtex_job_queue_release(struct dtex_async_queue* qp) {
 	free(qp);
 }
 
-struct dtex_job* 
-dtex_job_queue_front_and_pop(struct dtex_job_queue* queue) {
-	struct dtex_job* front = NULL;	
+struct dtex_async_job* 
+dtex_job_queue_front_and_pop(struct dtex_async_queue* queue) {
+	struct dtex_async_job* front = NULL;	
 	pthread_rwlock_wrlock(&queue->lock);
 	front = queue->head;
 	if (queue->head != NULL) {
@@ -48,7 +48,7 @@ dtex_job_queue_front_and_pop(struct dtex_job_queue* queue) {
 }
 
 void 
-dtex_job_queue_push(struct dtex_job_queue* queue, struct dtex_job* job) {
+dtex_job_queue_push(struct dtex_async_queue* queue, struct dtex_async_job* job) {
 	pthread_rwlock_wrlock(&queue->lock);
 	job->next = NULL;
 	if (queue->head == NULL) {
@@ -62,10 +62,10 @@ dtex_job_queue_push(struct dtex_job_queue* queue, struct dtex_job* job) {
 	pthread_rwlock_unlock(&queue->lock);		
 }
 
-//struct dtex_job*
-//dtex_job_queue_find(struct dtex_job_queue* queue, pthread_t id)
+//struct dtex_async_job*
+//dtex_job_queue_find(struct dtex_async_queue* queue, pthread_t id)
 //{
-//	struct dtex_job* job;
+//	struct dtex_async_job* job;
 //
 //	if (pthread_rwlock_rdlock(&queue->lock) != 0)
 //		return NULL;

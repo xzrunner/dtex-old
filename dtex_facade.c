@@ -23,6 +23,7 @@
 #include "dtex_statistics.h"
 #include "dtex_ej_sprite.h"
 #include "dtex_async_loader.h"
+#include "dtex_async_task.h"
 
 #include <cJSON.h>
 
@@ -306,10 +307,14 @@ _prepare_trans_pos(struct dtex_rect* rect, int tex_idx, struct dtex_raw_tex* dst
 //	dtexloader_after_do_task(LOADER, &_after_load_spr_task);	
 //}
 //
+
+void 
+dtexf_async_load_texture(const char* filepath, struct dtex_package* pkg, int idx, float scale) {
+	dtex_async_load_texture(BUF, filepath, pkg, idx, scale);
+}
+
 void 
 dtexf_update() {
-//	_do_load_task();
-
 	dtex_async_loader_update(BUF);
 }
 //
