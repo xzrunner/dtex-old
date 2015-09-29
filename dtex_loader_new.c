@@ -40,24 +40,11 @@ dtexloader_create() {
 	return loader;
 }
 
-static inline void
-_release_package(struct dtex_package* pkg) {
-	free(pkg->ej_pkg);
-// 	dtex_rrp_release(pkg->rrp_pkg);
-// 	dtex_pts_release(pkg->pts_pkg);
-// 	dtex_rrr_release(pkg->rrr_pkg);
-// 	dtex_b4r_release(pkg->b4r_pkg);
-
-	free(pkg->name);
-
-	memset(pkg, 0, sizeof(*pkg));
-}
-
 void 
 dtexloader_release(struct dtex_loader* loader) {
 	for (int i = 0; i < loader->pkg_size; ++i) {
 		struct dtex_package* pkg = &loader->packages[i];
-		_release_package(pkg);
+		dtex_package_release(pkg);
 	}
 
 	free(loader->buf); loader->buf = NULL;

@@ -3,15 +3,14 @@
 #include "dtex_texture_loader.h"
 #include "dtex_async_loader.h"
 #include "dtex_texture_pool.h"
-
-#include "dtex_facade.h"
+#include "dtex_desc_loader.h"
 
 #include <assert.h>
 #include <stdlib.h>
 
-//////////////////////////////////////////////////////////////////////////
-// load one texture
-//////////////////////////////////////////////////////////////////////////
+/************************************************************************/
+/* load one texture                                                     */
+/************************************************************************/
 
 struct load_texture_params {
 	struct dtex_buffer* buf;
@@ -33,9 +32,9 @@ dtex_async_load_texture(struct dtex_buffer* buf, struct dtex_package* pkg, int i
 	dtex_async_load_file(pkg->textures[idx]->filepath, _load_texture_func, params);
 }
 
-//////////////////////////////////////////////////////////////////////////
-// load multi textures
-//////////////////////////////////////////////////////////////////////////
+/************************************************************************/
+/* load multi textures                                                  */
+/************************************************************************/
 
 struct load_multi_textures_share_params {
 	struct dtex_buffer* buf;
@@ -95,4 +94,32 @@ dtex_async_load_multi_textures(struct dtex_buffer* buf, struct dtex_package* pkg
 		params->tex_idx = texture_ids[i];
 		dtex_async_load_file(pkg->textures[i]->filepath, _load_multi_textures_func, params);
 	}
+}
+
+/************************************************************************/
+/* load epe                                                             */
+/************************************************************************/
+
+struct load_epe_params {
+	void (*cb)(void* ud);
+	void* ud;
+};
+
+static inline void
+_load_epe_func(struct dtex_import_stream* is, void* ud) {
+	struct load_epe_params* params = (struct load_epe_params*)ud;	
+
+	struct dtex_package* pkg = dtex_package_create();
+	dtex_load_epe(is, pkg, 1);
+	
+
+	free(params);
+}
+
+void 
+dtex_async_load_epe(const char* filepath, void (*cb)(void* ud), void* ud) {
+	struct load_epe_params* params = (struct load_epe_params*)malloc(sizeof(*params));
+	params->cb = cb;
+	params->ud = ud;
+	dtex_async_load_file(filepath, _load_epe_func, params);
 }

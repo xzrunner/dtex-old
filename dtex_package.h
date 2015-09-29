@@ -39,9 +39,12 @@ struct dtex_package {
 	struct dtex_b4r* b4r_pkg;		// block4 raw (only for pvr)
 };
 
+struct dtex_package* dtex_package_create();
+void dtex_package_release(struct dtex_package* pkg);
+
 int dtex_get_spr_id(struct dtex_package* pkg, const char* name);
 
-void dtex_package_release_textures(struct dtex_package* pkg);
+//void dtex_package_release_textures(struct dtex_package* pkg);
 
 #endif // dynamic_texture_package_h
 
