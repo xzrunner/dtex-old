@@ -24,6 +24,8 @@
 #include "dtex_ej_sprite.h"
 #include "dtex_async_loader.h"
 #include "dtex_async_task.h"
+#include "dtex_array.h"
+#include "dtex_utility2.h"
 
 #include <cJSON.h>
 
@@ -156,7 +158,7 @@ dtexf_c3_load_end(bool async) {
 void 
 dtexf_c2_load_begin() {
 	if (C2) {
-		dtex_c2_load_begin(C2);		
+		dtex_c2_load_begin(C2);
 	}
 }
 
@@ -312,9 +314,42 @@ dtexf_async_load_texture(struct dtex_package* pkg, int idx) {
 	dtex_async_load_texture(BUF, pkg, idx);
 }
 
+struct async_load_texture_with_c2_params {
+	struct dtex_package* pkg;
+	int* sprite_ids;
+	int sprite_count;
+};
+
+static inline void
+_async_load_texture_with_c2_func(void* ud) {
+	if (!C2) {
+		return;
+	}
+
+	struct async_load_texture_with_c2_params* params = (struct async_load_texture_with_c2_params*)ud;
+	dtex_c2_load_begin(C2);
+	for (int i = 0; i < params->sprite_count; ++i) {
+		dtexf_c2_load(params->pkg, params->sprite_ids[i]);
+	}
+	dtex_c2_load_end(C2, BUF, LOADER, true);
+	free(params);
+}
+
 void 
 dtexf_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
-	dtex_async_load_texture_with_c2(BUF, pkg, sprite_ids, sprite_count);
+	struct dtex_array* tex_idx = dtex_get_texture_id_unique_set(pkg, sprite_ids, sprite_count);
+	int texture_count = dtex_array_size(tex_idx);
+	int texture_ids[texture_count];
+	for (int i = 0; i < texture_count; ++i) {
+		texture_ids[i] = *(int*)dtex_array_fetch(tex_idx, i);
+	}
+	dtex_array_release(tex_idx);
+
+	struct async_load_texture_with_c2_params* params = (struct async_load_texture_with_c2_params*)malloc(sizeof(*params));
+	params->pkg = pkg;
+	params->sprite_ids = sprite_ids;
+	params->sprite_count = sprite_count;
+	dtex_async_load_multi_textures(BUF, pkg, texture_ids, texture_count, _async_load_texture_with_c2_func, params);
 }
 
 void 
