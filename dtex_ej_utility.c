@@ -12,7 +12,7 @@ dtex_ej_pkg_traverse(struct ej_sprite_pack* ej_pkg, void (*pic_func)(struct ej_p
 }
 
 void 
-dtex_ej_spr_traverse(struct ej_sprite_pack* ej_pkg, int spr_id, void (*pic_func)(struct ej_pack_picture* ej_pic, void* ud), void* ud) {
+dtex_ej_spr_traverse(struct ej_sprite_pack* ej_pkg, int spr_id, void (*pic_func)(int pic_id, struct ej_pack_picture* ej_pic, void* ud), void* ud) {
 	if (spr_id < 0 || spr_id >= ej_pkg->n || spr_id == ANCHOR_ID) {
 		return;
 	}
@@ -20,7 +20,7 @@ dtex_ej_spr_traverse(struct ej_sprite_pack* ej_pkg, int spr_id, void (*pic_func)
 	int type = ej_pkg->type[spr_id];
 	if (type == TYPE_PICTURE) {
 		struct ej_pack_picture* pic = (struct ej_pack_picture*)ej_pkg->data[spr_id];
-		pic_func(pic, ud);
+		pic_func(spr_id, pic, ud);
 	} else if (type == TYPE_ANIMATION) {
 		struct ej_pack_animation* anim = (struct ej_pack_animation*)ej_pkg->data[spr_id];		
 		for (int i = 0; i < anim->component_number; ++i) {

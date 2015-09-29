@@ -120,7 +120,7 @@ struct preload_picture_params {
 };
 
 static inline void
-_preload_picture(struct ej_pack_picture* ej_pic, void* ud) {
+_preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	struct preload_picture_params* params = (struct preload_picture_params*)ud;
 
 	if (params->c2->loadable == 0 || params->c2->preload_size >= PRELOAD_SIZE - 1) {
@@ -144,7 +144,7 @@ _preload_picture(struct ej_pack_picture* ej_pic, void* ud) {
 			pn->ori_tex = dtex_pool_query(ej_q->texid - QUAD_TEXID_IN_PKG_MAX);
 		}
 
-		dtex_get_pic_src_rect(ej_q->texture_coord, &pn->rect);
+		dtex_get_texcoords_region(ej_q->texture_coord, &pn->rect);
 	}
 }
 
@@ -289,7 +289,7 @@ _set_rect_vb(struct preload_node* pn, struct dtex_node* n, bool rotate) {
 	dst_sz.inv_h = 1.0f / n->dst_tex->height;
 
 	int rotate_times = rotate ? 1 : 0;
-	dtex_relocate_pic_part(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb, n->dst_vb);
+	dtex_relocate_quad(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb, n->dst_vb);
 }
 
 static inline void
@@ -416,7 +416,7 @@ dtexc2_lookup_node(struct dtex_c2* dtex, int texid, struct dtex_rect* rect,
 }
 
 void 
-dtexc2_change_key(struct dtex_c2* dtex, int src_texid, struct dtex_rect* src_rect, int dst_texid, struct dtex_rect* dst_rect) {    
+dtex_c2_change_key(struct dtex_c2* dtex, int src_texid, struct dtex_rect* src_rect, int dst_texid, struct dtex_rect* dst_rect) {    
 	unsigned int idx = _hash_node(src_texid, src_rect);
 	struct hash_node* last = NULL;
 	struct hash_node* curr = dtex->hash[idx];

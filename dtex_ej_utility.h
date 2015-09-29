@@ -10,7 +10,7 @@ extern "C"
 
 void dtex_ej_pkg_traverse(struct ej_sprite_pack* ej_pkg, void (*pic_func)(struct ej_pack_picture* ej_pic, void* ud), void* ud);
 
-void dtex_ej_spr_traverse(struct ej_sprite_pack* ej_pkg, int spr_id, void (*pic_func)(struct ej_pack_picture* ej_pic, void* ud), void* ud);
+void dtex_ej_spr_traverse(struct ej_sprite_pack* ej_pkg, int spr_id, void (*pic_func)(int pic_id, struct ej_pack_picture* ej_pic, void* ud), void* ud);
 
 #endif // dynamic_texture_ejoy2d_utility_h
 

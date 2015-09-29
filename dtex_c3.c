@@ -623,13 +623,14 @@ dtex_c3_query_pkg(struct dtex_c3* c3, const char* name) {
 }
 
 void
-dtex_c3_query_rect(struct dtex_c3* c3, const char* name, struct dtex_rect** rect, int count) {
+dtex_c3_query_map_info(struct dtex_c3* c3, const char* name, struct dtex_texture** textures, struct dtex_rect** regions) {
 	unsigned int idx = _hash_origin_pack(name);
 	struct hash_node* hn = c3->hash[idx];
 	while (hn) {
 		struct dtex_node* dr = &hn->n;
 		if (strcmp(name, dr->pkg->name) == 0) {
-			rect[dr->raw_tex_idx] = &dr->dst_rect;
+			textures[dr->raw_tex_idx] = dr->dst_tex;
+			regions[dr->raw_tex_idx] = &dr->dst_rect;
 		}
 		hn = hn->next_hash;
 	}

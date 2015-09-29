@@ -26,7 +26,7 @@ void dtex_c3_load_end(struct dtex_c3*, struct dtex_loader*, struct dtex_buffer*,
 struct dp_pos* dtex_c3_load_tex(struct dtex_c3*, struct dtex_raw_tex*, struct dtex_buffer*, struct dtex_texture** dst);
 
 struct dtex_package* dtex_c3_query_pkg(struct dtex_c3*, const char* name);
-void dtex_c3_query_rect(struct dtex_c3*, const char* name, struct dtex_rect** rect, int count);
+void dtex_c3_query_map_info(struct dtex_c3*, const char* name, struct dtex_texture** textures, struct dtex_rect** regions);
 
 void dtex_c3_debug_draw(struct dtex_c3*);
 

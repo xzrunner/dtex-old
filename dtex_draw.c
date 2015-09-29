@@ -281,7 +281,7 @@ void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, str
 //		} else if (!rotate && part->is_rotated) {
 //			rotate_times = 1;
 //		}
-//		dtex_relocate_pic_part(NULL, &src_sz, &src_rect, &dst_sz, &dst_rect, rotate_times, trans_vb, dst_vb);
+//		dtex_relocate_quad(NULL, &src_sz, &src_rect, &dst_sz, &dst_rect, rotate_times, trans_vb, dst_vb);
 //		_draw(trans_vb, src);
 //	}
 //
