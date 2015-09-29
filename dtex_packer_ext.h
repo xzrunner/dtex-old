@@ -17,7 +17,7 @@ struct dp_rect {
 	struct dp_pos* dst_pos;
 };
 
-struct dtex_vector* dtex_packer_square_multi(struct dp_rect** rects, int sz);
+struct dtex_array* dtex_packer_square_multi(struct dp_rect** rects, int sz);
 
 #endif // dynamic_texture_packer_ext_h
 
