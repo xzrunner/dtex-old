@@ -193,7 +193,7 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 	switch (params->file_type) {
 	case FILE_EPT:
 		if (params->load_tex_idx >= 0) {
-			assert(params->load_tex_idx < pkg->tex_size);
+			assert(params->load_tex_idx < pkg->texture_count);
 			struct dtex_texture* tex = pkg->textures[params->load_tex_idx];
 			assert(tex);
 			dtex_load_texture_all(params->buf, is, tex);
@@ -204,12 +204,12 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 			}
 
 			struct relocate_quad_texid_params relocate_params;
-			relocate_params.from = pkg->tex_size;
+			relocate_params.from = pkg->texture_count;
 			relocate_params.to = tex->uid;
 			dtex_ej_pkg_traverse(pkg->ej_pkg, _relocate_quad_texid, &relocate_params);
 
 			dtex_load_texture_only_desc(is, tex, params->scale);
-			pkg->textures[pkg->tex_size++] = tex;
+			pkg->textures[pkg->texture_count++] = tex;
 		}
 		break;
 	case FILE_EPE:
@@ -244,13 +244,12 @@ _find_package(struct dtex_loader* loader, const char* name) {
 static inline struct dtex_package*
 _new_package(struct dtex_loader* loader, const char* name) {
 	if (loader->pkg_size >= PACKAGE_SIZE) {
-		dtex_fault("_new_package: dtex->pack_size >= PACKAGE_SIZE\n");
+		dtex_fault("_new_package: loader->pack_size >= PACKAGE_SIZE\n");
 	}	
 
 	struct dtex_package* pkg = &loader->packages[loader->pkg_size++];
 	memset(pkg, 0, sizeof(*pkg));
 	pkg->name = strdup(name);
-	pkg->tex_scale = 1;
 
 	return pkg;
 }
@@ -278,8 +277,8 @@ dtex_preload_pkg(struct dtex_loader* loader, const char* name, const char* path,
 	dtex_file_close(file);
 
 	if (type == FILE_EPT) {
-		assert(pkg->tex_size >= 1);
-		pkg->tex_filepaths[pkg->tex_size-1] = strdup(path);
+		assert(pkg->texture_count >= 1);
+		pkg->texture_filepaths[pkg->texture_count-1] = strdup(path);
 	}
 
 	return pkg;
@@ -287,7 +286,7 @@ dtex_preload_pkg(struct dtex_loader* loader, const char* name, const char* path,
 
 void 
 dtex_load_texture(struct dtex_loader* loader, struct dtex_buffer* buf, struct dtex_package* pkg, int idx, float scale) {
-	assert(idx < pkg->tex_size);
+	assert(idx < pkg->texture_count);
 	struct dtex_texture* tex = pkg->textures[idx];
 	assert(tex);
 
@@ -295,9 +294,9 @@ dtex_load_texture(struct dtex_loader* loader, struct dtex_buffer* buf, struct dt
 		return;
 	}
 
-	struct dtex_file* file = dtex_file_open(pkg->tex_filepaths[idx], "rb");
+	struct dtex_file* file = dtex_file_open(pkg->texture_filepaths[idx], "rb");
 	if (!file) {
-		dtex_fault("dtexloader_preload_pkg: can't open file %s\n", pkg->tex_filepaths[idx]);
+		dtex_fault("dtexloader_preload_pkg: can't open file %s\n", pkg->texture_filepaths[idx]);
 	}
 
 	struct unpack2pkg_params params;

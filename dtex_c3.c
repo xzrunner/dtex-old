@@ -101,7 +101,7 @@ dtex_c3_load(struct dtex_c3* c3, struct dtex_package* pkg, float scale) {
 		}
 	}
 
-	for (int i = 0; i < pkg->tex_size; ++i) {
+	for (int i = 0; i < pkg->texture_count; ++i) {
 		assert(c3->preload_size <= MAX_TEX_SIZE);
 		struct preload_node* n = c3->preload_list[c3->preload_size++];
 		n->pkg = pkg;
@@ -442,7 +442,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buff
  				struct relocate_nodes_params* params = (struct relocate_nodes_params*)malloc(sizeof(*params));
  				params->buf = buf;
  				params->node = dr;
- 				dtex_async_load_file(dr->pkg->tex_filepaths[pkg_idx], _relocate_nodes_cb, params);
+ 				dtex_async_load_file(dr->pkg->texture_filepaths[pkg_idx], _relocate_nodes_cb, params);
  			}
 		}
 

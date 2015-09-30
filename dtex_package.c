@@ -12,8 +12,8 @@ dtex_package_create() {
 
 void 
 dtex_package_release(struct dtex_package* pkg) {
-	for (int i = 0; i < pkg->tex_size; ++i) {
-		free(pkg->tex_filepaths[i]);
+	for (int i = 0; i < pkg->texture_count; ++i) {
+		free(pkg->texture_filepaths[i]);
 	}
 
 	free(pkg->ej_pkg);
@@ -54,7 +54,7 @@ dtex_get_spr_id(struct dtex_package* pkg, const char* name) {
 
 void 
 dtex_package_remove_texture_ref(struct dtex_package* pkg, struct dtex_texture* tex) {
-	for (int i = 0; i < pkg->tex_size; ++i) {
+	for (int i = 0; i < pkg->texture_count; ++i) {
 		if (pkg->textures[i] == tex) {
 			pkg->textures[i] = NULL;
 		}
@@ -69,7 +69,7 @@ dtex_package_remove_all_textures_ref(struct dtex_package* pkg) {
 int 
 dtex_package_texture_idx(struct dtex_package* pkg, struct dtex_texture* tex) {
 	int idx = -1;
-	for (int i = 0; i < pkg->tex_size; ++i) {
+	for (int i = 0; i < pkg->texture_count; ++i) {
 		if (pkg->textures[i] == tex) {
 			idx = i;
 			break;

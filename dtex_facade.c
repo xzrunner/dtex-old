@@ -338,9 +338,9 @@ _async_load_texture_with_c2_from_c3_func(void* ud) {
 	struct dtex_array* textures = dtex_get_texture_id_unique_set(pkg->ej_pkg, params->sprite_ids, params->sprite_count);
 	int tex_size = dtex_array_size(textures);
 
-	struct dtex_texture* c3_textures[pkg->tex_size];
+	struct dtex_texture* c3_textures[pkg->texture_count];
 	memset(c3_textures, 0, sizeof(c3_textures));
-	struct dtex_rect* c3_regions[pkg->tex_size];
+	struct dtex_rect* c3_regions[pkg->texture_count];
 	memset(c3_regions, 0, sizeof(c3_regions));
 	dtex_c3_query_map_info(C3, pkg, c3_textures, c3_regions);
 

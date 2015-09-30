@@ -78,38 +78,38 @@ dtex_c2_create(struct dtex_buffer* buf) {
 	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
 	size_t psize = PRELOAD_SIZE * sizeof(struct preload_node);
 	size_t sz = sizeof(struct dtex_c2) + nsize + psize;
-	struct dtex_c2* dtex = (struct dtex_c2*)malloc(sz);
-	memset(dtex, 0, sz);
+	struct dtex_c2* c2 = (struct dtex_c2*)malloc(sz);
+	memset(c2, 0, sz);
 
 	dtexbuf_reserve(buf, 1);
 
 	struct dtex_texture* tex = dtex_texture_create_mid(buf);
 	tex->t.MID.packer = dtexpacker_create(tex->width, tex->height, PRELOAD_SIZE);
-	dtex->textures[dtex->tex_size++] = tex;
+	c2->textures[c2->tex_size++] = tex;
 
-	dtex->freelist = (struct hash_node*)(dtex + 1);
+	c2->freelist = (struct hash_node*)(c2 + 1);
 	for (int i = 0; i < NODE_SIZE - 1; ++i) {
-		struct hash_node* hn = &dtex->freelist[i];
-		hn->next_hash = &dtex->freelist[i+1];
+		struct hash_node* hn = &c2->freelist[i];
+		hn->next_hash = &c2->freelist[i+1];
 	}
-	dtex->freelist[NODE_SIZE-1].next_hash = NULL;
+	c2->freelist[NODE_SIZE-1].next_hash = NULL;
 
-	_reset_preload_list(dtex);
+	_reset_preload_list(c2);
 
-	return dtex;
+	return c2;
 }
 
 void 
-dtex_c2_release(struct dtex_c2* dtex, struct dtex_buffer* buf) {
-	for (int i = 0; i < dtex->tex_size; ++i) {
-		dtex_texture_release(buf, dtex->textures[i]);
+dtex_c2_release(struct dtex_c2* c2, struct dtex_buffer* buf) {
+	for (int i = 0; i < c2->tex_size; ++i) {
+		dtex_texture_release(buf, c2->textures[i]);
 	}
-	free(dtex);
+	free(c2);
 }
 
 void 
-dtex_c2_load_begin(struct dtex_c2* dtex) {
-	dtex->loadable++;
+dtex_c2_load_begin(struct dtex_c2* c2) {
+	c2->loadable++;
 }
 
 // todo hash pic for preload_list
@@ -181,15 +181,15 @@ _compare_bound(const void *arg1, const void *arg2) {
 }
 
 static inline void
-_unique_nodes(struct dtex_c2* dtex) {
-	qsort((void*)dtex->preload_list, dtex->preload_size, sizeof(struct preload_node*), _compare_bound);
+_unique_nodes(struct dtex_c2* c2) {
+	qsort((void*)c2->preload_list, c2->preload_size, sizeof(struct preload_node*), _compare_bound);
 
 	struct preload_node* unique[PRELOAD_SIZE];
-	unique[0] = dtex->preload_list[0];
+	unique[0] = c2->preload_list[0];
 	int unique_size = 1;
-	for (int i = 1; i < dtex->preload_size; ++i) {
+	for (int i = 1; i < c2->preload_size; ++i) {
 		struct preload_node* last = unique[unique_size-1];
-		struct preload_node* curr = dtex->preload_list[i];
+		struct preload_node* curr = c2->preload_list[i];
 		if ((curr->ori_tex->id == last->ori_tex->id) && 
 			dtex_rect_same(&curr->rect, &last->rect)) {
 			;
@@ -197,8 +197,8 @@ _unique_nodes(struct dtex_c2* dtex) {
 			unique[unique_size++] = curr;
 		}
 	}
-	memcpy(dtex->preload_list, unique, unique_size*sizeof(struct preload_node*));
-	dtex->preload_size = unique_size;
+	memcpy(c2->preload_list, unique, unique_size*sizeof(struct preload_node*));
+	c2->preload_size = unique_size;
 }
 
 static inline int
@@ -247,9 +247,9 @@ _hash_node(unsigned int texid, struct dtex_rect* rect) {
 }
 
 static inline struct hash_node*
-_query_node(struct dtex_c2* dtex, unsigned int texid, struct dtex_rect* rect) {
+_query_node(struct dtex_c2* c2, unsigned int texid, struct dtex_rect* rect) {
 	unsigned int idx = _hash_node(texid, rect);
-	struct hash_node* hn = dtex->hash[idx];
+	struct hash_node* hn = c2->hash[idx];
 	while (hn) {
 		struct dtex_node* n = &hn->n;
 		if (n->ori_tex->id == texid && dtex_rect_same(&n->ori_rect, rect)) {
@@ -261,12 +261,12 @@ _query_node(struct dtex_c2* dtex, unsigned int texid, struct dtex_rect* rect) {
 }
 
 static inline struct hash_node* 
-_new_hash_rect(struct dtex_c2* dtex) {
-	if (dtex->freelist == NULL) {
+_new_hash_rect(struct dtex_c2* c2) {
+	if (c2->freelist == NULL) {
 		return NULL;
 	}
-	struct hash_node* ret = dtex->freelist;
-	dtex->freelist = ret->next_hash;
+	struct hash_node* ret = c2->freelist;
+	c2->freelist = ret->next_hash;
 	return ret;
 }
 
@@ -285,8 +285,8 @@ _set_rect_vb(struct preload_node* pn, struct dtex_node* n, bool rotate) {
 }
 
 static inline void
-_insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* loader, struct preload_node* pn, bool use_new_tex) {
-	struct hash_node* hn = _query_node(dtex, pn->ori_tex->id, &pn->rect);
+_insert_node(struct dtex_c2* c2, struct dtex_buffer* buf, struct dtex_loader* loader, struct preload_node* pn, bool use_new_tex) {
+	struct hash_node* hn = _query_node(c2, pn->ori_tex->id, &pn->rect);
 	if (hn != NULL) {
 		return;
 	}
@@ -309,8 +309,8 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 	struct dp_pos* pos = NULL;
 	struct dtex_texture* tex = NULL;
 	bool rotate = false;
-	for (int i = 0; i < dtex->tex_size && pos == NULL; ++i) {
-		tex = dtex->textures[i];
+	for (int i = 0; i < c2->tex_size && pos == NULL; ++i) {
+		tex = c2->textures[i];
 		assert(tex->type == TT_MID);
 		// todo padding and rotate
 	//	if (w >= h) {
@@ -335,7 +335,7 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 
 	// save info
 	pos->ud = &hn->n;
-	hn = _new_hash_rect(dtex);
+	hn = _new_hash_rect(c2);
 	if (hn == NULL) {
 		return;
 	}
@@ -352,8 +352,8 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 	_set_rect_vb(pn, &hn->n, rotate);
 
 	unsigned int idx = _hash_node(pn->ori_tex->id, &pn->rect);
-	hn->next_hash = dtex->hash[idx];
-	dtex->hash[idx] = hn;
+	hn->next_hash = c2->hash[idx];
+	c2->hash[idx] = hn;
 
 	if (rrp_pic) {
 //		dtex_draw_rrp_to_tex(buf, hn->n.ori_tex, rrp_pic, tex, pos, rotate);
@@ -363,11 +363,11 @@ _insert_node(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* 
 }
 
 void 
-dtex_c2_load_end(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_loader* loader, bool use_only_one_texture) {
-	if (--dtex->loadable > 0 || dtex->preload_size == 0) {
+dtex_c2_load_end(struct dtex_c2* c2, struct dtex_buffer* buf, struct dtex_loader* loader, bool use_only_one_texture) {
+	if (--c2->loadable > 0 || c2->preload_size == 0) {
 		return;
 	}
-	_unique_nodes(dtex);
+	_unique_nodes(c2);
 
 	// todo scale
 	if (use_only_one_texture) {
@@ -375,17 +375,17 @@ dtex_c2_load_end(struct dtex_c2* dtex, struct dtex_buffer* buf, struct dtex_load
 	}
 
 	// insert
-	qsort((void*)dtex->preload_list, dtex->preload_size, sizeof(struct preload_node*), _compare_max_edge);	
-	for (int i = 0; i < dtex->preload_size; ++i) {
-		_insert_node(dtex, buf, loader, dtex->preload_list[i], !use_only_one_texture);
+	qsort((void*)c2->preload_list, c2->preload_size, sizeof(struct preload_node*), _compare_max_edge);	
+	for (int i = 0; i < c2->preload_size; ++i) {
+		_insert_node(c2, buf, loader, c2->preload_list[i], !use_only_one_texture);
 	}
 
-	_reset_preload_list(dtex);
+	_reset_preload_list(c2);
 }
 
 float* 
-dtex_c2_lookup_texcoords(struct dtex_c2* dtex, int texid, struct dtex_rect* rect, int* out_texid) {
-	struct hash_node* hn = _query_node(dtex, texid, rect);
+dtex_c2_lookup_texcoords(struct dtex_c2* c2, int texid, struct dtex_rect* rect, int* out_texid) {
+	struct hash_node* hn = _query_node(c2, texid, rect);
 	if (hn == NULL) {
 		return NULL;
 	}
@@ -395,9 +395,9 @@ dtex_c2_lookup_texcoords(struct dtex_c2* dtex, int texid, struct dtex_rect* rect
 }
 
 void 
-dtexc2_lookup_node(struct dtex_c2* dtex, int texid, struct dtex_rect* rect,
+dtexc2_lookup_node(struct dtex_c2* c2, int texid, struct dtex_rect* rect,
 	               struct dtex_texture** out_tex, struct dp_pos** out_pos) {
-	struct hash_node* hn = _query_node(dtex, texid, rect);
+	struct hash_node* hn = _query_node(c2, texid, rect);
 	if (hn == NULL) {
 		*out_tex = NULL;
 		*out_pos = NULL;
@@ -408,10 +408,10 @@ dtexc2_lookup_node(struct dtex_c2* dtex, int texid, struct dtex_rect* rect,
 }
 
 void 
-dtex_c2_change_key(struct dtex_c2* dtex, int src_texid, struct dtex_rect* src_rect, int dst_texid, struct dtex_rect* dst_rect) {    
+dtex_c2_change_key(struct dtex_c2* c2, int src_texid, struct dtex_rect* src_rect, int dst_texid, struct dtex_rect* dst_rect) {    
 	unsigned int idx = _hash_node(src_texid, src_rect);
 	struct hash_node* last = NULL;
-	struct hash_node* curr = dtex->hash[idx];
+	struct hash_node* curr = c2->hash[idx];
 	while (curr) {
 		struct dtex_node* n = &curr->n;
 		if ((n->ori_tex->id == src_texid) && dtex_rect_same(&n->ori_rect, src_rect)) {
@@ -433,16 +433,16 @@ dtex_c2_change_key(struct dtex_c2* dtex, int src_texid, struct dtex_rect* src_re
 	if (last) {
 		last->next_hash = curr->next_hash;
 	} else {
-		dtex->hash[idx] = curr->next_hash;
+		c2->hash[idx] = curr->next_hash;
 	}
 	unsigned int new_idx = _hash_node(dst_texid, dst_rect);
-	curr->next_hash = dtex->hash[new_idx];
-	dtex->hash[new_idx] = curr;
+	curr->next_hash = c2->hash[new_idx];
+	c2->hash[new_idx] = curr;
 }
 
 void 
-dtex_c2_debug_draw(struct dtex_c2* dtex) {
-	dtex_debug_draw(dtex->textures[0]->id);
+dtex_c2_debug_draw(struct dtex_c2* c2) {
+	dtex_debug_draw(c2->textures[0]->id);
 
 	// const float edge = 0.5f;
 	// int col = 2 / edge;

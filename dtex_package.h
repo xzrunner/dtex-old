@@ -23,10 +23,9 @@ struct export_name {
 struct dtex_package {
 	char* name;
 
-	struct dtex_texture* textures[DTEX_PACK_TEX_SZ];		// todo malloc
-	char* tex_filepaths[DTEX_PACK_TEX_SZ];
-	int tex_size;
-	float tex_scale;
+	struct dtex_texture* textures[DTEX_PACK_TEX_SZ];
+	char* texture_filepaths[DTEX_PACK_TEX_SZ];
+	int texture_count;
 
 	struct export_name* export_names;
 	int export_size;
