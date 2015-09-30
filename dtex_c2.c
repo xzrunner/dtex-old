@@ -4,11 +4,11 @@
 #include "dtex_packer.h"
 #include "dtex_draw.h"
 #include "dtex_loader.h"
-#include "dtex_utility.h"
 #include "dtex_rrp.h"
 #include "dtex_texture_pool.h"
 #include "dtex_package.h"
 #include "dtex_ej_utility.h"
+#include "dtex_relocation.h"
 
 #include <stdint.h>
 #include <stdlib.h>

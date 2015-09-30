@@ -6,7 +6,6 @@
 #include "dtex_c1_new.h"
 #include "dtex_buffer.h"
 #include "dtex_async.h"
-#include "dtex_utility.h"
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
 #include "dtex_draw.h"
@@ -250,24 +249,6 @@ dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 //	int spr_id = sprite_id(pkg->ej_pkg, spr_name);
 //	dtex_async_load_spr(LOADER, pkg->ej_pkg, rect, pkg->tex_size, spr_id, path);
 //}
-
-static inline void
-_prepare_trans_pos(struct dtex_rect* rect, int tex_idx, struct dtex_raw_tex* dst_tex, struct dtex_img_pos* ori_pos, struct dtex_img_pos* dst_pos) {
-	struct dtex_raw_tex* src_tex = dtex_pool_query(tex_idx);
-	ori_pos->id = src_tex->id;
-	ori_pos->id_alpha = src_tex->id_alpha;
-	ori_pos->inv_width = src_tex->width;
-	ori_pos->inv_height = src_tex->height;
-	ori_pos->rect = *rect;
-
-	dst_pos->id = dst_tex->id;
-	dst_pos->id_alpha = dst_tex->id_alpha;
-	dst_pos->inv_width = 1.0f / dst_tex->width;
-	dst_pos->inv_height = 1.0f / dst_tex->height;
-	dst_pos->rect.xmin = dst_pos->rect.ymin = 0;
-	dst_pos->rect.xmax = dst_tex->width;
-	dst_pos->rect.ymax = dst_tex->height;	
-}
 
 //static inline void
 //_on_load_spr_task(struct ej_sprite_pack* ej_pkg, struct dtex_rect* rect, int spr_id, int tex_idx, struct dtex_raw_tex* dst_tex) {

@@ -256,8 +256,7 @@ dtex_preload_pkg(struct dtex_loader* loader, const char* name, const char* path,
 
 	if (type == FILE_EPT) {
 		assert(pkg->tex_size >= 1);
-		struct dtex_raw_tex* tex = pkg->textures[pkg->tex_size-1];
-		tex->filepath = strdup(path);
+		pkg->tex_filepaths[pkg->tex_size-1] = strdup(path);
 	}
 
 	return pkg;
@@ -273,9 +272,9 @@ dtex_load_texture(struct dtex_loader* loader, struct dtex_buffer* buf, struct dt
 		return;
 	}
 
-	struct dtex_file* file = dtex_file_open(tex->filepath, "rb");
+	struct dtex_file* file = dtex_file_open(pkg->tex_filepaths[idx], "rb");
 	if (!file) {
-		dtex_fault("dtexloader_preload_pkg: can't open file %s\n", tex->filepath);
+		dtex_fault("dtexloader_preload_pkg: can't open file %s\n", pkg->tex_filepaths[idx]);
 	}
 
 	struct unpack2pkg_params params;

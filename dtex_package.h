@@ -26,6 +26,7 @@ struct dtex_package {
 	char* name;
 
 	struct dtex_raw_tex* textures[DTEX_PACK_TEX_SZ];		// todo malloc
+	char* tex_filepaths[DTEX_PACK_TEX_SZ];
 	int tex_size;
 	float tex_scale;
 

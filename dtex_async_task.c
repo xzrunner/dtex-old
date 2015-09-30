@@ -29,7 +29,7 @@ dtex_async_load_texture(struct dtex_buffer* buf, struct dtex_package* pkg, int i
 	struct load_texture_params* params = (struct load_texture_params*)malloc(sizeof(*params));
 	params->buf = buf;
 	params->tex = pkg->textures[idx];
-	dtex_async_load_file(pkg->textures[idx]->filepath, _load_texture_func, params);
+	dtex_async_load_file(pkg->tex_filepaths[idx], _load_texture_func, params);
 }
 
 /************************************************************************/
@@ -92,7 +92,7 @@ dtex_async_load_multi_textures(struct dtex_buffer* buf, struct dtex_package* pkg
 		struct load_multi_textures_params* params = (struct load_multi_textures_params*)malloc(sizeof(*params));
 		params->share_params = share_params;
 		params->tex_idx = texture_ids[i];
-		dtex_async_load_file(pkg->textures[i]->filepath, _load_multi_textures_func, params);
+		dtex_async_load_file(pkg->tex_filepaths[i], _load_multi_textures_func, params);
 	}
 }
 

@@ -61,7 +61,6 @@ _release_texture(struct dtex_raw_tex* tex) {
 		tex->id_alpha = 0;
    }
 
-   free(tex->filepath);
    memset(tex, 0, sizeof(*tex));
 
    tex->id = -1;

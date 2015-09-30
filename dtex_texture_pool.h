@@ -13,7 +13,6 @@ struct dtex_raw_tex {
 	// todo inv ?
 	int format;
 
-	char* filepath;	// cache for reopen
 	int idx;		// in pool
 
 	float scale;

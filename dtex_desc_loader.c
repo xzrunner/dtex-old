@@ -1,5 +1,4 @@
 #include "dtex_desc_loader.h"
-#include "dtex_utility.h"
 #include "dtex_log.h"
 #include "dtex_stream_import.h"
 #include "dtex_package.h"

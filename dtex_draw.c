@@ -5,7 +5,6 @@
 #include "dtex_buffer.h"
 #include "dtex_typedef.h"
 #include "dtex_rrp.h"
-#include "dtex_utility.h"
 #include "dtex_packer.h"
 #include "dtex_pts.h"
 #include "dtex_texture_pool.h"

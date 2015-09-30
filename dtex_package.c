@@ -13,6 +13,10 @@ dtex_package_create() {
 
 void 
 dtex_package_release(struct dtex_package* pkg) {
+	for (int i = 0; i < pkg->tex_size; ++i) {
+		free(pkg->tex_filepaths[i]);
+	}
+
 	free(pkg->ej_pkg);
 	// 	dtex_rrp_release(pkg->rrp_pkg);
 	// 	dtex_pts_release(pkg->pts_pkg);

@@ -440,7 +440,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buff
  				struct relocate_nodes_params* params = (struct relocate_nodes_params*)malloc(sizeof(*params));
  				params->buf = buf;
  				params->node = dr;
- 				dtex_async_load_file(ori_tex->filepath, _relocate_nodes_cb, params);
+ 				dtex_async_load_file(dr->pkg->tex_filepaths[dr->raw_tex_idx], _relocate_nodes_cb, params);
  			}
 		}
 
@@ -580,22 +580,22 @@ dtexc3_preload_tex(struct dtex_c3* c3, struct dtex_raw_tex* tex, struct dtex_buf
 	dtex_pool_remove(tex);
 }
 
-static inline struct dtex_texture* 
-_query_tex_position(struct dtex_c3* c3, const char* name, int idx, struct dtex_rect** pos) {
-	unsigned int hash = _hash_origin_pack(name);
-	struct hash_node* hn = c3->hash[hash];
-	while (hn) {
-		struct dtex_node* dr = &hn->n;
-		if (strcmp(name, dr->pkg->name) == 0 && idx == dr->raw_tex_idx) {
-			*pos = &dr->dst_rect;
-			return dr->dst_tex;
-		}
-		hn = hn->next_hash;
-	}
-
-	pos = NULL;
-	return NULL;
-}
+// static inline struct dtex_texture* 
+// _query_tex_position(struct dtex_c3* c3, const char* name, int idx, struct dtex_rect** pos) {
+// 	unsigned int hash = _hash_origin_pack(name);
+// 	struct hash_node* hn = c3->hash[hash];
+// 	while (hn) {
+// 		struct dtex_node* dr = &hn->n;
+// 		if (strcmp(name, dr->pkg->name) == 0 && idx == dr->raw_tex_idx) {
+// 			*pos = &dr->dst_rect;
+// 			return dr->dst_tex;
+// 		}
+// 		hn = hn->next_hash;
+// 	}
+// 
+// 	pos = NULL;
+// 	return NULL;
+// }
 
 //static inline void
 //_relocate_rrp(struct dtex_c3* c3, struct dtex_package* pkg) {
