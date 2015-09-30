@@ -6,24 +6,45 @@ extern "C"
 #ifndef dynamic_texture_texture_h
 #define dynamic_texture_texture_h
 
-struct dtex_texture {
-	unsigned int tex;
-	int width, height;
-	// todo inv w & h
-
-	struct dtex_raw_tex* raw_tex;
-
-	struct dtex_packer* packer;		
+enum TEXTURE_TYPE {
+	TT_INVALID = 0,
+	TT_RAW,
+	TT_MID
 };
 
-struct dtex_buffer;
+struct dtex_texture {
+	unsigned int id;		// gl id
 
-struct dtex_texture* dtex_new_tex(struct dtex_buffer*);
-struct dtex_texture* dtex_new_tex_with_packer(struct dtex_buffer*, int packer_cap);
-// todo return buf
-void dtex_del_tex(struct dtex_buffer*, struct dtex_texture*);
+	int width, height;
+	float inv_width, inv_height;
 
-void dtex_clear_tex(struct dtex_texture*, struct dtex_buffer*);
+	int uid;				// id in dtex
+							// >= QUAD_TEXID_IN_PKG_MAX
+
+	int type;
+	union {
+		struct {
+			int id_alpha;	// for etc1
+			int format;
+			float scale;
+		} RAW;
+
+		struct {
+			struct dtex_packer* packer;
+		} MID;
+	} t;
+};
+
+struct dtex_texture* dtex_texture_create_raw();
+struct dtex_texture* dtex_texture_create_mid(struct dtex_buffer*);
+void dtex_texture_release(struct dtex_buffer*, struct dtex_texture*);
+
+void dtex_texture_clear(struct dtex_buffer*, struct dtex_texture*);
+
+void dtex_texture_pool_init();
+
+struct dtex_texture* dtex_texture_fetch(int uid);
+unsigned int dtex_texture_get_gl_id(int uid);
 
 #endif // dynamic_texture_texture_h
 

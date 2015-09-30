@@ -1,5 +1,4 @@
 #include "dtex_package.h"
-#include "dtex_texture_pool.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -53,3 +52,28 @@ dtex_get_spr_id(struct dtex_package* pkg, const char* name) {
 // 	}
 // }
 
+void 
+dtex_package_remove_texture_ref(struct dtex_package* pkg, struct dtex_texture* tex) {
+	for (int i = 0; i < pkg->tex_size; ++i) {
+		if (pkg->textures[i] == tex) {
+			pkg->textures[i] = NULL;
+		}
+	}	
+}
+
+void 
+dtex_package_remove_all_textures_ref(struct dtex_package* pkg) {
+	memset(pkg->textures, 0, sizeof(pkg->textures));
+}
+
+int 
+dtex_package_texture_idx(struct dtex_package* pkg, struct dtex_texture* tex) {
+	int idx = -1;
+	for (int i = 0; i < pkg->tex_size; ++i) {
+		if (pkg->textures[i] == tex) {
+			idx = i;
+			break;
+		}
+	}
+	return idx;
+}

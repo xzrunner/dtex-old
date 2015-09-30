@@ -1,12 +1,13 @@
 #include "dtex_loader_new.h"
 #include "dtex_desc_loader.h"
 #include "dtex_texture_loader.h"
-#include "dtex_texture_pool.h"
 #include "dtex_stream_import.h"
 #include "dtex_log.h"
 #include "dtex_file.h"
 #include "dtex_package.h"
 #include "dtex_typedef.h"
+#include "dtex_texture.h"
+#include "dtex_ej_utility.h"
 
 #include "LzmaDec.h"
 #ifdef _MSC_VER
@@ -167,6 +168,22 @@ struct unpack2pkg_params {
 	struct dtex_buffer* buf;
 };
 
+struct relocate_quad_texid_params {
+	int from;
+	int to;
+};
+
+static inline void
+_relocate_quad_texid(struct ej_pack_picture* ej_pic, void* ud) {
+	struct relocate_quad_texid_params* params = (struct relocate_quad_texid_params*)ud;
+	for (int i = 0; i < ej_pic->n; ++i) {
+		struct pack_quad* ej_q = &ej_pic->rect[i];
+		if (ej_q->texid == params->from) {
+			ej_q->texid = params->to;
+		}
+	}
+}
+
 static inline void
 _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 	struct unpack2pkg_params* params = (struct unpack2pkg_params*)ud;
@@ -177,15 +194,21 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 	case FILE_EPT:
 		if (params->load_tex_idx >= 0) {
 			assert(params->load_tex_idx < pkg->tex_size);
-			struct dtex_raw_tex* tex = pkg->textures[params->load_tex_idx];
+			struct dtex_texture* tex = pkg->textures[params->load_tex_idx];
 			assert(tex);
 			dtex_load_texture_all(params->buf, is, tex);
 		} else {
-			struct dtex_raw_tex* tex = dtex_pool_add();
+			struct dtex_texture* tex = dtex_texture_create_raw();
 			if (!tex) {
 				dtex_fault("_unpack_memory_to_pkg dtex_pool_add err.");
 			}
-			dtex_load_texture_desc(is, tex, params->scale);
+
+			struct relocate_quad_texid_params relocate_params;
+			relocate_params.from = pkg->tex_size;
+			relocate_params.to = tex->uid;
+			dtex_ej_pkg_traverse(pkg->ej_pkg, _relocate_quad_texid, &relocate_params);
+
+			dtex_load_texture_only_desc(is, tex, params->scale);
 			pkg->textures[pkg->tex_size++] = tex;
 		}
 		break;
@@ -265,7 +288,7 @@ dtex_preload_pkg(struct dtex_loader* loader, const char* name, const char* path,
 void 
 dtex_load_texture(struct dtex_loader* loader, struct dtex_buffer* buf, struct dtex_package* pkg, int idx, float scale) {
 	assert(idx < pkg->tex_size);
-	struct dtex_raw_tex* tex = pkg->textures[idx];
+	struct dtex_texture* tex = pkg->textures[idx];
 	assert(tex);
 
 	if (tex->id != 0) {

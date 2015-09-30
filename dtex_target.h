@@ -7,7 +7,6 @@ extern "C"
 #define dynamic_texture_target_h
 
 struct dtex_target;
-struct dtex_texture;
 
 struct dtex_target* dtex_new_target();
 void dtex_del_target(struct dtex_target*);

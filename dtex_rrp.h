@@ -23,7 +23,7 @@
 //	struct rrp_rect src, dst;
 //	bool is_rotated;
 //
-//	struct dtex_texture* dst_tex;
+//	struct dtex_mid_tex* dst_tex;
 //	struct dtex_rect* dst_pos;
 //};
 //
@@ -42,7 +42,7 @@
 //
 //struct rrp_picture* dtex_rrp_get_pic(struct dtex_rrp*, int id);
 //
-//void dtex_rrp_relocate(struct dtex_rrp* rrp, int idx, struct dtex_texture* tex, struct dtex_rect* pos);
+//void dtex_rrp_relocate(struct dtex_rrp* rrp, int idx, struct dtex_mid_tex* tex, struct dtex_rect* pos);
 //
 //#ifdef EXPORT_RRP
 //size_t dtex_rrp_size(void* data, int sz);

@@ -1,10 +1,10 @@
 #include "dtex_ej_sprite.h"
 #include "dtex_typedef.h"
 #include "dtex_package.h"
-#include "dtex_texture_pool.h"
 #include "dtex_screen.h"
 #include "dtex_c2.h"
 #include "dtex_shader.h"
+#include "dtex_texture.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -71,15 +71,7 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
    float vb[16];
    for (int i = 0; i < picture->n; i++) {
 	   struct ej_pack_quad* q = &picture->rect[i];
-
-	   struct dtex_raw_tex* tex = NULL;
-	   if (q->texid < QUAD_TEXID_IN_PKG_MAX) {
-		   assert(q->texid < pkg->tex_size);
-		   tex = pkg->textures[q->texid];
-	   } else {
-		   tex = dtex_pool_query(q->texid - QUAD_TEXID_IN_PKG_MAX);
-	   }
-
+	   struct dtex_texture* tex = dtex_texture_fetch(q->texid);
 	   for (int j = 0; j < 4; j++) {
 		   int xx = q->screen_coord[j*2+0];
 		   int yy = q->screen_coord[j*2+1];
@@ -89,8 +81,8 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
 
 		   float tx = q->texture_coord[j*2+0];
 		   float ty = q->texture_coord[j*2+1];
-		   tx /= tex->width;
-		   ty /= tex->height;
+		   tx *= tex->inv_width;
+		   ty *= tex->inv_height;
 
 		   vb[j*4+0] = vx;
 		   vb[j*4+1] = vy;

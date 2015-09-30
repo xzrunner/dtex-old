@@ -1,16 +1,11 @@
 #include "dtex_draw.h"
-#include "dtex_texture.h"
-#include "dtex_loader.h"
 #include "dtex_target.h"
 #include "dtex_buffer.h"
 #include "dtex_typedef.h"
-#include "dtex_rrp.h"
-#include "dtex_packer.h"
-#include "dtex_pts.h"
-#include "dtex_texture_pool.h"
 #include "dtex_shader.h"
 #include "dtex_screen.h"
 #include "dtex_gl.h"
+#include "dtex_texture.h"
 
 #include <ejoy2d.h>
 
@@ -19,8 +14,8 @@
 #include <string.h>
 
 static inline void
-_draw(const float vb[16], struct dtex_raw_tex* src) {
-	if (src->format == PKMC) {
+_draw(const float vb[16], struct dtex_texture* src) {
+	if (src->type == TT_RAW && src->t.RAW.format == PKMC) {
 //		shader_draw_separate(vb, src->id, src->id_alpha);
 	} else {
 		dtex_shader_texture(src->id);
@@ -29,7 +24,7 @@ _draw(const float vb[16], struct dtex_raw_tex* src) {
 }
 
 static inline void
-_before_draw(int format) {
+_before_draw(struct dtex_texture* tex) {
 // 	if (format == KTX) {
 // 		shader_program(PROGRAM_SPRITE_KTX);
 // 	} else if (format == PKMC) {
@@ -38,7 +33,7 @@ _before_draw(int format) {
 // 		shader_program(PROGRAM_SPRITE);
 // 	} 
 
-	if (format == PKMC) {
+	if (tex->type == TT_RAW && tex->t.RAW.format == PKMC) {
 		dtex_shader_program(PROGRAM_ETC1);
 	} else {
 		dtex_shader_program(PROGRAM_NORMAL);
@@ -46,7 +41,7 @@ _before_draw(int format) {
 }
 
 //void 
-//dtex_draw_rrp(struct dtex_raw_tex* src, struct rrp_picture* pic, 
+//dtex_draw_rrp(struct dtex_texture* src, struct rrp_picture* pic, 
 //	struct draw_params* params, const int32_t part_screen[8]) {
 //	assert(pic);
 //	_before_draw(src->format);
@@ -188,18 +183,18 @@ _before_draw(int format) {
 //}
 
 static inline void 
-_before_target_draw(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dtex_texture* dst, 
-				 struct dtex_target** target, float* scr_w, float* scr_h) {
+_before_target_draw(struct dtex_buffer* buf, struct dtex_texture* src, struct dtex_texture* dst, 
+				    struct dtex_target** target, float* scr_w, float* scr_h) {
 
 	*target = dtex_buf_fetch_target(buf);
-	dtex_target_bind_texture(*target, dst->tex);
+	dtex_target_bind_texture(*target, dst->id);
 	dtex_target_bind(*target);
 
 	float s;
 	dtex_get_screen(scr_w, scr_h, &s);
 	dtex_gl_viewport(0, 0, dst->width, dst->height);
 
-	_before_draw(src->format);
+	_before_draw(src);
 }
 
 static inline void
@@ -214,7 +209,7 @@ _after_target_draw(struct dtex_buffer* buf, struct dtex_target* target, float sc
 	dtex_buf_return_target(buf, target);
 }
 
-void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct dtex_texture* dst, const float vb[16]) {
+void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]) {
 	struct dtex_target* target = NULL;
 	float scr_w, scr_h;
 	_before_target_draw(buf, src, dst, &target, &scr_w, &scr_h);
@@ -225,7 +220,7 @@ void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_raw_tex* src, str
 }
 
 //void 
-//dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_raw_tex* src, struct rrp_picture* pic, 
+//dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_texture* src, struct rrp_picture* pic, 
 //	struct dtex_texture* dst, struct dp_pos* pos, bool rotate) {
 //
 //	assert(pic);

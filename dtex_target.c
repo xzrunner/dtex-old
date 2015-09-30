@@ -1,5 +1,4 @@
 #include "dtex_target.h"
-#include "dtex_texture.h"
 #include "dtex_file.h"
 #include "dtex_log.h"
 #include "dtex_shader.h"

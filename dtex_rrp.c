@@ -109,7 +109,7 @@
 //}
 //
 //void 
-//dtex_rrp_relocate(struct dtex_rrp* rrp, int idx, struct dtex_texture* tex, struct dtex_rect* pos) {
+//dtex_rrp_relocate(struct dtex_rrp* rrp, int idx, struct dtex_mid_tex* tex, struct dtex_rect* pos) {
 //for (int i = 0; i < rrp->pic_size; ++i) {
 //	struct rrp_picture* pic = &rrp->pictures[i];
 //	for (int j = 0; j < pic->part_sz; ++j) {

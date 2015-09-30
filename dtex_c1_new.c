@@ -1,12 +1,12 @@
 #include "dtex_c1_new.h"
 #include "dtex_buffer.h"
-#include "dtex_texture.h"
 #include "dtex_target.h"
 #include "dtex_screen.h"
 #include "dtex_shader.h"
 #include "dtex_ej_sprite.h"
 #include "dtex_draw.h"
 #include "dtex_gl.h"
+#include "dtex_texture.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -22,11 +22,11 @@ dtex_c1_create(struct dtex_buffer* buf) {
 	memset(c1, 0, sizeof(struct dtex_c1));
 
 	dtexbuf_reserve(buf, 1);
-	c1->texture = dtex_new_tex(buf);
+	c1->texture = dtex_texture_create_mid(buf);
 
 	c1->target = dtex_buf_fetch_target(buf);
 
-	dtex_target_bind_texture(c1->target, c1->texture->tex);
+	dtex_target_bind_texture(c1->target, c1->texture->id);
 
 	return c1;
 }
@@ -34,7 +34,7 @@ dtex_c1_create(struct dtex_buffer* buf) {
 void 
 dtex_c1_release(struct dtex_c1* c1, struct dtex_buffer* buf) {
 	dtex_target_unbind_texture(c1->target);
-	dtex_del_tex(buf, c1->texture);
+	dtex_texture_release(buf, c1->texture);
 	dtex_buf_return_target(buf, c1->target);
 	free(c1);
 }
@@ -60,5 +60,5 @@ dtex_c1_update(struct dtex_c1* c1, struct dtex_c2* c2, struct dtex_package* pkg,
 
 void 
 dtex_c1_debug_draw(struct dtex_c1* c1) {
-	dtex_debug_draw(c1->texture->tex);
+	dtex_debug_draw(c1->texture->id);
 }

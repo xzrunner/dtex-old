@@ -1,6 +1,6 @@
 //#include "dtex_c1.h"
 //#include "dtex_typedef.h"
-//#include "dtex_texture.h"
+//#include "dtex_mid_tex.h"
 //#include "dtex_packer.h"
 //#include "dtex_buffer.h"
 //#include "dtex_target.h"
@@ -42,7 +42,7 @@
 //};
 //
 //struct dtex_c1 {
-//	struct dtex_texture* texture;
+//	struct dtex_mid_tex* texture;
 //
 //	struct dtex_target *fbo0, *fbo1;
 //	bool is_fbo0_front;
@@ -246,7 +246,7 @@
 //static inline void
 //_draw_animation(struct dtex_c1* dtex, struct ej_sprite_pack* pkg, struct animation* ani, int action, int frame, 
 //				struct dp_pos* pos, struct dtex_rect* rect, bool need_clear, struct dtex_target* fbo) {
-//	struct dtex_texture* tex = dtex->texture;
+//	struct dtex_mid_tex* tex = dtex->texture;
 //
 //	dtex_target_bind_texture(fbo, tex);
 //	dtex_target_bind(fbo);
@@ -322,7 +322,7 @@
 //	struct dtex_rect rect = _get_animation_region(pkg, ani, action);
 //	int w = rect.xmax - rect.xmin,
 //		h = rect.ymax - rect.ymin;
-//	struct dtex_texture* tex = dtex->texture;
+//	struct dtex_mid_tex* tex = dtex->texture;
 //	struct dp_pos* pos = NULL;
 //	// todo padding and rotate
 ////	if (w >= h) {

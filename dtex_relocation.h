@@ -11,7 +11,7 @@ extern "C"
 /************************************************************************/
 /* get src and dst trans position (rect to rect)                        */
 /************************************************************************/
-void dtex_prepare_c3_trans_pos(struct dtex_rect* src_rect, struct dtex_raw_tex* src_tex, struct dtex_raw_tex* dst_tex, 
+void dtex_prepare_c3_trans_pos(struct dtex_rect* src_rect, struct dtex_texture* src_tex, struct dtex_texture* dst_tex, 
                                struct dtex_img_pos* src_pos, struct dtex_img_pos* dst_pos);
 
 /************************************************************************/

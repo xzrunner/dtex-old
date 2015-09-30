@@ -9,7 +9,6 @@
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
 #include "dtex_draw.h"
-#include "dtex_texture.h"
 #include "dtex_pvr.h"
 #include "dtex_etc1.h"
 #include "dtex_packer.h"
@@ -17,7 +16,6 @@
 #include "dtex_gl.h"
 #include "dtex_file.h"
 #include "dtex_log.h"
-#include "dtex_texture_pool.h"
 #include "dtex_package.h"
 #include "dtex_statistics.h"
 #include "dtex_ej_sprite.h"
@@ -26,6 +24,7 @@
 #include "dtex_array.h"
 #include "dtex_utility2.h"
 #include "dtex_relocation.h"
+#include "dtex_texture.h"
 
 #include <cJSON.h>
 
@@ -75,6 +74,8 @@ dtexf_create(const char* cfg) {
 	}
 
 	dtex_async_loader_init();
+
+	dtex_texture_pool_init();
 
 	LOADER = dtexloader_create();
 
@@ -130,7 +131,7 @@ dtexf_load_texture(struct dtex_package* pkg, int idx, float scale) {
 //		return NULL;
 //	}
 //
-//	struct dtex_raw_tex* src_tex = dtexloader_load_image(path);
+//	struct dtex_texture* src_tex = dtexloader_load_image(path);
 //
 //	struct dtex_texture* dst_tex = NULL;
 //	struct dp_pos* pos = dtex_c3_load_tex(C3, src_tex, BUF, &dst_tex);
@@ -165,7 +166,7 @@ dtexf_c2_load_begin() {
 void 
 dtexf_c2_load(struct dtex_package* pkg, int spr_id) {
 	if (C2) {
-		dtex_c2_load(C2, pkg, spr_id, -1);		
+		dtex_c2_load(C2, pkg, spr_id);		
 	}
 }
 
@@ -192,7 +193,7 @@ _get_pic_ori_rect(int ori_w, int ori_h, float* ori_vb, struct dtex_rect* rect) {
 }
 
 float* 
-dtexf_c2_lookup_texcoords(struct dtex_raw_tex* ori_tex, float* ori_vb, int* dst_tex) {
+dtexf_c2_lookup_texcoords(struct dtex_texture* ori_tex, float* ori_vb, int* dst_tex) {
 	if (C2 == NULL) {
 		return NULL;
 	}
@@ -251,7 +252,7 @@ dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 //}
 
 //static inline void
-//_on_load_spr_task(struct ej_sprite_pack* ej_pkg, struct dtex_rect* rect, int spr_id, int tex_idx, struct dtex_raw_tex* dst_tex) {
+//_on_load_spr_task(struct ej_sprite_pack* ej_pkg, struct dtex_rect* rect, int spr_id, int tex_idx, struct dtex_texture* dst_tex) {
 //	struct dtex_img_pos ori_pos, dst_pos;
 //	_prepare_trans_pos(rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
 //
@@ -265,7 +266,7 @@ dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 //}
 
 //static inline void
-//_after_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id, int tex_idx, struct dtex_raw_tex* dst_tex) {
+//_after_load_spr_task(struct ej_package* pkg, struct dtex_rect* rect, int spr_id, int tex_idx, struct dtex_texture* dst_tex) {
 //	struct dtex_img_pos ori_pos, dst_pos;
 //	_prepare_trans_pos(rect, tex_idx, dst_tex, &ori_pos, &dst_pos);
 //
@@ -341,12 +342,12 @@ _async_load_texture_with_c2_from_c3_func(void* ud) {
 	memset(c3_textures, 0, sizeof(c3_textures));
 	struct dtex_rect* c3_regions[pkg->tex_size];
 	memset(c3_regions, 0, sizeof(c3_regions));
-	dtex_c3_query_map_info(C3, pkg->name, c3_textures, c3_regions);
+	dtex_c3_query_map_info(C3, pkg, c3_textures, c3_regions);
 
 	for (int i = 0; i < tex_size; ++i) {
 		int idx = *(int*)dtex_array_fetch(textures, i);
 		struct dtex_img_pos ori_pos, dst_pos;
-		dtex_prepare_c3_trans_pos(c3_regions[idx], c3_textures[idx]->raw_tex, pkg->textures[idx], &ori_pos, &dst_pos);
+		dtex_prepare_c3_trans_pos(c3_regions[idx], c3_textures[idx], pkg->textures[idx], &ori_pos, &dst_pos);
 		dtex_relocate_spr(pkg, idx, pictures, &ori_pos, &dst_pos);
 	}
 	
@@ -372,14 +373,14 @@ _async_load_texture_with_c2_from_c3_func(void* ud) {
 void
 _async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count, void (*cb)(void* ud), void* ud) {
 	struct dtex_array* tex_idx = dtex_get_texture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
-	int texture_count = dtex_array_size(tex_idx);
-	int texture_ids[texture_count];
-	for (int i = 0; i < texture_count; ++i) {
-		texture_ids[i] = *(int*)dtex_array_fetch(tex_idx, i);
+	int count = dtex_array_size(tex_idx);
+	int uids[count];
+	for (int i = 0; i < count; ++i) {
+		uids[i] = *(int*)dtex_array_fetch(tex_idx, i);
 	}
 	dtex_array_release(tex_idx);
 
-	dtex_async_load_multi_textures(BUF, pkg, texture_ids, texture_count, cb, ud);
+	dtex_async_load_multi_textures(BUF, pkg, uids, count, cb, ud);
 }
 
 void 
@@ -418,7 +419,7 @@ dtexf_update() {
 //		return false;
 //	}
 //
-//	struct dtex_raw_tex src;
+//	struct dtex_texture src;
 //	src.id = tex->id;
 //	src.id_alpha = tex->id_alpha;
 //	src.width = 1.0f / tex->width;
@@ -476,12 +477,13 @@ dtexf_test_pvr(const char* path) {
 #endif
 	free(buf_uncompressed);
 
-	struct dtex_raw_tex src_tex;
-	src_tex.format = TEXTURE8;
+	struct dtex_texture src_tex;
+	src_tex.id = tex;
 	src_tex.width = width;
 	src_tex.height = height;
-	src_tex.id = tex;
-	src_tex.id_alpha = 0;
+	src_tex.type = TT_RAW;
+	src_tex.t.RAW.format = TEXTURE8;
+	src_tex.t.RAW.id_alpha = 0;
 
 	struct dtex_texture* dst_tex = NULL;
 	dtex_c3_load_tex(C3, &src_tex, BUF, &dst_tex);
@@ -508,12 +510,13 @@ dtexf_test_etc1(const char* path) {
 #endif
 	free(buf_uncompressed);
 
-	struct dtex_raw_tex src_tex;
-	src_tex.format = TEXTURE8;
+	struct dtex_texture src_tex;
+	src_tex.id = tex;
 	src_tex.width = width;
 	src_tex.height = height;
-	src_tex.id = tex;
-	src_tex.id_alpha = 0;
+	src_tex.type = TT_RAW;
+	src_tex.t.RAW.format = TEXTURE8;
+	src_tex.t.RAW.id_alpha = 0;
 
 	struct dtex_texture* dst_tex = NULL;
 	dtex_c3_load_tex(C3, &src_tex, BUF, &dst_tex);

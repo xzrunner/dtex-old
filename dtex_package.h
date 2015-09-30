@@ -13,8 +13,6 @@ struct dtex_pts;
 struct dtex_rrr;
 struct dtex_b4r;
 
-struct dtex_raw_tex;
-
 #define DTEX_PACK_TEX_SZ 128
 
 struct export_name {
@@ -25,7 +23,7 @@ struct export_name {
 struct dtex_package {
 	char* name;
 
-	struct dtex_raw_tex* textures[DTEX_PACK_TEX_SZ];		// todo malloc
+	struct dtex_texture* textures[DTEX_PACK_TEX_SZ];		// todo malloc
 	char* tex_filepaths[DTEX_PACK_TEX_SZ];
 	int tex_size;
 	float tex_scale;
@@ -41,11 +39,16 @@ struct dtex_package {
 };
 
 struct dtex_package* dtex_package_create();
-void dtex_package_release(struct dtex_package* pkg);
+void dtex_package_release(struct dtex_package*);
 
-int dtex_get_spr_id(struct dtex_package* pkg, const char* name);
+int dtex_get_spr_id(struct dtex_package*, const char* name);
 
-//void dtex_package_release_textures(struct dtex_package* pkg);
+//void dtex_package_release_textures(struct dtex_package*);
+
+void dtex_package_remove_texture_ref(struct dtex_package*, struct dtex_texture*);
+void dtex_package_remove_all_textures_ref(struct dtex_package*);
+
+int dtex_package_texture_idx(struct dtex_package*, struct dtex_texture*);
 
 #endif // dynamic_texture_package_h
 
