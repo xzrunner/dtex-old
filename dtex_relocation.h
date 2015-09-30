@@ -9,6 +9,12 @@ extern "C"
 #include <stdint.h>
 
 /************************************************************************/
+/* swap quad's texid and texcoords with extend info of pkg.             */
+/************************************************************************/
+
+void dtex_swap_quad_src_info(struct dtex_package* pkg, struct dtex_array* picture_ids);
+
+/************************************************************************/
 /* get src and dst trans position (rect to rect)                        */
 /************************************************************************/
 void dtex_prepare_c3_trans_pos(struct dtex_rect* src_rect, struct dtex_texture* src_tex, struct dtex_texture* dst_tex, 

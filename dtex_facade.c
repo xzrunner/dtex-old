@@ -25,6 +25,7 @@
 #include "dtex_utility2.h"
 #include "dtex_relocation.h"
 #include "dtex_texture.h"
+#include "dtex_array.h"
 
 #include <cJSON.h>
 
@@ -297,6 +298,38 @@ dtexf_async_load_texture(struct dtex_package* pkg, int idx) {
 	dtex_async_load_texture(BUF, pkg, idx);
 }
 
+struct async_load_texture_from_c3_params {
+	struct dtex_package* pkg;
+	struct dtex_array* picture_ids;
+};
+
+static inline void
+_async_load_texture_from_c3_func(void* ud) {
+	struct async_load_texture_from_c3_params* params = (struct async_load_texture_from_c3_params*)ud;
+	
+	dtex_swap_quad_src_info(params->pkg, params->picture_ids);
+
+	dtex_array_release(params->picture_ids);
+	free(params);
+}
+
+void 
+dtexf_async_load_texture_from_c3(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
+	struct dtex_array* picture_ids = dtex_get_picture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
+	dtex_swap_quad_src_info(pkg, picture_ids);
+
+	struct dtex_array* tex_idx = dtex_get_texture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
+
+	dtex_swap_quad_src_info(pkg, picture_ids);
+
+	struct async_load_texture_from_c3_params* params = malloc(sizeof(struct async_load_texture_from_c3_params));
+	params->pkg = pkg;
+	params->picture_ids = picture_ids;
+
+	dtex_async_load_multi_textures(BUF, pkg, tex_idx, _async_load_texture_from_c3_func, params);
+	dtex_array_release(tex_idx);
+}
+
 struct async_load_texture_with_c2_params {
 	struct dtex_package* pkg;
 	int* sprite_ids;
@@ -322,6 +355,7 @@ struct async_load_texture_with_c2_from_c3_params {
 	struct dtex_package* pkg;
 	int* sprite_ids;
 	int sprite_count;
+//	struct dtex_array* picture_ids;
 };
 
 static inline void
@@ -380,7 +414,7 @@ _async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprit
 	}
 	dtex_array_release(tex_idx);
 
-	dtex_async_load_multi_textures(BUF, pkg, uids, count, cb, ud);
+//	dtex_async_load_multi_textures(BUF, pkg, uids, count, cb, ud);
 }
 
 void 
@@ -396,9 +430,14 @@ void
 dtexf_async_load_texture_with_c2_from_c3(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
 	struct async_load_texture_with_c2_from_c3_params* params = (struct async_load_texture_with_c2_from_c3_params*)malloc(sizeof(*params));
 	params->pkg = pkg;
+//	params->picture_ids = dtex_get_picture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
 	params->sprite_ids = sprite_ids;
 	params->sprite_count = sprite_count;
+	
+	struct dtex_array* picture_ids = dtex_get_picture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
+	dtex_swap_quad_src_info(pkg, picture_ids);
 	_async_load_texture_with_c2(pkg, sprite_ids, sprite_count, _async_load_texture_with_c2_from_c3_func, params);
+	dtex_swap_quad_src_info(pkg, picture_ids);
 }
 
 void 

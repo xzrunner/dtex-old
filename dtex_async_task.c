@@ -4,6 +4,7 @@
 #include "dtex_async_loader.h"
 #include "dtex_desc_loader.h"
 #include "dtex_texture.h"
+#include "dtex_array.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -73,22 +74,32 @@ _load_multi_textures_func(struct dtex_import_stream* is, void* ud) {
 }
 
 void 
-dtex_async_load_multi_textures(struct dtex_buffer* buf, struct dtex_package* pkg, int* texture_uid, int texture_count, void (*cb)(void* ud), void* ud) {
+dtex_async_load_multi_textures(struct dtex_buffer* buf, struct dtex_package* pkg, 
+							   struct dtex_array* texture_idx, void (*cb)(void* ud), void* ud) {
 	struct load_multi_textures_share_params* share_params = (struct load_multi_textures_share_params*)malloc(sizeof(*share_params));
 
 	share_params->buf = buf;
 
-	share_params->tot_count = texture_count;
+	int sz = dtex_array_size(texture_idx);
+	share_params->tot_count = sz;
 	share_params->loaded_count = 0;
 
 	share_params->cb = cb;
 	share_params->ud = ud;
 
-	for (int i = 0; i < texture_count; ++i) {
+	for (int i = 0; i < sz; ++i) {
+		int idx = *(int*)dtex_array_fetch(texture_idx, i);
+		assert(idx < pkg->texture_count);
+
 		struct load_multi_textures_params* params = (struct load_multi_textures_params*)malloc(sizeof(*params));
 		params->share_params = share_params;
-		params->tex = dtex_texture_fetch(texture_uid[i]);
-		dtex_async_load_file(pkg->texture_filepaths[i], _load_multi_textures_func, params);
+
+		if (pkg->textures[idx] == NULL) {
+			pkg->textures[idx] = dtex_texture_create_raw();
+		}
+		params->tex = pkg->textures[idx];
+
+		dtex_async_load_file(pkg->texture_filepaths[idx], _load_multi_textures_func, params);
 	}
 }
 

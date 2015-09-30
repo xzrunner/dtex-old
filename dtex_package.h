@@ -20,6 +20,15 @@ struct export_name {
 	int id;
 };
 
+struct quad_ext_info {
+	int texid;
+	uint16_t texture_coord[8];
+};
+
+struct pic_ext_info {
+	struct quad_ext_info quads[1];
+};
+
 struct dtex_package {
 	char* name;
 
@@ -29,6 +38,8 @@ struct dtex_package {
 
 	struct export_name* export_names;
 	int export_size;
+
+	void** spr_ext_info;
 
 	struct ej_sprite_pack* ej_pkg;	// epe
 	struct dtex_rrp* rrp_pkg;		// regular rect pack

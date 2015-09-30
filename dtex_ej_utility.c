@@ -1,12 +1,12 @@
 #include "dtex_ej_utility.h"
 
 void 
-dtex_ej_pkg_traverse(struct ej_sprite_pack* ej_pkg, void (*pic_func)(struct ej_pack_picture* ej_pic, void* ud), void* ud) {
-	for (int id = 0; id < ej_pkg->n; ++id) {
-		int type = ej_pkg->type[id];
+dtex_ej_pkg_traverse(struct ej_sprite_pack* ej_pkg, void (*pic_func)(int pic_id, struct ej_pack_picture* ej_pic, void* ud), void* ud) {
+	for (int spr_id = 0; spr_id < ej_pkg->n; ++spr_id) {
+		int type = ej_pkg->type[spr_id];
 		if (type == TYPE_PICTURE) {
-			struct ej_pack_picture* ej_pic = (struct ej_pack_picture*)ej_pkg->data[id];
-			pic_func(ej_pic, ud);
+			struct ej_pack_picture* ej_pic = (struct ej_pack_picture*)ej_pkg->data[spr_id];
+			pic_func(spr_id, ej_pic, ud);
 		}
 	}
 }

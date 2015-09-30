@@ -32,7 +32,7 @@ _comp_export(const void *a, const void *b) {
 }
 
 static inline void
-_scale_pic(struct ej_pack_picture* ej_pic, void* ud) {
+_scale_pic(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	float scale = *(float*)ud;
 	
 	for (int i = 0; i < ej_pic->n; ++i) {
@@ -46,7 +46,46 @@ _scale_pic(struct ej_pack_picture* ej_pic, void* ud) {
 	}
 }
 
-struct ej_sprite_pack*
+static inline void
+_count_quad_num(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
+	int* num = (int*)ud;
+	*num += ej_pic->n;
+}
+
+static inline void
+_load_sprites_extend_info(struct dtex_package* pkg) {
+	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
+
+	int quad_num = 0;
+	dtex_ej_pkg_traverse(ej_pkg, _count_quad_num, &quad_num);
+
+	size_t sz = sizeof(void*) * ej_pkg->n + sizeof(struct quad_ext_info) * quad_num;
+	char* buf = malloc(sz);
+	memset(buf, 0, sz);
+
+	pkg->spr_ext_info = (void**)buf;
+
+	char* ptr = buf + sizeof(void*) * ej_pkg->n;
+	for (int spr_id = 0; spr_id < ej_pkg->n; ++spr_id) {
+		pkg->spr_ext_info[spr_id] = ptr;
+		int type = ej_pkg->type[spr_id];
+		if (type != TYPE_PICTURE) {
+			continue;
+		}
+		struct ej_pack_picture* src_pic = (struct ej_pack_picture*)ej_pkg->data[spr_id];
+		struct pic_ext_info* dst_pic = (struct pic_ext_info*)ptr;
+		for (int i = 0; i < src_pic->n; ++i) {
+			struct ej_pack_quad* src_quad = &src_pic->rect[i];
+			struct quad_ext_info* dst_quad = &dst_pic->quads[i];
+			dst_quad->texid = src_quad->texid;
+			memcpy(&dst_quad->texture_coord[0], &src_quad->texture_coord[0], sizeof(struct quad_ext_info));
+		}
+
+		ptr += sizeof(struct quad_ext_info) * src_pic->n;
+	}
+}
+
+void
 dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float scale) {
 	uint16_t export_n = dtex_import_uint16(is);
 	uint16_t maxid = dtex_import_uint16(is);
@@ -71,7 +110,9 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 
 	struct ej_sprite_pack* ej_pkg = ej_pkg_import((void*)is->stream, body_sz, tex, maxid, unpack_sz);
 	dtex_ej_pkg_traverse(ej_pkg, _scale_pic, &scale);
-	return ej_pkg;
+	pkg->ej_pkg = ej_pkg;
+
+	_load_sprites_extend_info(pkg);
 }
 
 struct dtex_rrp* 

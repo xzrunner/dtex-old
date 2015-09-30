@@ -71,7 +71,12 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
    float vb[16];
    for (int i = 0; i < picture->n; i++) {
 	   struct ej_pack_quad* q = &picture->rect[i];
-	   struct dtex_texture* tex = dtex_texture_fetch(q->texid);
+	   struct dtex_texture* tex;
+	   if (q->texid < QUAD_TEXID_IN_PKG_MAX) {
+		   tex = pkg->textures[q->texid];
+	   } else {
+		   tex = dtex_texture_fetch(q->texid);
+	   }
 	   for (int j = 0; j < 4; j++) {
 		   int xx = q->screen_coord[j*2+0];
 		   int yy = q->screen_coord[j*2+1];

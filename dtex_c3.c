@@ -318,7 +318,7 @@ struct relocate_pic_data {
 };
 
 static inline void
-_relocate_pic(struct ej_pack_picture* ej_pic, void* ud) {
+_relocate_pic(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	struct dtex_node* dr = (struct dtex_node*)ud;
 	struct dtex_texture* src = dtex_texture_fetch(dr->src_tex->uid);
 	for (int i = 0; i < ej_pic->n; ++i) {

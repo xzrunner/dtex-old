@@ -174,7 +174,7 @@ struct relocate_quad_texid_params {
 };
 
 static inline void
-_relocate_quad_texid(struct ej_pack_picture* ej_pic, void* ud) {
+_relocate_quad_texid(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	struct relocate_quad_texid_params* params = (struct relocate_quad_texid_params*)ud;
 	for (int i = 0; i < ej_pic->n; ++i) {
 		struct pack_quad* ej_q = &ej_pic->rect[i];
@@ -213,7 +213,7 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 		}
 		break;
 	case FILE_EPE:
-		pkg->ej_pkg = dtex_load_epe(is, pkg, params->scale);
+		dtex_load_epe(is, pkg, params->scale);
 		break;
 	case FILE_RRP:
 		pkg->rrp_pkg = dtex_load_rrp(is);
