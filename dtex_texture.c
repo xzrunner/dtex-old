@@ -14,7 +14,7 @@
 
 struct dtex_texture* 
 dtex_new_tex(struct dtex_buffer* buf) {
-	GLuint tex_id = dtexbuf_fetch_texid(buf);
+	unsigned int tex_id = dtexbuf_fetch_texid(buf);
 	if (tex_id == 0) {
 		return NULL;
 	}

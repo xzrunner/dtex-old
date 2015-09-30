@@ -324,7 +324,7 @@ _relocate_pic(struct ej_pack_picture* ej_pic, void* ud) {
 		struct pack_quad* ej_q = &ej_pic->rect[i];
 		if (ej_q->texid >= QUAD_TEXID_IN_PKG_MAX ||
 			ej_q->texid != dr->raw_tex_idx) {
-				continue;
+			continue;
 		}
 		struct dtex_raw_tex* src = dr->pkg->textures[ej_q->texid];
 		ej_q->texid = dr->dst_tex->raw_tex->idx + QUAD_TEXID_IN_PKG_MAX;

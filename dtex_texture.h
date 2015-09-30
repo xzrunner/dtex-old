@@ -6,10 +6,8 @@ extern "C"
 #ifndef dynamic_texture_texture_h
 #define dynamic_texture_texture_h
 
-typedef unsigned int GLuint;
-
 struct dtex_texture {
-	GLuint tex;
+	unsigned int tex;
 	int width, height;
 	// todo inv w & h
 

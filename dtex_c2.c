@@ -248,14 +248,14 @@ _compare_max_edge(const void *arg1, const void *arg2) {
 }
 
 static inline unsigned int
-_hash_node(GLuint texid, struct dtex_rect* rect) {
+_hash_node(unsigned int texid, struct dtex_rect* rect) {
 	int cx = (int)(0.5f * (rect->xmin + rect->xmax)),
 		cy = (int)(0.5f * (rect->ymin + rect->ymax));
 	return (cx ^ (cy * 97) ^ (texid * 101)) % HASH_SIZE;
 }
 
 static inline struct hash_node*
-_query_node(struct dtex_c2* dtex, GLuint texid, struct dtex_rect* rect) {
+_query_node(struct dtex_c2* dtex, unsigned int texid, struct dtex_rect* rect) {
 	unsigned int idx = _hash_node(texid, rect);
 	struct hash_node* hn = dtex->hash[idx];
 	while (hn) {
