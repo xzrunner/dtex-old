@@ -43,21 +43,6 @@ dtex_ej_sprite_create(struct ej_sprite_pack* ej_pkg, int spr_id) {
 }
 
 static inline void
-_get_pic_ori_rect(int ori_w, int ori_h, float* ori_vb, struct dtex_rect* rect) {
-	float xmin = 1, ymin = 1, xmax = 0, ymax = 0;
-	for (int i = 0; i < 4; ++i) {
-		if (ori_vb[i*4+2] < xmin) xmin = ori_vb[i*4+2];
-		if (ori_vb[i*4+2] > xmax) xmax = ori_vb[i*4+2];
-		if (ori_vb[i*4+3] < ymin) ymin = ori_vb[i*4+3];
-		if (ori_vb[i*4+3] > ymax) ymax = ori_vb[i*4+3];
-	}
-	rect->xmin = ori_w * xmin;
-	rect->ymin = ori_h * ymin;
-	rect->xmax = ori_w * xmax;
-	rect->ymax = ori_h * ymax;
-}
-
-static inline void
 _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture* picture, 
 		   const struct ej_srt* srt, const struct ej_sprite_trans* arg) {
    struct matrix tmp;
@@ -98,10 +83,8 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
 	   int texid = tex->id;
 
 	   if (c2) {
-		   struct dtex_rect rect;
-		   _get_pic_ori_rect(tex->width, tex->height, vb, &rect);
 		   int new_texid = 0;
-		   float* tex_vb = dtex_c2_lookup_texcoords(c2, tex->id, &rect, &new_texid);
+		   float* tex_vb = dtex_c2_lookup_texcoords(c2, tex, vb, &new_texid);
 		   if (tex_vb != NULL) {
 			   memcpy(vb+2, tex_vb, 2*sizeof(float));
 			   memcpy(vb+6, tex_vb+2, 2*sizeof(float));

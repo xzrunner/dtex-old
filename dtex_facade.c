@@ -42,6 +42,10 @@ static struct dtex_c2* C2 = NULL;
 static struct dtex_c1* C1 = NULL;
 static struct dtex_buffer*	BUF = NULL;
 
+/************************************************************************/
+/* dtexf overall                                                        */
+/************************************************************************/
+
 struct dtex_config {
 	bool open_c1;
 	bool open_c2;
@@ -111,10 +115,18 @@ dtexf_release() {
 	dtex_async_loader_release();
 }
 
+/************************************************************************/
+/* sprite draw                                                          */
+/************************************************************************/
+
 void 
 dtexf_sprite_draw(struct dtex_package* pkg, struct ej_sprite* spr, struct ej_srt* srt) {
 	dtex_ej_sprite_draw(pkg, C2, spr, srt);
 }
+
+/************************************************************************/
+/* sync load desc file (epe, pts...) and texture                        */
+/************************************************************************/
 
 struct dtex_package* 
 dtexf_preload_pkg(const char* name, const char* path, int type, float scale) {
@@ -143,6 +155,10 @@ dtexf_load_texture(struct dtex_package* pkg, int idx, float scale) {
 //	return dtex_sprite_create(dst_tex, pos);
 //}
 
+/************************************************************************/
+/* C3                                                                   */
+/************************************************************************/
+
 void
 dtexf_c3_load(struct dtex_package* pkg, float scale) {
 	if (C3) {
@@ -156,6 +172,10 @@ dtexf_c3_load_end(bool async) {
 		dtex_c3_load_end(C3, LOADER, BUF, async);
 	}
 }
+
+/************************************************************************/
+/* C2                                                                   */
+/************************************************************************/
 
 void 
 dtexf_c2_load_begin() {
@@ -178,31 +198,13 @@ dtexf_c2_load_end() {
 	}
 }
 
-static inline void
-_get_pic_ori_rect(int ori_w, int ori_h, float* ori_vb, struct dtex_rect* rect) {
-	float xmin = 1, ymin = 1, xmax = 0, ymax = 0;
-	for (int i = 0; i < 4; ++i) {
-		if (ori_vb[i*4+2] < xmin) xmin = ori_vb[i*4+2];
-		if (ori_vb[i*4+2] > xmax) xmax = ori_vb[i*4+2];
-		if (ori_vb[i*4+3] < ymin) ymin = ori_vb[i*4+3];
-		if (ori_vb[i*4+3] > ymax) ymax = ori_vb[i*4+3];
-	}
-	rect->xmin = ori_w * xmin;
-	rect->ymin = ori_h * ymin;
-	rect->xmax = ori_w * xmax;
-	rect->ymax = ori_h * ymax;
-}
-
 float* 
 dtexf_c2_lookup_texcoords(struct dtex_texture* ori_tex, float* ori_vb, int* dst_tex) {
-	if (C2 == NULL) {
+	if (C2) {
+		return dtex_c2_lookup_texcoords(C2, ori_tex, ori_vb, dst_tex);
+	} else {
 		return NULL;
 	}
-
-	struct dtex_rect rect;
-	_get_pic_ori_rect(ori_tex->width, ori_tex->height, ori_vb, &rect);
-
-	return dtex_c2_lookup_texcoords(C2, ori_tex->id, &rect, dst_tex);
 }
 
 //void 
@@ -218,6 +220,10 @@ dtexf_c2_lookup_texcoords(struct dtex_texture* ori_tex, float* ori_vb, int* dst_
 //
 //	dtexc2_lookup_node(C2, ori_tex->id, &rect, out_tex, out_pos);
 //}
+
+/************************************************************************/
+/* C1                                                                   */
+/************************************************************************/
 
 void 
 dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
@@ -293,10 +299,18 @@ dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 //}
 //
 
+/************************************************************************/
+/* async load texture                                                   */
+/************************************************************************/
+
 void 
 dtexf_async_load_texture(struct dtex_package* pkg, int idx) {
 	dtex_async_load_texture(BUF, pkg, idx);
 }
+
+/************************************************************************/
+/* 1. C3 load small scale 2. async load origin size texture             */
+/************************************************************************/
 
 struct async_load_texture_from_c3_params {
 	struct dtex_package* pkg;
@@ -315,11 +329,10 @@ _async_load_texture_from_c3_func(void* ud) {
 
 void 
 dtexf_async_load_texture_from_c3(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
+	// swap to origin data, get texture idx info
 	struct dtex_array* picture_ids = dtex_get_picture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
 	dtex_swap_quad_src_info(pkg, picture_ids);
-
 	struct dtex_array* tex_idx = dtex_get_texture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
-
 	dtex_swap_quad_src_info(pkg, picture_ids);
 
 	struct async_load_texture_from_c3_params* params = malloc(sizeof(struct async_load_texture_from_c3_params));
@@ -329,6 +342,10 @@ dtexf_async_load_texture_from_c3(struct dtex_package* pkg, int* sprite_ids, int 
 	dtex_async_load_multi_textures(BUF, pkg, tex_idx, _async_load_texture_from_c3_func, params);
 	dtex_array_release(tex_idx);
 }
+
+/************************************************************************/
+/* 1. normal loading 2. async load needed texture and pack to C2        */
+/************************************************************************/
 
 struct async_load_texture_with_c2_params {
 	struct dtex_package* pkg;
@@ -351,11 +368,37 @@ _async_load_texture_with_c2_func(void* ud) {
 	free(params);
 }
 
+void
+_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count, void (*cb)(void* ud), void* ud) {
+	struct dtex_array* tex_idx = dtex_get_texture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
+	int count = dtex_array_size(tex_idx);
+	int uids[count];
+	for (int i = 0; i < count; ++i) {
+		uids[i] = *(int*)dtex_array_fetch(tex_idx, i);
+	}
+	dtex_array_release(tex_idx);
+
+//	dtex_async_load_multi_textures(BUF, pkg, uids, count, cb, ud);
+}
+
+void 
+dtexf_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
+	struct async_load_texture_with_c2_params* params = (struct async_load_texture_with_c2_params*)malloc(sizeof(*params));
+	params->pkg = pkg;
+	params->sprite_ids = sprite_ids;
+	params->sprite_count = sprite_count;
+	_async_load_texture_with_c2(pkg, sprite_ids, sprite_count, _async_load_texture_with_c2_func, params);
+}
+
+/************************************************************************/
+/* 1. C3 loading 2. async load needed texture and pack to C2            */
+/************************************************************************/
+
 struct async_load_texture_with_c2_from_c3_params {
 	struct dtex_package* pkg;
 	int* sprite_ids;
 	int sprite_count;
-//	struct dtex_array* picture_ids;
+	//	struct dtex_array* picture_ids;
 };
 
 static inline void
@@ -384,46 +427,24 @@ _async_load_texture_with_c2_from_c3_func(void* ud) {
 		dtex_prepare_c3_trans_pos(c3_regions[idx], c3_textures[idx], pkg->textures[idx], &ori_pos, &dst_pos);
 		dtex_relocate_spr(pkg, idx, pictures, &ori_pos, &dst_pos);
 	}
-	
+
 	dtex_c2_load_begin(C2); 
 	for (int i = 0; i < params->sprite_count; ++i) {
 		dtexf_c2_load(pkg, params->sprite_ids[i]);
 	}
 	dtex_c2_load_end(C2, BUF, LOADER, true);
 
-// 	for (int i = 0; i < tex_size; ++i) {
-// 		struct dtex_img_pos ori_pos, dst_pos;
-// 		dtex_prepare_c3_trans_pos(rect, );
-// 		dtex_relocate_c2_key();
-// 		dtex_relocate_spr(&dst_pos, &ori_pos);
-// 	}
+	// 	for (int i = 0; i < tex_size; ++i) {
+	// 		struct dtex_img_pos ori_pos, dst_pos;
+	// 		dtex_prepare_c3_trans_pos(rect, );
+	// 		dtex_relocate_c2_key();
+	// 		dtex_relocate_spr(&dst_pos, &ori_pos);
+	// 	}
 
 	dtex_array_release(textures);
 	dtex_array_release(pictures);
 
 	free(params);
-}
-
-void
-_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count, void (*cb)(void* ud), void* ud) {
-	struct dtex_array* tex_idx = dtex_get_texture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
-	int count = dtex_array_size(tex_idx);
-	int uids[count];
-	for (int i = 0; i < count; ++i) {
-		uids[i] = *(int*)dtex_array_fetch(tex_idx, i);
-	}
-	dtex_array_release(tex_idx);
-
-//	dtex_async_load_multi_textures(BUF, pkg, uids, count, cb, ud);
-}
-
-void 
-dtexf_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
-	struct async_load_texture_with_c2_params* params = (struct async_load_texture_with_c2_params*)malloc(sizeof(*params));
-	params->pkg = pkg;
-	params->sprite_ids = sprite_ids;
-	params->sprite_count = sprite_count;
-	_async_load_texture_with_c2(pkg, sprite_ids, sprite_count, _async_load_texture_with_c2_func, params);
 }
 
 void 
@@ -439,6 +460,10 @@ dtexf_async_load_texture_with_c2_from_c3(struct dtex_package* pkg, int* sprite_i
 	_async_load_texture_with_c2(pkg, sprite_ids, sprite_count, _async_load_texture_with_c2_from_c3_func, params);
 	dtex_swap_quad_src_info(pkg, picture_ids);
 }
+
+/************************************************************************/
+/* update for async loading                                             */
+/************************************************************************/
 
 void 
 dtexf_update() {
@@ -484,6 +509,10 @@ dtexf_update() {
 //	return true;
 //}
 
+/************************************************************************/
+/* debug                                                                */
+/************************************************************************/
+
 void 
 dtexf_debug_draw() {
   	if (C1) {
@@ -497,68 +526,67 @@ dtexf_debug_draw() {
 //	dtex_debug_draw(4);
 }
 
-void 
-dtexf_test_pvr(const char* path) {
-	uint32_t width, height;
-	uint8_t* buf_compressed = dtex_pvr_read_file(path, &width, &height);
-	assert(buf_compressed);
-
-	uint8_t* buf_uncompressed = dtex_pvr_decode(buf_compressed, width, height);
-	free(buf_compressed);
-
-	unsigned int tex;
-#ifdef __APPLE__
-	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
-	tex = dtex_gl_create_texture(TEXTURE_PVR4, width, height, new_compressed, 0);
-	free(new_compressed);
-#else
-	tex = dtex_gl_create_texture(TEXTURE_RGBA8, width, height, buf_uncompressed, 0);
-#endif
-	free(buf_uncompressed);
-
-	struct dtex_texture src_tex;
-	src_tex.id = tex;
-	src_tex.width = width;
-	src_tex.height = height;
-	src_tex.type = TT_RAW;
-	src_tex.t.RAW.format = TEXTURE8;
-	src_tex.t.RAW.id_alpha = 0;
-
-	struct dtex_texture* dst_tex = NULL;
-	dtex_c3_load_tex(C3, &src_tex, BUF, &dst_tex);
-}
-
-#ifndef __ANDROID__
-
-void 
-dtexf_test_etc1(const char* path) {
-	uint32_t width, height;
-	uint8_t* buf_compressed = dtex_etc1_read_file(path, &width, &height);
-	assert(buf_compressed);
-
-	uint8_t* buf_uncompressed = dtex_etc1_decode(buf_compressed, width, height);
-	free(buf_compressed);
-
-	unsigned int tex;
-#ifdef __ANDROID__
-	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
-	tex = dtex_gl_create_texture(TEXTURE_ETC1, width, height, new_compressed, 0);
-	free(new_compressed);
-#else
-	tex = dtex_gl_create_texture(TEXTURE_RGBA8, width, height, buf_uncompressed, 0);
-#endif
-	free(buf_uncompressed);
-
-	struct dtex_texture src_tex;
-	src_tex.id = tex;
-	src_tex.width = width;
-	src_tex.height = height;
-	src_tex.type = TT_RAW;
-	src_tex.t.RAW.format = TEXTURE8;
-	src_tex.t.RAW.id_alpha = 0;
-
-	struct dtex_texture* dst_tex = NULL;
-	dtex_c3_load_tex(C3, &src_tex, BUF, &dst_tex);
-}
-
-#endif
+//void 
+//dtexf_test_pvr(const char* path) {
+//	uint32_t width, height;
+//	uint8_t* buf_compressed = dtex_pvr_read_file(path, &width, &height);
+//	assert(buf_compressed);
+//
+//	uint8_t* buf_uncompressed = dtex_pvr_decode(buf_compressed, width, height);
+//	free(buf_compressed);
+//
+//	unsigned int tex;
+//#ifdef __APPLE__
+//	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
+//	tex = dtex_gl_create_texture(TEXTURE_PVR4, width, height, new_compressed, 0);
+//	free(new_compressed);
+//#else
+//	tex = dtex_gl_create_texture(TEXTURE_RGBA8, width, height, buf_uncompressed, 0);
+//#endif
+//	free(buf_uncompressed);
+//
+//	struct dtex_texture src_tex;
+//	src_tex.id = tex;
+//	src_tex.width = width;
+//	src_tex.height = height;
+//	src_tex.type = TT_RAW;
+//	src_tex.t.RAW.format = TEXTURE8;
+//	src_tex.t.RAW.id_alpha = 0;
+//
+//	struct dtex_texture* dst_tex = NULL;
+//	dtex_c3_load_tex(C3, &src_tex, BUF, &dst_tex);
+//}
+//
+//#ifndef __ANDROID__
+//
+//void 
+//dtexf_test_etc1(const char* path) {
+//	uint32_t width, height;
+//	uint8_t* buf_compressed = dtex_etc1_read_file(path, &width, &height);
+//	assert(buf_compressed);
+//
+//	uint8_t* buf_uncompressed = dtex_etc1_decode(buf_compressed, width, height);
+//	free(buf_compressed);
+//
+//	unsigned int tex;
+//#ifdef __ANDROID__
+//	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
+//	tex = dtex_gl_create_texture(TEXTURE_ETC1, width, height, new_compressed, 0);
+//	free(new_compressed);
+//#else
+//	tex = dtex_gl_create_texture(TEXTURE_RGBA8, width, height, buf_uncompressed, 0);
+//#endif
+//	free(buf_uncompressed);
+//
+//	struct dtex_texture src_tex;
+//	src_tex.id = tex;
+//	src_tex.width = width;
+//	src_tex.height = height;
+//	src_tex.type = TT_RAW;
+//	src_tex.t.RAW.format = TEXTURE8;
+//	src_tex.t.RAW.id_alpha = 0;
+//
+//	struct dtex_texture* dst_tex = NULL;
+//	dtex_c3_load_tex(C3, &src_tex, BUF, &dst_tex);
+//}
+//#endif
