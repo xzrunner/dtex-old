@@ -117,9 +117,10 @@ dtex_load_texture_all(struct dtex_buffer* buf, struct dtex_import_stream* is, st
 	int format = dtex_import_uint8(is);
 	int width = dtex_import_uint16(is),
 		height = dtex_import_uint16(is);
-	assert(tex->t.RAW.format == format 
-		&& tex->width == floor(width * tex->t.RAW.scale + 0.5f)
-		&& tex->height == floor(height * tex->t.RAW.scale + 0.5f));
+// 	assert(tex->t.RAW.format == format 
+// 		&& tex->width == floor(width * tex->t.RAW.scale + 0.5f)
+// 		&& tex->height == floor(height * tex->t.RAW.scale + 0.5f));
+	tex->t.RAW.format = format;
 	tex->width = width;
 	tex->height = height;
 
