@@ -22,7 +22,7 @@
 #include "dtex_async_loader.h"
 #include "dtex_async_task.h"
 #include "dtex_array.h"
-#include "dtex_utility2.h"
+#include "dtex_utility.h"
 #include "dtex_relocation.h"
 #include "dtex_texture.h"
 #include "dtex_array.h"

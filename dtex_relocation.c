@@ -69,6 +69,7 @@ dtex_relocate_spr(struct dtex_package* pkg, int tex_idx, struct dtex_array* pict
 
 	int sz;
 	
+	// relocate quad src info
 	sz = dtex_array_size(pictures);
 	for (int i = 0; i < sz; ++i) {
 		int spr_id = *(int*)dtex_array_fetch(pictures, i);
@@ -80,9 +81,9 @@ dtex_relocate_spr(struct dtex_package* pkg, int tex_idx, struct dtex_array* pict
 			}
 
 			int16_t sw = src->rect.xmax - src->rect.xmin,
-				sh = src->rect.ymax - src->rect.ymin;
+				    sh = src->rect.ymax - src->rect.ymin;
 			int16_t dw = dst->rect.xmax - dst->rect.xmin,
-				dh = dst->rect.ymax - dst->rect.ymin;
+				    dh = dst->rect.ymax - dst->rect.ymin;
 
 			for (int k = 0; k < 4; ++k) {
 				ej_q->texture_coord[k*2]   = (ej_q->texture_coord[k*2]   - src->rect.xmin) * dw / sw + dst->rect.xmin;
@@ -91,6 +92,7 @@ dtex_relocate_spr(struct dtex_package* pkg, int tex_idx, struct dtex_array* pict
 		}
 	}
 
+	// relocate texture
 	assert(tex->t.RAW.id_alpha == src->id_alpha
 		&& tex->width == src->inv_width
 		&& tex->height == src->inv_height);
