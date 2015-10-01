@@ -92,6 +92,7 @@ dtex_texture_release(struct dtex_buffer* buf, struct dtex_texture* tex) {
 		}
 	}
 
+	memset(tex, 0, sizeof(*tex));
 	tex->type = TT_INVALID;
 }
 

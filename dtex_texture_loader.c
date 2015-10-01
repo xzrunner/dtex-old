@@ -123,6 +123,8 @@ dtex_load_texture_all(struct dtex_buffer* buf, struct dtex_import_stream* is, st
 	tex->t.RAW.format = format;
 	tex->width = width;
 	tex->height = height;
+	tex->inv_width = 1.0f / width;
+	tex->inv_height = 1.0f / height;
 
 	switch (tex->t.RAW.format) {
 	case TEXTURE4: 

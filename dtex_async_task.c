@@ -96,6 +96,7 @@ dtex_async_load_multi_textures(struct dtex_buffer* buf, struct dtex_package* pkg
 
 		if (pkg->textures[idx] == NULL) {
 			pkg->textures[idx] = dtex_texture_create_raw();
+			pkg->textures[idx]->t.RAW.scale = 1;
 		}
 		params->tex = pkg->textures[idx];
 
