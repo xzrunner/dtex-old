@@ -26,7 +26,7 @@ void dtex_c2_load_end(struct dtex_c2*, struct dtex_buffer*, struct dtex_loader*,
 float* dtex_c2_lookup_texcoords(struct dtex_c2*, struct dtex_texture* tex, float vb[16], int* out_texid);
 void dtexc2_lookup_node(struct dtex_c2*, int texid, struct dtex_rect* rect, struct dtex_texture** out_tex, struct dp_pos** out_pos);
 
-void dtex_c2_change_key(struct dtex_c2*, int src_texid, struct dtex_rect* src_rect, int dst_texid, struct dtex_rect* dst_rect);
+void dtex_c2_change_key(struct dtex_c2*, struct dtex_texture_with_rect* src, struct dtex_texture_with_rect* dst);
 
 void dtex_c2_debug_draw(struct dtex_c2*);
 

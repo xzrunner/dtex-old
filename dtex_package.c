@@ -68,12 +68,10 @@ dtex_package_remove_all_textures_ref(struct dtex_package* pkg) {
 
 int 
 dtex_package_texture_idx(struct dtex_package* pkg, struct dtex_texture* tex) {
-	int idx = -1;
 	for (int i = 0; i < pkg->texture_count; ++i) {
 		if (pkg->textures[i] == tex) {
-			idx = i;
-			break;
+			return i;
 		}
 	}
-	return idx;
+	return -1;
 }

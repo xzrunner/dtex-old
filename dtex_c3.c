@@ -34,7 +34,7 @@
 struct dtex_node {
 	struct dtex_package* pkg;
 	// src
-	struct dtex_texture* src_tex;
+	int src_tex_idx;
 	// dst
 	struct dtex_texture* dst_tex;
 	struct dtex_rect dst_rect;
@@ -48,7 +48,7 @@ struct hash_node {
 
 struct preload_node {
 	struct dtex_package* pkg;
-	struct dtex_texture* tex;
+	int tex_idx;
 	float scale;
 };
 
@@ -105,7 +105,7 @@ dtex_c3_load(struct dtex_c3* c3, struct dtex_package* pkg, float scale) {
 		assert(c3->preload_size <= MAX_TEX_SIZE);
 		struct preload_node* n = c3->preload_list[c3->preload_size++];
 		n->pkg = pkg;
-		n->tex = pkg->textures[i];
+		n->tex_idx = i;
 		n->scale = scale;
 	}
 }
@@ -119,7 +119,7 @@ _compare_preload_name(const void *arg1, const void *arg2) {
 
 	int cmp = strcmp(node1->pkg->name, node2->pkg->name);
 	if (cmp == 0) {
-		return node1->tex->uid < node2->tex->uid;
+		return node1->pkg->textures[node1->tex_idx]->uid < node2->pkg->textures[node2->tex_idx]->uid;
 	} else {
 		return cmp;
 	}
@@ -132,10 +132,10 @@ _compare_preload_length(const void *arg1, const void *arg2) {
 	node1 = *((struct preload_node**)(arg1));
 	node2 = *((struct preload_node**)(arg2));
 
-	int w1 = node1->tex->width,
-		h1 = node1->tex->height;
-	int w2 = node2->tex->width,
-		h2 = node2->tex->height;
+	int w1 = node1->pkg->textures[node1->tex_idx]->width,
+		h1 = node1->pkg->textures[node1->tex_idx]->height;
+	int w2 = node2->pkg->textures[node2->tex_idx]->width,
+		h2 = node2->pkg->textures[node2->tex_idx]->height;
 
 	int16_t long1, long2, short1, short2;
 	if (w1 > h1) {
@@ -173,7 +173,7 @@ _unique_nodes(struct dtex_c3* c3) {
 	for (int i = 1; i < c3->preload_size; ++i) {
 		struct preload_node* last = unique[unique_size-1];
 		struct preload_node* curr = c3->preload_list[i];
-		if (strcmp(curr->pkg->name, last->pkg->name) == 0 && curr->tex == last->tex) {
+		if (strcmp(curr->pkg->name, last->pkg->name) == 0 && curr->tex_idx == last->tex_idx) {
 			;
 		} else {
 			unique[unique_size] = curr;
@@ -213,8 +213,9 @@ static inline bool
 _pack_preload_node(struct dtex_c3* c3, float scale, struct preload_node* node, struct dtex_texture* texture) {
 	assert(texture->type == TT_MID);
 
-	int w = node->tex->width * node->scale * scale,
-		h = node->tex->height * node->scale * scale;
+	struct dtex_texture* tex = node->pkg->textures[node->tex_idx];
+	int w = tex->width * node->scale * scale,
+		h = tex->height * node->scale * scale;
 	struct dp_pos* pos = NULL;
 	// todo padding
 	if (w >= h) {
@@ -228,7 +229,7 @@ _pack_preload_node(struct dtex_c3* c3, float scale, struct preload_node* node, s
 
 	struct hash_node* hn = _new_hash_rect(c3);
 	hn->n.pkg = node->pkg;
-	hn->n.src_tex = node->tex;
+	hn->n.src_tex_idx = node->tex_idx;
 	hn->n.dst_tex = texture;
 	hn->n.dst_rect = pos->r;
 	if ((pos->is_rotated && w >= h) ||
@@ -320,10 +321,11 @@ struct relocate_pic_data {
 static inline void
 _relocate_pic(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	struct dtex_node* dr = (struct dtex_node*)ud;
-	struct dtex_texture* src = dtex_texture_fetch(dr->src_tex->uid);
+	int tex_uid = dr->pkg->textures[dr->src_tex_idx]->uid;
+	struct dtex_texture* src = dtex_texture_fetch(tex_uid);
 	for (int i = 0; i < ej_pic->n; ++i) {
 		struct pack_quad* ej_q = &ej_pic->rect[i];
-		if (ej_q->texid != dr->src_tex->uid) {
+		if (ej_q->texid != tex_uid) {
 			continue;
 		}
 		ej_q->texid = dr->dst_tex->uid;
@@ -377,7 +379,8 @@ static inline void
 _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 	// todo: check file type: rrr, b4r
 	struct relocate_nodes_params* params = (struct relocate_nodes_params*)ud;	
-	struct dtex_texture* tex = params->node->src_tex;
+	struct dtex_node* node = params->node;
+	struct dtex_texture* tex = node->pkg->textures[node->src_tex_idx];
 
 	bool tex_loaded = false;
 	if (tex->id == 0) {
@@ -427,7 +430,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buff
 		} else if (dr->pkg->b4r_pkg) {
 //			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
-			ori_tex = dr->src_tex;
+			ori_tex = dr->pkg->textures[dr->src_tex_idx];
 			assert(ori_tex->type == TT_RAW);
 			int pkg_idx = dtex_package_texture_idx(dr->pkg, ori_tex);
 			assert(pkg_idx != -1);
@@ -463,8 +466,9 @@ _alloc_texture(struct dtex_c3* c3, struct dtex_buffer* buf) {
 	float area = 0;
 	for (int i = 0; i < c3->preload_size; ++i) {
 		struct preload_node* n = c3->preload_list[i];
-		int w = n->tex->width * n->scale,
-			h = n->tex->height * n->scale;
+		struct dtex_texture* tex = n->pkg->textures[n->tex_idx];
+		int w = tex->width * n->scale,
+			h = tex->height * n->scale;
 		area += w * h;
 	}
 	area *= TOT_AREA_SCALE;	
@@ -625,9 +629,8 @@ dtex_c3_query_map_info(struct dtex_c3* c3, struct dtex_package* pkg, struct dtex
 	while (hn) {
 		struct dtex_node* dr = &hn->n;
 		if (strcmp(pkg->name, dr->pkg->name) == 0) {
-			int idx = dtex_package_texture_idx(pkg, dr->src_tex);
-			textures[idx] = dr->dst_tex;
-			regions[idx]  = &dr->dst_rect;
+			textures[dr->src_tex_idx] = dr->dst_tex;
+			regions[dr->src_tex_idx]  = &dr->dst_rect;
 		}
 		hn = hn->next_hash;
 	}

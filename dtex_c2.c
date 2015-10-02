@@ -135,7 +135,11 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		struct preload_node* pn = params->c2->preload_list[params->c2->preload_size++];
 		pn->ej_pkg = params->pkg->ej_pkg;
 		pn->ej_quad = ej_q;
-		pn->ori_tex = dtex_texture_fetch(ej_q->texid);
+		if (ej_q->texid < QUAD_TEXID_IN_PKG_MAX) {
+			pn->ori_tex = params->pkg->textures[ej_q->texid];
+		} else {
+			pn->ori_tex = dtex_texture_fetch(ej_q->texid);
+		}
 		dtex_get_texcoords_region(ej_q->texture_coord, &pn->rect);
 	}
 }
@@ -180,6 +184,14 @@ _compare_bound(const void *arg1, const void *arg2) {
 	return 0;
 }
 
+static inline bool 
+_is_rect_same(struct dtex_rect* r0, struct dtex_rect* r1) {
+	return r0->xmin == r1->xmin 
+		&& r0->ymin == r1->ymin 
+		&& r0->xmax == r1->xmax 
+		&& r0->ymax == r1->ymax;		
+}
+
 static inline void
 _unique_nodes(struct dtex_c2* c2) {
 	qsort((void*)c2->preload_list, c2->preload_size, sizeof(struct preload_node*), _compare_bound);
@@ -191,7 +203,7 @@ _unique_nodes(struct dtex_c2* c2) {
 		struct preload_node* last = unique[unique_size-1];
 		struct preload_node* curr = c2->preload_list[i];
 		if ((curr->ori_tex->id == last->ori_tex->id) && 
-			dtex_rect_same(&curr->rect, &last->rect)) {
+			_is_rect_same(&curr->rect, &last->rect)) {
 			;
 		} else {
 			unique[unique_size++] = curr;
@@ -252,7 +264,7 @@ _query_node(struct dtex_c2* c2, unsigned int texid, struct dtex_rect* rect) {
 	struct hash_node* hn = c2->hash[idx];
 	while (hn) {
 		struct dtex_node* n = &hn->n;
-		if (n->ori_tex->id == texid && dtex_rect_same(&n->ori_rect, rect)) {
+		if (n->ori_tex->id == texid && _is_rect_same(&n->ori_rect, rect)) {
 			return hn;
 		}
 		hn = hn->next_hash;
@@ -426,13 +438,13 @@ dtexc2_lookup_node(struct dtex_c2* c2, int texid, struct dtex_rect* rect,
 }
 
 void 
-dtex_c2_change_key(struct dtex_c2* c2, int src_texid, struct dtex_rect* src_rect, int dst_texid, struct dtex_rect* dst_rect) {    
-	unsigned int idx = _hash_node(src_texid, src_rect);
+dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struct dtex_texture_with_rect* dst) {    
+	unsigned int idx = _hash_node(src->tex->id, &src->rect);
 	struct hash_node* last = NULL;
 	struct hash_node* curr = c2->hash[idx];
 	while (curr) {
 		struct dtex_node* n = &curr->n;
-		if ((n->ori_tex->id == src_texid) && dtex_rect_same(&n->ori_rect, src_rect)) {
+		if ((n->ori_tex == src->tex) && _is_rect_same(&n->ori_rect, &src->rect)) {
 			break;
 		}
 		last = curr;
@@ -445,15 +457,15 @@ dtex_c2_change_key(struct dtex_c2* c2, int src_texid, struct dtex_rect* src_rect
 	}
 	assert(curr);
 
-	curr->n.ori_tex->id = dst_texid;
-	curr->n.ori_rect = *dst_rect;
+	curr->n.ori_tex = dst->tex;
+	curr->n.ori_rect = dst->rect;
 
 	if (last) {
 		last->next_hash = curr->next_hash;
 	} else {
 		c2->hash[idx] = curr->next_hash;
 	}
-	unsigned int new_idx = _hash_node(dst_texid, dst_rect);
+	unsigned int new_idx = _hash_node(dst->tex->id, &dst->rect);
 	curr->next_hash = c2->hash[new_idx];
 	c2->hash[new_idx] = curr;
 }

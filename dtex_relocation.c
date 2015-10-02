@@ -34,38 +34,14 @@ dtex_swap_quad_src_info(struct dtex_package* pkg, struct dtex_array* picture_ids
 	}
 }
 
-void
-dtex_prepare_c3_trans_pos(struct dtex_rect* src_rect, struct dtex_texture* src_tex, struct dtex_texture* dst_tex, 
-                          struct dtex_img_pos* src_pos, struct dtex_img_pos* dst_pos) {
-	assert(src_tex->type == TT_RAW && dst_tex->type == TT_RAW);
-
-	src_pos->id = src_tex->id;
-	src_pos->id_alpha = src_tex->t.RAW.id_alpha;
-	src_pos->inv_width = src_tex->inv_width;
-	src_pos->inv_height = src_tex->inv_height;
-	src_pos->rect = *src_rect;
-
-	dst_pos->id = dst_tex->id;
-	dst_pos->id_alpha = dst_tex->t.RAW.id_alpha;
-	dst_pos->inv_width = dst_tex->inv_width;
-	dst_pos->inv_height = dst_tex->inv_height;
-	dst_pos->rect.xmin = dst_pos->rect.ymin = 0;
-	dst_pos->rect.xmax = dst_tex->width;
-	dst_pos->rect.ymax = dst_tex->height;	
-}
-
 void 
 dtex_relocate_spr(struct dtex_package* pkg, int tex_idx, struct dtex_array* pictures, 
-                  struct dtex_img_pos* src, struct dtex_img_pos* dst) {
+                  struct dtex_texture_with_rect* src, struct dtex_texture_with_rect* dst) {
 	struct dtex_texture* tex = pkg->textures[tex_idx];
 	assert(tex->type == TT_RAW);
-
-	if (tex->id != src->id) {
+	if (tex != src->tex) {
 		return;
 	}
-	assert(tex->t.RAW.id_alpha == src->id_alpha
-		&& tex->width == src->inv_width
-		&& tex->height == src->inv_height);
 
 	int sz;
 	
@@ -93,26 +69,16 @@ dtex_relocate_spr(struct dtex_package* pkg, int tex_idx, struct dtex_array* pict
 	}
 
 	// relocate texture
-	assert(tex->t.RAW.id_alpha == src->id_alpha
-		&& tex->width == src->inv_width
-		&& tex->height == src->inv_height);
-	tex->id = dst->id;
-	tex->t.RAW.id_alpha = dst->id_alpha;
-	tex->width = dst->inv_width;
-	tex->height = dst->inv_height;
+	pkg->textures[tex_idx] = dst->tex;
 }
 
 void dtex_relocate_c2_key(struct dtex_c2* c2, struct dtex_package* pkg, int tex_idx, 
-                          struct dtex_array* pictures, struct dtex_img_pos* src, struct dtex_img_pos* dst) {
+                          struct dtex_array* pictures, struct dtex_texture_with_rect* src, struct dtex_texture_with_rect* dst) {
 	struct dtex_texture* tex = pkg->textures[tex_idx];
 	assert(tex->type == TT_RAW);
-
-	if (tex->id != src->id) {
+	if (tex != src->tex) {
 		return;
 	}
-	assert(tex->t.RAW.id_alpha == src->id_alpha
-		&& tex->width == src->inv_width
-		&& tex->height == src->inv_height);
 
 	int sz = dtex_array_size(pictures);
 	for (int i = 0; i < sz; ++i) {
@@ -134,10 +100,12 @@ void dtex_relocate_c2_key(struct dtex_c2* c2, struct dtex_package* pkg, int tex_
 				dst_src[i*2+1] = (ej_q->texture_coord[i*2+1] - src->rect.ymin) * dh / sh + dst->rect.ymin;				
 			}
 
-			struct dtex_rect src_rect, dst_rect;
-			dtex_get_texcoords_region(ej_q->texture_coord, &src_rect);
-			dtex_get_texcoords_region(dst_src, &dst_rect);
-			dtex_c2_change_key(c2, src->id, &src_rect, dst->id, &dst_rect);
+			struct dtex_texture_with_rect src_quad, dst_quad;
+			src_quad.tex = src->tex;
+			dst_quad.tex = dst->tex;
+			dtex_get_texcoords_region(ej_q->texture_coord, &src_quad.rect);
+			dtex_get_texcoords_region(dst_src, &dst_quad.rect);
+			dtex_c2_change_key(c2, &src_quad, &dst_quad);
 		}
 	}
 }
