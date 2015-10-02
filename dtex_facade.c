@@ -1,5 +1,5 @@
 #include "dtex_facade.h"
-#include "dtex_loader_new.h"
+#include "dtex_loader.h"
 #include "dtex_c3.h"
 #include "dtex_c2.h"
 #include "dtex_c1.h"

@@ -1,61 +1,31 @@
-//#ifdef __cplusplus
-//extern "C"
-//{
-//#endif
-//
-//#ifndef dynamic_texture_loader_h
-//#define dynamic_texture_loader_h
-//
-//#include <opengl.h>
-//
-//#include <ejoy2d.h>
-//
-//#include <stdbool.h>
-//
-//#define DTEX_PACK_TEX_SZ 16
-//
-//struct dtex_rrp;
-//struct dtex_pts;
-//
-//struct dtex_package {
-//	char* name;
-//	char* filepath;	
-//
-//	struct dtex_raw_tex textures[DTEX_PACK_TEX_SZ];
-//	int tex_size;
-//	float tex_scale;
-//
-//	struct ej_sprite_pack* ej_pkg;	// epe
-//	struct dtex_rrp* rrp_pkg;		// regular rect pack
-//	struct dtex_pts* pts_pkg;		// picture triangles strip
-//	struct dtex_rrr* rrr_pkg;		// regular rect raw (only for pvr)
-//	struct dtex_b4r* b4r_pkg;		// block4 raw (only for pvr)
-//};
-//
-//struct dtex_rect;
-//
-//struct dtex_loader;
-//
-//struct dtex_loader* dtexloader_create();
-//void dtexloader_release(struct dtex_loader*);
-//
-//struct dtex_package* dtexloader_preload_pkg(struct dtex_loader*, const char* name, const char* path);
-//struct dtex_raw_tex* dtexloader_load_epp(struct dtex_loader*, struct dtex_package*, int idx);
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#ifndef dynamic_texture_loader_h
+#define dynamic_texture_loader_h
+
+struct dtex_loader;
+struct dtex_import_stream;
+
+struct dtex_loader* dtexloader_create();
+void dtexloader_release(struct dtex_loader*);
+
+struct dtex_package* dtex_preload_pkg(struct dtex_loader*, const char* name, const char* path, int type, float scale);
+void dtex_load_texture(struct dtex_loader*, struct dtex_buffer*, struct dtex_package*, int idx, float scale);
+
+void dtex_load_file(const char* filepath, void (*unpack_func)(struct dtex_import_stream* is, void* ud), void* ud);
+
+struct dtex_package* dtex_get_pkg(struct dtex_loader*, int idx);
+
+//// old loader's 
 //struct dtex_raw_tex* dtexloader_load_image(const char* path);
-//void dtexloader_unload_tex(struct dtex_raw_tex*);
-//
-//struct dtex_package* dtexloader_get_pkg(struct dtex_loader*, int idx);
-//
-//bool dtexloader_has_task(struct dtex_loader*);
-//void dtexloader_load_spr2task(struct dtex_loader*, struct ej_sprite_pack*, struct dtex_rect**, int id, const char* path);
-//void dtexloader_do_task(struct dtex_loader*, void (*on_load_func)());
-//void dtexloader_after_do_task(struct dtex_loader*, void (*after_load_func)());
-//
 //struct dtex_rrp* dtexloader_query_rrp(struct dtex_loader*, struct ej_sprite_pack*);
 //struct dtex_pts* dtexloader_query_pts(struct dtex_loader*, struct ej_sprite_pack*);
-//
-//#endif // dynamic_texture_loader_h
-//
-//#ifdef __cplusplus
-//}
-//#endif
+
+#endif // dynamic_texture_loader_h
+
+#ifdef __cplusplus
+}
+#endif

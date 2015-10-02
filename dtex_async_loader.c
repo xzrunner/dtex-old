@@ -1,6 +1,6 @@
 #include "dtex_async_loader.h"
 #include "dtex_async_queue.h"
-#include "dtex_loader_new.h"
+#include "dtex_loader.h"
 #include "dtex_stream_import.h"
 
 #include <stdlib.h>

@@ -7,7 +7,7 @@
 #include "dtex_b4r.h"
 #include "dtex_file.h"
 #include "dtex_math.h"
-#include "dtex_loader_new.h"
+#include "dtex_loader.h"
 #include "dtex_package.h"
 #include "dtex_ej_utility.h"
 #include "dtex_texture_loader.h"
