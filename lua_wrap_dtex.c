@@ -93,7 +93,7 @@ lc3_load_pkg_finish(lua_State* L) {
 //}
 
 int
-lualib_dtex(lua_State* L) {
+luaopen_dtex_c(lua_State* L) {
 	luaL_Reg l[] = {
 		{ "create", lcreate },
 		{ "release", lrelease },
