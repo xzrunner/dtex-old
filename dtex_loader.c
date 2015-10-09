@@ -9,12 +9,12 @@
 #include "dtex_texture.h"
 #include "dtex_ej_utility.h"
 
-#include "LzmaDec.h"
-#ifdef _MSC_VER
-#include "Alloc.h"
+#ifdef _LZ_ALLOC
+#include <LzAlloc.h>
 #else
-#include "LzAlloc.h"
-#endif // _MSC_VER
+#include <Alloc.h>
+#endif // _LZ_ALLOC
+#include <LzmaDec.h>
 
 #include <stdlib.h>
 #include <string.h>

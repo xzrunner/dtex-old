@@ -6,7 +6,7 @@ extern "C"
 #ifndef dynamic_texture_facade_h
 #define dynamic_texture_facade_h
 
-#include <ejoy2d.h>
+#include "ejoy2d.h"
 
 #include <stdbool.h>
 

@@ -6,7 +6,7 @@ extern "C"
 #ifndef dynamic_texture_cache1_h
 #define dynamic_texture_cache1_h
 
-#include <ejoy2d.h>
+#include "ejoy2d.h"
 
 struct dtex_c1;
 

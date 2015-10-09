@@ -6,7 +6,7 @@ extern "C"
 #ifndef dynamic_texture_desc_loader_h
 #define dynamic_texture_desc_loader_h
 
-#include <ejoy2d.h>
+#include "ejoy2d.h"
 
 struct dtex_import_stream;
 

@@ -14,7 +14,7 @@
 #include "dtex_async_loader.h"
 #include "dtex_texture.h"
 
-#include <ejoy2d.h>
+#include "ejoy2d.h"
 
 #include <stdlib.h>
 #include <string.h>

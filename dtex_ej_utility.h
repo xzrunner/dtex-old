@@ -6,7 +6,7 @@ extern "C"
 #ifndef dynamic_texture_ejoy2d_utility_h
 #define dynamic_texture_ejoy2d_utility_h
 
-#include <ejoy2d.h>
+#include "ejoy2d.h"
 
 void dtex_ej_pkg_traverse(struct ej_sprite_pack* ej_pkg, void (*pic_func)(int pic_id, struct ej_pack_picture* ej_pic, void* ud), void* ud);
 

@@ -7,7 +7,7 @@
 #include "dtex_gl.h"
 #include "dtex_texture.h"
 
-#include <ejoy2d.h>
+#include "ejoy2d.h"
 
 #include <assert.h>
 #include <stdlib.h>

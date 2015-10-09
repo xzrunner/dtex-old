@@ -6,7 +6,7 @@
 //#include "dtex_target.h"
 //#include "dtex_draw.h"
 //
-//#include <ejoy2d.h>
+//#include "ejoy2d.h"
 //
 //#include <assert.h>
 //#include <stdlib.h>
