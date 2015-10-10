@@ -57,7 +57,8 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
 	for (int i = end; i < end + max_count; ++i) {
         dtex_info("dtex_buffer: new texture %d\n", edge);
         
-		unsigned int tex = dtex_gl_create_texture(TEXTURE_RGBA8, edge, edge, empty_data, 0);
+		int gl_id, uid_3rd;
+		dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, &gl_id, &uid_3rd);
 		if (dtex_gl_out_of_memory()) {
 			// return 1 tex
 			--buf->end_tex;
@@ -66,7 +67,7 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
 			break;
 		}
 
-        buf->tex_pool[i] = tex;
+        buf->tex_pool[i] = gl_id;
         ++buf->end_tex;
 	}
 

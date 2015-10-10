@@ -6,6 +6,8 @@
 
 #include "dtex_shader.h"
 #include "dtex_screen.h"	// todo
+#include "dtex_texture.h"
+#include "dtex_gl.h"
 
 #include "dtex_statistics.h"
 

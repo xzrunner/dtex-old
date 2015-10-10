@@ -6,9 +6,19 @@ extern "C"
 #ifndef dynamic_texture_gl_h
 #define dynamic_texture_gl_h
 
+#define USE_EJ_RENDER
+
+#ifdef USE_EJ_RENDER
+#include "ejoy2d.h"
+#endif // USE_EJ_RENDER
+
 #include <stdbool.h>
 
-unsigned int dtex_gl_create_texture(int type, int width, int height, const void* data, int channel);
+#ifdef USE_EJ_RENDER
+void dtex_gl_init(struct ej_render* R);
+#endif // USE_EJ_RENDER
+
+void dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd);
 void dtex_gl_release_texture(unsigned int id, int channel);
 
 void dtex_gl_clear_color(float r, float g, float b, float a);

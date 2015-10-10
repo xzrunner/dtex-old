@@ -13,6 +13,32 @@
 #define COMPRESSED_RGBA_PVRTC_4BPPV1_IMG 4
 #define COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 2
 
+#ifdef USE_EJ_RENDER
+static struct ej_render* EJ_R = NULL;
+#endif // USE_EJ_RENDER
+
+void 
+dtex_gl_init(struct ej_render* R) {
+	EJ_R = R;
+}
+
+#ifdef USE_EJ_RENDER
+
+void
+dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd) {
+	if (type == DTEX_TF_INVALID) {
+		return;
+	}
+
+	*uid_3rd = ej_render_texture_create(EJ_R, width, height, EJ_TEXTURE_RGBA8, TEXTURE_2D, 0);
+	ej_render_texture_update(EJ_R, *uid_3rd, width, height, data, 0, 0);
+
+	*gl_id = render_get_texture_gl_id(EJ_R, *uid_3rd);
+	dtex_stat_add_texture(*gl_id, width, height);
+}
+
+#else
+
 unsigned int
 _create_texture(int channel) {
 	unsigned int id = 0;
@@ -32,12 +58,12 @@ _create_texture(int channel) {
 
 unsigned int 
 dtex_gl_create_texture(int type, int width, int height, const void* data, int channel) {
-	if (type == TEXTURE_INVALID) {
+	if (type == DTEX_TF_INVALID) {
 		return 0;
 	}
 
 	// todo
-	if ((type == TEXTURE_RGBA8) || (IS_POT(width) && IS_POT(height))) {
+	if ((type == DTEX_TF_RGBA8) || (IS_POT(width) && IS_POT(height))) {
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 	} else {
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -51,24 +77,24 @@ dtex_gl_create_texture(int type, int width, int height, const void* data, int ch
 	uint8_t* uncompressed = NULL;
 
 	switch (type) {
-	case TEXTURE_RGBA8:
+	case DTEX_TF_RGBA8:
 		is_compressed = false;
 		_format = GL_RGBA;
 		_type = GL_UNSIGNED_BYTE;
 		break;
-	case TEXTURE_RGBA4:
+	case DTEX_TF_RGBA4:
 		is_compressed = false;
 		_format = GL_RGBA;
 		_type = GL_UNSIGNED_SHORT_4_4_4_4;
 		break;
-	case TEXTURE_PVR2:
+	case DTEX_TF_PVR2:
 #ifdef __APPLE__
 		is_compressed = true;
 		_type = COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
 		size = width * height * 8 * _type / 16;
 #endif // __APPLE__
 		break;
-	case TEXTURE_PVR4:
+	case DTEX_TF_PVR4:
 #ifdef __APPLE__
 		is_compressed = true;
 		_type = COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
@@ -80,7 +106,7 @@ dtex_gl_create_texture(int type, int width, int height, const void* data, int ch
 		uncompressed = dtex_pvr_decode(data, width, height);
 #endif // __APPLE__
 		break;
-	case TEXTURE_ETC1:
+	case DTEX_TF_ETC1:
 #ifdef __ANDROID__
 		is_compressed = true;
 		_type = GL_ETC1_RGB8_OES;
@@ -110,6 +136,8 @@ dtex_gl_create_texture(int type, int width, int height, const void* data, int ch
 	dtex_stat_add_texture(id, width, height);
 	return id;
 }
+
+#endif // USE_EJ_RENDER
 
 void 
 dtex_gl_release_texture(unsigned int id, int channel) {

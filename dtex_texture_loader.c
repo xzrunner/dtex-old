@@ -52,7 +52,7 @@
 
 void 
 dtex_load_texture_only_desc(struct dtex_import_stream* is, struct dtex_texture* tex, float scale) {
-	assert(tex->type == TT_RAW);
+	assert(tex->type == DTEX_TT_RAW);
 
 	tex->t.RAW.format = dtex_import_uint8(is);
 
@@ -71,14 +71,15 @@ dtex_load_texture_only_desc(struct dtex_import_stream* is, struct dtex_texture* 
 
 void
 _scale_texture(struct dtex_buffer* buf, struct dtex_texture* tex, float scale) {
-	assert(tex->type == TT_RAW);
+	assert(tex->type == DTEX_TT_RAW);
 
 	uint16_t new_w = floor(tex->width * scale + 0.5f);
 	uint16_t new_h = floor(tex->height * scale + 0.5f);
 	
 	uint8_t* empty_data = (uint8_t*)malloc(new_w*new_h*4);
 	memset(empty_data, 0, new_w*new_h*4);
-	unsigned int texid = dtex_gl_create_texture(TEXTURE_RGBA8, new_w, new_h, empty_data, 0);
+	int gl_id, uid_3rd;
+	dtex_gl_create_texture(DTEX_TF_RGBA8, new_w, new_h, empty_data, 0, &gl_id, &uid_3rd);
 	free(empty_data);
 
 	float vb[16];
@@ -92,11 +93,12 @@ _scale_texture(struct dtex_buffer* buf, struct dtex_texture* tex, float scale) {
 	vb[14] =  1, vb[15] =  0;
 
 	struct dtex_texture dst;
-	dst.id = texid;
+	dst.id = gl_id;
+	dst.uid_3rd = uid_3rd;
 	dst.width = new_w;
 	dst.height = new_h;
 	dst.uid = -1;
-	dst.type = TT_MID;
+	dst.type = DTEX_TT_MID;
 	dst.t.MID.packer = NULL;
 
 	dtex_draw_to_texture(buf, tex, &dst, vb);
@@ -104,7 +106,8 @@ _scale_texture(struct dtex_buffer* buf, struct dtex_texture* tex, float scale) {
 	dtex_gl_release_texture(tex->id, 0);
 
 	tex->t.RAW.format = TEXTURE8;
-	tex->id = texid;
+	tex->id = gl_id;
+	tex->uid_3rd = uid_3rd;
 	tex->t.RAW.id_alpha = 0;
 	tex->width = new_w;
 	tex->height = new_h;
@@ -112,7 +115,7 @@ _scale_texture(struct dtex_buffer* buf, struct dtex_texture* tex, float scale) {
 
 void 
 dtex_load_texture_all(struct dtex_buffer* buf, struct dtex_import_stream* is, struct dtex_texture* tex) {
-	assert(tex->type == TT_RAW);
+	assert(tex->type == DTEX_TT_RAW);
 
 	int format = dtex_import_uint8(is);
 	int width = dtex_import_uint16(is),
@@ -128,19 +131,20 @@ dtex_load_texture_all(struct dtex_buffer* buf, struct dtex_import_stream* is, st
 
 	switch (tex->t.RAW.format) {
 	case TEXTURE4: 
-		tex->id = dtex_gl_create_texture(TEXTURE_RGBA4, width, height, is->stream, 0);
+		dtex_gl_create_texture(DTEX_TF_RGBA4, width, height, is->stream, 0, &tex->id, &tex->uid_3rd);
 		break;
 	case TEXTURE8:
-		tex->id = dtex_gl_create_texture(TEXTURE_RGBA8, width, height, is->stream, 0);
+		dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, is->stream, 0, &tex->id, &tex->uid_3rd);
 		break;
 	case PVRTC:
-		tex->id = dtex_gl_create_texture(TEXTURE_PVR4, width, height, is->stream, 0);
+		dtex_gl_create_texture(DTEX_TF_PVR4, width, height, is->stream, 0, &tex->id, &tex->uid_3rd);
 		// todo
 //		tex->id = _pvr_texture_create(buf+5, sz-5, internal_format, width, height);
 		break;
 	case PKMC:
-		tex->id = dtex_gl_create_texture(TEXTURE_ETC1, width, height, is->stream, 0);
-		tex->t.RAW.id_alpha = dtex_gl_create_texture(TEXTURE_ETC1, width, height, is->stream + ((width * height) >> 1), 1);
+		dtex_gl_create_texture(DTEX_TF_ETC1, width, height, is->stream, 0, &tex->id, &tex->uid_3rd);
+		// fixme
+		dtex_gl_create_texture(DTEX_TF_ETC1, width, height, is->stream + ((width * height) >> 1), 1, &tex->t.RAW.id_alpha, &tex->uid_3rd);
 		break;
 	}
 

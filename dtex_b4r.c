@@ -290,7 +290,7 @@
 //
 //	tex->width = w;
 //	tex->height = h;
-//	tex->id = dtex_gl_create_texture(TEXTURE_PVR4, w, h, buf, 0);
+//	tex->id = dtex_gl_create_texture(DTEX_TF_PVR4, w, h, buf, 0);
 //	assert(tex->id != 0);
 //	tex->id_alpha = 0;
 //	tex->format = PVRTC;
@@ -320,8 +320,8 @@
 //
 //	tex->width = w;
 //	tex->height = h;
-//	tex->id = dtex_gl_create_texture(TEXTURE_ETC1, w, h, buf, 0);
-//	tex->id_alpha = dtex_gl_create_texture(TEXTURE_ETC1, w, h, buf + ((width * height) >> 1), 1);
+//	tex->id = dtex_gl_create_texture(DTEX_TF_ETC1, w, h, buf, 0);
+//	tex->id_alpha = dtex_gl_create_texture(DTEX_TF_ETC1, w, h, buf + ((width * height) >> 1), 1);
 //	tex->format = PKMC;
 //
 //	return tex;
