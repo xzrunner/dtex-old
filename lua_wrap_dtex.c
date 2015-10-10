@@ -1,47 +1,82 @@
 #include "dtex_facade.h"
+#include "dtex_typedef.h"
+#include "dtex_package.h"
+#include "dtex_shader.h"
 
-#include "sprite.h"
+#include <string.h>
 
-#include "lua.h"
-#include "lauxlib.h"
+#include <lua.h>
+#include <lauxlib.h>
 
 static int
 lcreate(lua_State* L) {
 	const char* str = lua_tostring(L, 1);	
 	dtexf_create(str);
+	dtex_shader_load();
 	return 0;
 }
 
 static int
 lrelease(lua_State* L) {
+	dtex_shader_unload();
 	dtexf_release();
 	return 0;
 }
 
 static int
-lload_pkg(lua_State* L) {
-// 	const char* name = luaL_checkstring(L, 1);
-// 	const char* path = luaL_checkstring(L, 2);
-//	dtexf_load_pkg(name, path);
-	return 0;
-}
+lpreload_pkg(lua_State* L) {
+	const char* name = luaL_checkstring(L, 1);
+	const char* path = luaL_checkstring(L, 2);
+	const char* stype = luaL_checkstring(L, 3);
+	float scale = luaL_optnumber(L, 4, 1);
 
-static int
-lc3_load_pkg(lua_State* L) {
-// 	const char* name = luaL_checkstring(L, 1);
-// 	const char* path = luaL_checkstring(L, 2);
-// 	float scale = luaL_optnumber(L, 3, 1);
-// 
-// 	struct ej_package* pkg = dtexf_c3_load_pkg(name, path, scale);
-// 	lua_pushlightuserdata(L, pkg);
+	int itype = FILE_INVALID;
+	if (strcmp(stype, "ept") == 0) {
+		itype = FILE_EPT;
+	} else if (strcmp(stype, "epe") == 0) {
+		itype = FILE_EPE;
+	} else {
+		luaL_error(L, "unknown file type %s", stype);
+	}
+	
+ 	struct dtex_package* pkg = dtexf_preload_pkg(name, path, itype, scale);
+ 	lua_pushlightuserdata(L, pkg);
+
 	return 1;
 }
 
 static int
-lc3_load_pkg_finish(lua_State* L) {
-	dtexf_c3_load_end(false);
+lload_texture(lua_State* L) {
+	struct dtex_package* pkg = lua_touserdata(L, 1);
+	int idx = (int)lua_tointeger(L, 2);
+	float scale = luaL_optnumber(L, 3, 1);
+
+	dtexf_load_texture(pkg, idx, scale);
 	return 0;
 }
+
+static int
+lquery(lua_State* L) {
+	const char* pkg_name = luaL_checkstring(L, 1);
+	const char* spr_name = luaL_checkstring(L, 2);
+
+	struct dtex_package* pkg = dtexf_query_pkg(pkg_name);
+	if (!pkg) {
+		int zz = 0;
+	}
+	lua_pushlightuserdata(L, pkg->ej_pkg);
+
+	int spr_id = dtex_get_spr_id(pkg, spr_name);
+	lua_pushinteger(L, spr_id);
+
+	return 2;
+}
+
+// static int
+// lc3_load_pkg_finish(lua_State* L) {
+// 	dtexf_c3_load_end(false);
+// 	return 0;
+// }
 
 //static int
 //lc2_load_begin(lua_State* L) {
@@ -99,11 +134,13 @@ luaopen_dtex_c(lua_State* L) {
 		{ "release", lrelease },
 
 		// loading
-		{ "load_pkg", lload_pkg },
+		{ "preload_pkg", lpreload_pkg },
+		{ "load_texture", lload_texture },
+		{ "query", lquery },
 
-		// C3
-		{ "c3_load_pkg", lc3_load_pkg },
-		{ "c3_load_pkg_finish", lc3_load_pkg_finish },
+// 		// C3
+// 		{ "c3_load_pkg", lc3_load_pkg },
+// 		{ "c3_load_pkg_finish", lc3_load_pkg_finish },
 
 // 		// C2
 // 		{ "c2_load_begin", lc2_load_begin },

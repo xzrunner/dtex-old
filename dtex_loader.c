@@ -324,12 +324,22 @@ dtex_load_file(const char* filepath, void (*unpack_func)(struct dtex_import_stre
 }
 
 struct dtex_package* 
-dtex_get_pkg(struct dtex_loader* loader, int idx) {
+dtex_fetch_pkg(struct dtex_loader* loader, int idx) {
 	if (idx < 0 || idx >= loader->pkg_size) {
 		return NULL;
 	} else {
 		return &loader->packages[idx];
 	}
+}
+
+struct dtex_package* 
+dtex_query_pkg(struct dtex_loader* loader, const char* name) {
+	for (int i = 0; i < loader->pkg_size; ++i) {
+		if (strcmp(name, loader->packages[i].name) == 0) {
+			return &loader->packages[i];
+		}
+	}
+	return NULL;
 }
 
 //struct dtex_raw_tex* 

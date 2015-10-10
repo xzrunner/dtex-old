@@ -20,6 +20,8 @@ struct dp_pos;
 void dtexf_create(const char* cfg);
 void dtexf_release();
 
+struct dtex_package* dtexf_query_pkg(const char* name);
+
 /************************************************************************/
 /* sprite draw                                                          */
 /************************************************************************/
@@ -28,7 +30,7 @@ void dtexf_sprite_draw(struct dtex_package*, struct ej_sprite*, struct ej_srt*);
 /************************************************************************/
 /* sync load desc file (epe, pts...) and texture                        */
 /************************************************************************/
-struct dtex_package*  dtexf_preload_pkg(const char* name, const char* path, int type, float scale);
+struct dtex_package* dtexf_preload_pkg(const char* name, const char* path, int type, float scale);
 void dtexf_load_texture(struct dtex_package* pkg, int idx, float scale);
 // todo sort sprite list for C3
 //struct ej_sprite* dtexf_create_sprite(const char* path);

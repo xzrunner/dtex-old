@@ -17,7 +17,8 @@ void dtex_load_texture(struct dtex_loader*, struct dtex_buffer*, struct dtex_pac
 
 void dtex_load_file(const char* filepath, void (*unpack_func)(struct dtex_import_stream* is, void* ud), void* ud);
 
-struct dtex_package* dtex_get_pkg(struct dtex_loader*, int idx);
+struct dtex_package* dtex_fetch_pkg(struct dtex_loader*, int idx);
+struct dtex_package* dtex_query_pkg(struct dtex_loader*, const char* name);
 
 //// old loader's 
 //struct dtex_raw_tex* dtexloader_load_image(const char* path);

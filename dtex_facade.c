@@ -114,6 +114,11 @@ dtexf_release() {
 	dtex_async_loader_release();
 }
 
+struct dtex_package* 
+dtexf_query_pkg(const char* name) {
+	return dtex_query_pkg(LOADER, name);
+}
+
 /************************************************************************/
 /* sprite draw                                                          */
 /************************************************************************/
@@ -382,7 +387,7 @@ _async_load_texture_with_c2_from_c3_func(void* ud) {
 		struct dtex_texture *src_tex = pkg->textures[idx], 
 			*dst_tex = dst_textures[idx];
 
-		assert(src_tex->type == TT_RAW && dst_tex->type == TT_MID);
+		assert(src_tex->type == DTEX_TT_RAW && dst_tex->type == DTEX_TT_MID);
  		struct dtex_texture_with_rect src, dst;
 
 		src.tex = src_tex;
@@ -504,10 +509,10 @@ dtexf_debug_draw() {
 //	unsigned int tex;
 //#ifdef __APPLE__
 //	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
-//	tex = dtex_gl_create_texture(TEXTURE_PVR4, width, height, new_compressed, 0);
+//	tex = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, new_compressed, 0);
 //	free(new_compressed);
 //#else
-//	tex = dtex_gl_create_texture(TEXTURE_RGBA8, width, height, buf_uncompressed, 0);
+//	tex = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, buf_uncompressed, 0);
 //#endif
 //	free(buf_uncompressed);
 //
@@ -515,7 +520,7 @@ dtexf_debug_draw() {
 //	src_tex.id = tex;
 //	src_tex.width = width;
 //	src_tex.height = height;
-//	src_tex.type = TT_RAW;
+//	src_tex.type = DTEX_TT_RAW;
 //	src_tex.t.RAW.format = TEXTURE8;
 //	src_tex.t.RAW.id_alpha = 0;
 //
@@ -537,10 +542,10 @@ dtexf_debug_draw() {
 //	unsigned int tex;
 //#ifdef __ANDROID__
 //	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
-//	tex = dtex_gl_create_texture(TEXTURE_ETC1, width, height, new_compressed, 0);
+//	tex = dtex_gl_create_texture(DTEX_TF_ETC1, width, height, new_compressed, 0);
 //	free(new_compressed);
 //#else
-//	tex = dtex_gl_create_texture(TEXTURE_RGBA8, width, height, buf_uncompressed, 0);
+//	tex = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, buf_uncompressed, 0);
 //#endif
 //	free(buf_uncompressed);
 //
@@ -548,7 +553,7 @@ dtexf_debug_draw() {
 //	src_tex.id = tex;
 //	src_tex.width = width;
 //	src_tex.height = height;
-//	src_tex.type = TT_RAW;
+//	src_tex.type = DTEX_TT_RAW;
 //	src_tex.t.RAW.format = TEXTURE8;
 //	src_tex.t.RAW.id_alpha = 0;
 //
