@@ -211,7 +211,7 @@ _hash_origin_pack(const char* name) {
 
 static inline bool
 _pack_preload_node(struct dtex_c3* c3, float scale, struct preload_node* node, struct dtex_texture* texture) {
-	assert(texture->type == TT_MID);
+	assert(texture->type == DTEX_TT_MID);
 
 	struct dtex_texture* tex = node->pkg->textures[node->tex_idx];
 	int w = tex->width * node->scale * scale,
@@ -250,7 +250,7 @@ _pack_preload_list_with_scale(struct dtex_c3* c3, float scale) {
 	// init rect packer
 	for (int i = 0; i < c3->tex_size; ++i) {
 		struct dtex_texture* tex = c3->textures[i];
-		assert(tex->type == TT_MID);
+		assert(tex->type == DTEX_TT_MID);
 		if (tex->t.MID.packer) {
 			dtexpacker_release(tex->t.MID.packer);
 		}
@@ -431,7 +431,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buff
 //			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
 			ori_tex = dr->pkg->textures[dr->src_tex_idx];
-			assert(ori_tex->type == TT_RAW);
+			assert(ori_tex->type == DTEX_TT_RAW);
 			int pkg_idx = dtex_package_texture_idx(dr->pkg, ori_tex);
 			assert(pkg_idx != -1);
 			if (!async) {
@@ -507,7 +507,7 @@ dtex_c3_load_tex(struct dtex_c3* c3, struct dtex_texture* tex, struct dtex_buffe
 
 	// todo select dst texture
 	struct dtex_texture* dst_tex = c3->textures[0];
-	assert(dst_tex->type == TT_MID);
+	assert(dst_tex->type == DTEX_TT_MID);
 	*dst = dst_tex;
 
 	// insert
@@ -552,7 +552,7 @@ dtex_c3_load_tex(struct dtex_c3* c3, struct dtex_texture* tex, struct dtex_buffe
 // 
 // 	// todo select dst texture
 // 	struct dtex_texture* dst_tex = c3->textures[0];
-// 	assert(dst_tex->type == TT_MID);
+// 	assert(dst_tex->type == DTEX_TT_MID);
 // 
 // 	// insert
 // 	struct dp_pos* pos = dtexpacker_add(dst_tex->t.MID.packer, tex->width, tex->height, true);

@@ -323,7 +323,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_buffer* buf, struct dtex_loader* lo
 	bool rotate = false;
 	for (int i = 0; i < c2->tex_size && pos == NULL; ++i) {
 		tex = c2->textures[i];
-		assert(tex->type == TT_MID);
+		assert(tex->type == DTEX_TT_MID);
 		// todo padding and rotate
 	//	if (w >= h) {
 			pos = dtexpacker_add(tex->t.MID.packer, w + PADDING * 2, h + PADDING * 2, true);

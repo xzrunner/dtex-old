@@ -6,10 +6,10 @@ extern "C"
 #ifndef dynamic_texture_texture_h
 #define dynamic_texture_texture_h
 
-enum TEXTURE_TYPE {
-	TT_INVALID = 0,
-	TT_RAW,
-	TT_MID
+enum DTEX_TF_TYPE {
+	DTEX_TT_INVALID = 0,
+	DTEX_TT_RAW,
+	DTEX_TT_MID
 };
 
 struct dtex_texture {
@@ -20,6 +20,8 @@ struct dtex_texture {
 
 	int uid;				// id in dtex
 							// >= QUAD_TEXID_IN_PKG_MAX
+
+	int uid_3rd;			// id in other engine
 
 	int type;
 	union {

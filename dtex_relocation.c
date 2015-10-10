@@ -38,7 +38,7 @@ void
 dtex_relocate_spr(struct dtex_package* pkg, int tex_idx, struct dtex_array* pictures, 
                   struct dtex_texture_with_rect* src, struct dtex_texture_with_rect* dst) {
 	struct dtex_texture* tex = pkg->textures[tex_idx];
-	assert(tex->type == TT_RAW);
+	assert(tex->type == DTEX_TT_RAW);
 	if (tex != src->tex) {
 		return;
 	}
@@ -75,7 +75,7 @@ dtex_relocate_spr(struct dtex_package* pkg, int tex_idx, struct dtex_array* pict
 void dtex_relocate_c2_key(struct dtex_c2* c2, struct dtex_package* pkg, int tex_idx, 
                           struct dtex_array* pictures, struct dtex_texture_with_rect* src, struct dtex_texture_with_rect* dst) {
 	struct dtex_texture* tex = pkg->textures[tex_idx];
-	assert(tex->type == TT_RAW);
+	assert(tex->type == DTEX_TT_RAW);
 	if (tex != src->tex) {
 		return;
 	}

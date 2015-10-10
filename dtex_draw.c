@@ -15,7 +15,7 @@
 
 static inline void
 _draw(const float vb[16], struct dtex_texture* src) {
-	if (src->type == TT_RAW && src->t.RAW.format == PKMC) {
+	if (src->type == DTEX_TT_RAW && src->t.RAW.format == PKMC) {
 //		shader_draw_separate(vb, src->id, src->id_alpha);
 	} else {
 		dtex_shader_texture(src->id);
@@ -33,7 +33,7 @@ _before_draw(struct dtex_texture* tex) {
 // 		shader_program(PROGRAM_SPRITE);
 // 	} 
 
-	if (tex->type == TT_RAW && tex->t.RAW.format == PKMC) {
+	if (tex->type == DTEX_TT_RAW && tex->t.RAW.format == PKMC) {
 		dtex_shader_program(PROGRAM_ETC1);
 	} else {
 		dtex_shader_program(PROGRAM_NORMAL);
