@@ -6,9 +6,9 @@ extern "C"
 #ifndef ejoy2d_h
 #define ejoy2d_h
 
-#include "matrix.h"
-#include "spritepack.h"
-#include "sprite.h"
+#include <matrix.h>
+#include <spritepack.h>
+#include <sprite.h>
 
 // "matrix.h"
 #define ej_srt				srt
