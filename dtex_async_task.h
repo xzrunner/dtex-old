@@ -6,7 +6,7 @@ extern "C"
 #ifndef dynamic_texture_async_task_h
 #define dynamic_texture_async_task_h
 
-#include <ejoy2d.h>
+#include "ejoy2d.h"
 
 void dtex_async_load_texture(struct dtex_buffer* buf, struct dtex_package* pkg, int idx);
 
