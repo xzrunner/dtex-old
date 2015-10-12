@@ -271,3 +271,8 @@ dtexpacker_get_size(struct dtex_packer* packer, int* width, int* height) {
 	*width = packer->w;
 	*height = packer->h;
 }
+
+int 
+dtexpacker_get_remain_area(struct dtex_packer* packer) {
+	return packer->root->pack.remain_area;
+}

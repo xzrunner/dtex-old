@@ -24,6 +24,8 @@ struct dp_pos* dtexpacker_add(struct dtex_packer*, int width, int height, bool c
 
 void dtexpacker_get_size(struct dtex_packer*, int* width, int* height);
 
+int dtexpacker_get_remain_area(struct dtex_packer*);
+
 #endif // dynamic_texture_packer_h
 
 #ifdef __cplusplus

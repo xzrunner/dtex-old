@@ -39,6 +39,8 @@ struct dtex_node {
 	struct dtex_texture* dst_tex;
 	struct dtex_rect dst_rect;
 	bool dst_rotated;
+
+	bool finish;	// relocated
 };
 
 struct hash_node {
@@ -228,6 +230,7 @@ _pack_preload_node(struct dtex_c3* c3, float scale, struct preload_node* node, s
 	}
 
 	struct hash_node* hn = _new_hash_rect(c3);
+	hn->n.finish = false;
 	hn->n.pkg = node->pkg;
 	hn->n.src_tex_idx = node->tex_idx;
 	hn->n.dst_tex = texture;
@@ -251,21 +254,30 @@ _pack_preload_list_with_scale(struct dtex_c3* c3, float scale) {
 	for (int i = 0; i < c3->tex_size; ++i) {
 		struct dtex_texture* tex = c3->textures[i];
 		assert(tex->type == DTEX_TT_MID);
-		if (tex->t.MID.packer) {
-			dtexpacker_release(tex->t.MID.packer);
+
+		if (!tex->t.MID.packer) {
+			tex->t.MID.packer = dtexpacker_create(tex->width, tex->height, c3->preload_size + 100);
 		}
-		// packer's capacity should larger for later inserting
-		tex->t.MID.packer = dtexpacker_create(tex->width, tex->height, c3->preload_size + 100);
+
+// 		if (tex->t.MID.packer) {
+// 			dtexpacker_release(tex->t.MID.packer);
+// 		}
+// 		// packer's capacity should larger for later inserting
+// 		tex->t.MID.packer = dtexpacker_create(tex->width, tex->height, c3->preload_size + 100);
 	}
+
 	// insert
-	int tex_idx = 0;
+	int first_try_idx = 0;
 	for (int i = 0; i < c3->preload_size; ++i) {
 		struct preload_node* node = c3->preload_list[i];
 		bool success = false;
-		for (int j = tex_idx; j < tex_idx + c3->tex_size && !success; ++j) {
-			struct dtex_texture* tex = c3->textures[j % c3->tex_size];
+		for (int j = 0; j < c3->tex_size; ++j) {
+			struct dtex_texture* tex = c3->textures[(first_try_idx+ j) % c3->tex_size];
 			success = _pack_preload_node(c3, scale, node, tex);
-			tex_idx = j;
+			if (success) {
+				first_try_idx = j;
+				break;
+			}
 		}
 		if (!success) {
 			return false;
@@ -374,6 +386,7 @@ _relocate_node(struct dtex_buffer* buf, struct dtex_texture* src, struct dtex_no
 	// 		_relocate_rrp(c3, pkg);
 	// 	}
 
+	dst->finish = true;
 }
 
 static inline void
@@ -406,7 +419,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buff
 	struct dtex_node* nodes[NODE_SIZE];
 	for (int i = 0; i < HASH_SIZE; ++i) {
 		struct hash_node* hn = c3->hash[i];
-		while (hn) {
+		while (hn && !hn->n.finish) {
 			nodes[count++] = &hn->n;
 			hn = hn->next_hash;
 		}
@@ -432,7 +445,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buff
 //			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
 		} else {
 			ori_tex = dr->pkg->textures[dr->src_tex_idx];
-			assert(ori_tex->type == DTEX_TT_RAW);
+			assert(ori_tex && ori_tex->type == DTEX_TT_RAW);
 			int pkg_idx = dtex_package_texture_idx(dr->pkg, ori_tex);
 			assert(pkg_idx != -1);
 			if (!async) {
@@ -473,6 +486,13 @@ _alloc_texture(struct dtex_c3* c3, struct dtex_buffer* buf) {
 		area += w * h;
 	}
 	area *= TOT_AREA_SCALE;	
+
+	for (int i = 0; i < c3->tex_size; ++i) {
+		area -= dtexpacker_get_remain_area(c3->textures[i]->t.MID.packer);
+	}
+	if (area <= 0) {
+		return 1.0f;
+	}
 
 	int gain = dtexbuf_reserve(buf, area);
 	int real = 0;
