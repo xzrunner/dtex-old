@@ -94,7 +94,14 @@ lc3_load(lua_State* L) {
 
 static int
 lc3_load_end(lua_State* L) {
+	dtex_shader_texture(0);
+	dtex_shader_program(PROGRAM_NULL);
+
 	dtexf_c3_load_end(false);
+
+	ej_shader_texture(0, 0);
+	ej_shader_program(PROGRAM_PICTURE, NULL);
+
 	return 0;
 }
 

@@ -48,6 +48,7 @@ extern "C"
 // "shader.h"
 #define ej_vertex_pack				vertex_pack
 #define ej_shader_texture			shader_texture
+#define ej_shader_program			shader_program
 #define ej_shader_draw				shader_draw
 
 #endif // ejoy2d_h
