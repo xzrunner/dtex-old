@@ -2,6 +2,9 @@
 #include "dtex_log.h"
 #include "dtex_statistics.h"
 
+#include "dtex_gl.h"
+#include <assert.h>
+
 #include <opengl.h>
 
 #include <stdlib.h>
@@ -268,6 +271,9 @@ static void
 _rs_commit() {
 	if (RS == NULL || RS->object == 0)
 		return;
+
+	assert(dtex_gl_is_texture(dtex_gl_get_curr_texrute()));
+	assert(dtex_gl_get_curr_target() != 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VERTEX_BUFFER);
 	glBufferData(GL_ARRAY_BUFFER, 24 * RS->object * sizeof(float), RS->vb, GL_DYNAMIC_DRAW);
