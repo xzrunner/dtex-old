@@ -328,6 +328,7 @@ _relocate_pic(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		if (ej_q->texid != tex_uid) {
 			continue;
 		}
+
 		ej_q->texid = dr->dst_tex->uid;
 		for (int j = 0; j < 4; ++j) {
 			float x = (float)ej_q->texture_coord[j*2]   * src->inv_width;
@@ -645,10 +646,10 @@ dtex_c3_debug_draw(struct dtex_c3* c3) {
 // 	}
 
 	if (c3->tex_size > 0) {
-//		dtex_debug_draw(c3->textures[0]->id);
-
-//		dtex_debug_draw_ej(c3->textures[0]->uid_3rd);
-		dtex_debug_draw_ej(21);
+		dtex_debug_draw_ej(c3->textures[0]->uid_3rd, 1);
+		if (c3->tex_size > 1) {
+			dtex_debug_draw_ej(c3->textures[1]->uid_3rd, 4);
+		}
 	}
 
     //dtex_debug_draw(5);

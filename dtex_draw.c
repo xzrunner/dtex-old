@@ -17,7 +17,7 @@ static inline void
 _draw(const float vb[16], struct dtex_texture* src) {
 	if (src->type == DTEX_TT_RAW && src->t.RAW.format == PKMC) {
 //		shader_draw_separate(vb, src->id, src->id_alpha);
-	} else {
+	} else { 
 		dtex_shader_texture(src->id);
 		dtex_shader_draw(vb);
 	}
@@ -207,9 +207,6 @@ _after_target_draw(struct dtex_buffer* buf, struct dtex_target* target, float sc
 	dtex_target_unbind_texture(target);
 
 	dtex_buf_return_target(buf, target);
-
-	// debug
-	dtex_shader_texture(0);
 }
 
 void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]) {
@@ -312,13 +309,36 @@ void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin,
 }
 
 void 
-dtex_debug_draw_ej(int uid_3rd) {
+dtex_debug_draw_ej(int uid_3rd, int pos) {
 	struct ej_vertex_pack vb[4];
 
-	vb[0].vx = -1;	vb[0].vy = -1;
-	vb[1].vx = -1;	vb[1].vy =  1;
-	vb[2].vx =  1;	vb[2].vy =  1;
-	vb[3].vx =  1;	vb[3].vy = -1;
+	float xmin, xmax, ymin, ymax;
+	if (pos == 1) {
+		xmin = 1.1f;
+		xmax = 1.9f;
+		ymin = -0.9f;
+		ymax = -0.1f;
+	} else if (pos == 2) {
+		xmin = 0.1f;
+		xmax = 0.9f;
+		ymin = -0.9f;
+		ymax = -0.1f;
+	} else if (pos == 3) {
+		xmin = 0.1f;
+		xmax = 0.9f;
+		ymin = -1.9f;
+		ymax = -1.1f;
+	} else if (pos == 4) {
+		xmin = 1.1f;
+		xmax = 1.9f;
+		ymin = -1.9f;
+		ymax = -1.1f;
+	}
+
+	vb[0].vx = xmin;	vb[0].vy = ymin;
+	vb[1].vx = xmin;	vb[1].vy = ymax;
+	vb[2].vx = xmax;	vb[2].vy = ymax;
+	vb[3].vx = xmax;	vb[3].vy = ymin;
 
 	vb[0].tx = 0;	vb[0].ty = 0;
 	vb[1].tx = 0;	vb[1].ty = 0xffff;
