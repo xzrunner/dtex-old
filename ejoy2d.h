@@ -9,8 +9,11 @@ extern "C"
 #include <matrix.h>
 #include <spritepack.h>
 #include <sprite.h>
-#include <render.h>
 #include <shader.h>
+#ifndef USED_IN_EDITOR
+#include <render.h>
+#include <renderbuffer.h>
+#endif // USED_IN_EDITOR
 
 // "matrix.h"
 #define ej_srt						srt
@@ -38,6 +41,8 @@ extern "C"
 #define ej_sprite_childname			sprite_childname
 #define ej_sprite_mount				sprite_mount
 
+#ifndef USED_IN_EDITOR
+
 // "render.h"
 #define ej_render					render
 #define EJ_TEXTURE_RGBA8			TEXTURE_RGBA8
@@ -45,11 +50,15 @@ extern "C"
 #define ej_render_texture_update	render_texture_update
 #define ej_render_get_texture_gl_id	render_get_texture_gl_id
 
-// "shader.h"
+// "renderbuffer.h"
 #define ej_vertex_pack				vertex_pack
+
+// "shader.h"
 #define ej_shader_texture			shader_texture
 #define ej_shader_program			shader_program
 #define ej_shader_draw				shader_draw
+
+#endif // USED_IN_EDITOR
 
 #endif // ejoy2d_h
 

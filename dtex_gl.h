@@ -6,17 +6,15 @@ extern "C"
 #ifndef dynamic_texture_gl_h
 #define dynamic_texture_gl_h
 
-#define USE_EJ_RENDER
-
-#ifdef USE_EJ_RENDER
+#ifndef USED_IN_EDITOR
 #include "ejoy2d.h"
-#endif // USE_EJ_RENDER
+#endif // USED_IN_EDITOR
 
 #include <stdbool.h>
 
-#ifdef USE_EJ_RENDER
+#ifndef USED_IN_EDITOR
 void dtex_gl_init(struct ej_render* R);
-#endif // USE_EJ_RENDER
+#endif // USED_IN_EDITOR
 
 void dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd, bool create_by_ej);
 void dtex_gl_release_texture(unsigned int id, int channel);

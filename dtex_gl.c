@@ -13,9 +13,8 @@
 #define COMPRESSED_RGBA_PVRTC_4BPPV1_IMG 4
 #define COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 2
 
-#ifdef USE_EJ_RENDER
+#ifndef USED_IN_EDITOR
 static struct ej_render* EJ_R = NULL;
-#endif // USE_EJ_RENDER
 
 void 
 dtex_gl_init(struct ej_render* R) {
@@ -34,6 +33,8 @@ _create_texture_ej(int type, int width, int height, const void* data, int channe
 	*gl_id = ej_render_get_texture_gl_id(EJ_R, *uid_3rd);
 	dtex_stat_add_texture(*gl_id, width, height);
 }
+
+#endif // USED_IN_EDITOR
 
 unsigned int
 _gen_texture_dtex(int channel) {
@@ -140,7 +141,12 @@ dtex_gl_create_texture(int type, int width, int height, const void* data, int ch
 	}
 
 	if (create_by_ej) {
+#ifndef USED_IN_EDITOR
 		_create_texture_ej(type, width, height, data, channel, gl_id, uid_3rd);
+#else
+		*uid_3rd = 0;
+		*gl_id = _create_texture_dtex(type, width, height, data, channel);
+#endif // USED_IN_EDITOR
 	} else {
 		*uid_3rd = 0;
 		*gl_id = _create_texture_dtex(type, width, height, data, channel);

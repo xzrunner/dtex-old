@@ -272,7 +272,9 @@ _rs_commit() {
 	if (RS == NULL || RS->object == 0)
 		return;
 
+#ifndef USED_IN_EDITOR
 	assert(dtex_gl_is_texture(dtex_gl_get_curr_texrute()));
+#endif // USED_IN_EDITOR
 	assert(dtex_gl_get_curr_target() != 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VERTEX_BUFFER);

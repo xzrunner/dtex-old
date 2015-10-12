@@ -308,6 +308,8 @@ void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin,
 	dtex_shader_draw(vb);		
 }
 
+#ifndef USED_IN_EDITOR
+
 void 
 dtex_debug_draw_ej(int uid_3rd, int pos) {
 	struct ej_vertex_pack vb[4];
@@ -348,6 +350,8 @@ dtex_debug_draw_ej(int uid_3rd, int pos) {
 	ej_shader_texture(uid_3rd, 0);
 	ej_shader_draw(vb, 0xffffffff, 0, 0xff0000ff, 0x00ff00ff, 0x0000ffff);
 }
+
+#endif // USED_IN_EDITOR
 
 //void dtex_debug_draw(struct dtex_texture* tex) {
 //	float vb[16];

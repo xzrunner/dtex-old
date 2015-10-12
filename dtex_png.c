@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#ifdef USE_LIBPNG
+#ifdef USED_IN_EDITOR
 
 #include <libpng/png.h>
 
@@ -150,4 +150,4 @@ dtex_png_read(const char* filepath, int* width, int* height, int* channels, int*
 	return NULL;
 }
 
-#endif // USE_LIBPNG
+#endif // USED_IN_EDITOR

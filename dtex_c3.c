@@ -639,18 +639,20 @@ dtex_c3_query_map_info(struct dtex_c3* c3, struct dtex_package* pkg, struct dtex
 
 void 
 dtex_c3_debug_draw(struct dtex_c3* c3) {
-// 	const float edge = 0.5f;
-// 	for (int i = 0; i < c3->tex_size; ++i) {
-// 		dtex_debug_draw_with_pos(c3->textures[i]->tex, 
-// 			-1 + i * edge, 1 - edge, -1 + i * edge + edge, 1);
-// 	}
+#ifdef USED_IN_EDITOR
+//  	const float edge = 0.5f;
+//  	for (int i = 0; i < c3->tex_size; ++i) {
+//  		dtex_debug_draw_with_pos(c3->textures[i]->tex, 
+//  			-1 + i * edge, 1 - edge, -1 + i * edge + edge, 1);
+//  	}
 
+	dtex_debug_draw(c3->textures[0]->id);
+#else
 	if (c3->tex_size > 0) {
 		dtex_debug_draw_ej(c3->textures[0]->uid_3rd, 1);
 		if (c3->tex_size > 1) {
 			dtex_debug_draw_ej(c3->textures[1]->uid_3rd, 4);
 		}
 	}
-
-    //dtex_debug_draw(5);
+#endif // USED_IN_EDITOR
 }
