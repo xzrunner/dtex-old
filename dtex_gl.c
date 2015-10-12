@@ -173,6 +173,12 @@ dtex_gl_out_of_memory() {
 	return err == GL_OUT_OF_MEMORY;
 }
 
+void 
+dtex_gl_finish() {
+	glFinish();
+	glFlush();
+}
+
 bool
 dtex_gl_istexture(unsigned int id) {
 	return glIsTexture(id);

@@ -29,6 +29,8 @@ void dtex_gl_viewport(int x, int y, int w, int h);
 int dtex_gl_get_max_texture_size();
 bool dtex_gl_out_of_memory();
 
+void dtex_gl_finish();
+
 // debug
 bool dtex_gl_istexture(unsigned int id);
 
