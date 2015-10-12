@@ -24,6 +24,8 @@ void dtex_draw_to_texture(struct dtex_buffer*, struct dtex_texture* src, struct 
 void dtex_debug_draw(unsigned int texid);
 void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin, float xmax, float ymax);
 
+void dtex_debug_draw_ej(int uid_3rd);
+
 //void dtex_debug_draw(struct dtex_texture*);
 
 void dtex_flush_shader();

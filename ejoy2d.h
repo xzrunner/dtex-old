@@ -10,6 +10,7 @@ extern "C"
 #include <spritepack.h>
 #include <sprite.h>
 #include <render.h>
+#include <shader.h>
 
 // "matrix.h"
 #define ej_srt						srt
@@ -43,6 +44,11 @@ extern "C"
 #define ej_render_texture_create	render_texture_create
 #define ej_render_texture_update	render_texture_update
 #define ej_render_get_texture_gl_id	render_get_texture_gl_id
+
+// "shader.h"
+#define ej_vertex_pack				vertex_pack
+#define ej_shader_texture			shader_texture
+#define ej_shader_draw				shader_draw
 
 #endif // ejoy2d_h
 

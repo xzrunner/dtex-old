@@ -8,6 +8,10 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+/************************************************************************/
+/* overall                                                        */
+/************************************************************************/
+
 static int
 lcreate(lua_State* L) {
 	const char* str = lua_tostring(L, 1);	
@@ -22,6 +26,10 @@ lrelease(lua_State* L) {
 	dtexf_release();
 	return 0;
 }
+
+/************************************************************************/
+/* normal                                                               */
+/************************************************************************/
 
 static int
 lpreload_pkg(lua_State* L) {
@@ -72,11 +80,33 @@ lquery(lua_State* L) {
 	return 2;
 }
 
-// static int
-// lc3_load_pkg_finish(lua_State* L) {
-// 	dtexf_c3_load_end(false);
-// 	return 0;
-// }
+/************************************************************************/
+/* c3                                                                   */
+/************************************************************************/
+
+static int
+lc3_load(lua_State* L) {
+	struct dtex_package* pkg = lua_touserdata(L, 1);
+	float scale = luaL_optnumber(L, 2, 1);
+	dtexf_c3_load(pkg, scale);
+	return 0;
+}
+
+static int
+lc3_load_end(lua_State* L) {
+	dtexf_c3_load_end(false);
+	return 0;
+}
+
+/************************************************************************/
+/* debug                                                                */
+/************************************************************************/
+
+static int
+ldebug_draw(lua_State* L) {
+	dtexf_debug_draw();
+	return 0;
+}
 
 //static int
 //lc2_load_begin(lua_State* L) {
@@ -130,17 +160,21 @@ lquery(lua_State* L) {
 int
 luaopen_dtex_c(lua_State* L) {
 	luaL_Reg l[] = {
+		// overall
 		{ "create", lcreate },
 		{ "release", lrelease },
 
-		// loading
+		// normal
 		{ "preload_pkg", lpreload_pkg },
 		{ "load_texture", lload_texture },
 		{ "query", lquery },
 
-// 		// C3
-// 		{ "c3_load_pkg", lc3_load_pkg },
-// 		{ "c3_load_pkg_finish", lc3_load_pkg_finish },
+		// C3
+		{ "c3_load", lc3_load },
+		{ "c3_load_end", lc3_load_end },
+
+		// debug
+		{ "debug_draw", ldebug_draw },
 
 // 		// C2
 // 		{ "c2_load_begin", lc2_load_begin },

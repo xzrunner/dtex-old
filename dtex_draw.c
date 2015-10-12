@@ -207,6 +207,9 @@ _after_target_draw(struct dtex_buffer* buf, struct dtex_target* target, float sc
 	dtex_target_unbind_texture(target);
 
 	dtex_buf_return_target(buf, target);
+
+	// debug
+	dtex_shader_texture(0);
 }
 
 void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]) {
@@ -306,6 +309,24 @@ void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin,
 
 	dtex_shader_texture(texid);
 	dtex_shader_draw(vb);		
+}
+
+void 
+dtex_debug_draw_ej(int uid_3rd) {
+	struct ej_vertex_pack vb[4];
+
+	vb[0].vx = -1;	vb[0].vy = -1;
+	vb[1].vx = -1;	vb[1].vy =  1;
+	vb[2].vx =  1;	vb[2].vy =  1;
+	vb[3].vx =  1;	vb[3].vy = -1;
+
+	vb[0].tx = 0;	vb[0].ty = 0;
+	vb[1].tx = 0;	vb[1].ty = 0xffff;
+	vb[2].tx = 0xffff;	vb[2].ty = 0xffff;
+	vb[3].tx = 0xffff;	vb[3].ty = 0;
+
+	ej_shader_texture(uid_3rd, 0);
+	ej_shader_draw(vb, 0xffffffff, 0, 0xff0000ff, 0x00ff00ff, 0x0000ffff);
 }
 
 //void dtex_debug_draw(struct dtex_texture* tex) {

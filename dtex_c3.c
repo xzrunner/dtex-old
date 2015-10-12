@@ -644,7 +644,12 @@ dtex_c3_debug_draw(struct dtex_c3* c3) {
 // 			-1 + i * edge, 1 - edge, -1 + i * edge + edge, 1);
 // 	}
 
-	dtex_debug_draw(c3->textures[0]->id);
+	if (c3->tex_size > 0) {
+//		dtex_debug_draw(c3->textures[0]->id);
+
+//		dtex_debug_draw_ej(c3->textures[0]->uid_3rd);
+		dtex_debug_draw_ej(21);
+	}
 
     //dtex_debug_draw(5);
 }
