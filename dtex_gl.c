@@ -22,10 +22,8 @@ dtex_gl_init(struct ej_render* R) {
 	EJ_R = R;
 }
 
-#ifdef USE_EJ_RENDER
-
-void
-dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd) {
+static inline void
+_create_texture_ej(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd) {
 	if (type == DTEX_TF_INVALID) {
 		return;
 	}
@@ -33,14 +31,12 @@ dtex_gl_create_texture(int type, int width, int height, const void* data, int ch
 	*uid_3rd = ej_render_texture_create(EJ_R, width, height, EJ_TEXTURE_RGBA8, TEXTURE_2D, 0);
 	ej_render_texture_update(EJ_R, *uid_3rd, width, height, data, 0, 0);
 
-	*gl_id = render_get_texture_gl_id(EJ_R, *uid_3rd);
+	*gl_id = ej_render_get_texture_gl_id(EJ_R, *uid_3rd);
 	dtex_stat_add_texture(*gl_id, width, height);
 }
 
-#else
-
 unsigned int
-_create_texture(int channel) {
+_gen_texture_dtex(int channel) {
 	unsigned int id = 0;
 
 	glActiveTexture(GL_TEXTURE0 + channel);
@@ -57,7 +53,7 @@ _create_texture(int channel) {
 }
 
 unsigned int 
-dtex_gl_create_texture(int type, int width, int height, const void* data, int channel) {
+_create_texture_dtex(int type, int width, int height, const void* data, int channel) {
 	if (type == DTEX_TF_INVALID) {
 		return 0;
 	}
@@ -122,7 +118,7 @@ dtex_gl_create_texture(int type, int width, int height, const void* data, int ch
 		dtex_fault("dtex_gl_create_texture: unknown texture type.");
 	}
 
-	unsigned int id = _create_texture(channel);
+	unsigned int id = _gen_texture_dtex(channel);
 	if (is_compressed) {
 		glCompressedTexImage2D(GL_TEXTURE_2D, 0, _type, width, height, 0, size, data);	
 	} else {
@@ -137,7 +133,19 @@ dtex_gl_create_texture(int type, int width, int height, const void* data, int ch
 	return id;
 }
 
-#endif // USE_EJ_RENDER
+void
+dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd, bool create_by_ej) {
+	if (type == DTEX_TF_INVALID) {
+		return;
+	}
+
+	if (create_by_ej) {
+		_create_texture_ej(type, width, height, data, channel, gl_id, uid_3rd);
+	} else {
+		*uid_3rd = 0;
+		*gl_id = _create_texture_dtex(type, width, height, data, channel);
+	}
+}
 
 void 
 dtex_gl_release_texture(unsigned int id, int channel) {
@@ -180,6 +188,20 @@ dtex_gl_finish() {
 }
 
 bool
-dtex_gl_istexture(unsigned int id) {
+dtex_gl_is_texture(unsigned int id) {
 	return glIsTexture(id);
+}
+
+int 
+dtex_gl_get_curr_texrute() {
+	GLint texid;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &texid);
+	return texid;
+}
+
+int 
+dtex_gl_get_curr_target() {
+	GLint fboid = 0;
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING , &fboid);
+	return fboid;
 }

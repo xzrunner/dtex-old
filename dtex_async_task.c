@@ -21,7 +21,7 @@ struct load_texture_params {
 static inline void
 _load_texture_func(struct dtex_import_stream* is, void* ud) {
 	struct load_texture_params* params = (struct load_texture_params*)ud;	
- 	dtex_load_texture_all(params->buf, is, params->tex);
+ 	dtex_load_texture_all(params->buf, is, params->tex, true);
 	free(params);
 }
 
@@ -57,7 +57,7 @@ _load_multi_textures_func(struct dtex_import_stream* is, void* ud) {
 	struct load_multi_textures_params* params = (struct load_multi_textures_params*)ud;	
 	struct load_multi_textures_share_params* share_params = params->share_params;
 
-	dtex_load_texture_all(share_params->buf, is, params->tex);
+	dtex_load_texture_all(share_params->buf, is, params->tex, true);
 
 	free(params);
 

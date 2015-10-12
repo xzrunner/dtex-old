@@ -18,7 +18,7 @@ extern "C"
 void dtex_gl_init(struct ej_render* R);
 #endif // USE_EJ_RENDER
 
-void dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd);
+void dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd, bool create_by_ej);
 void dtex_gl_release_texture(unsigned int id, int channel);
 
 void dtex_gl_clear_color(float r, float g, float b, float a);
@@ -32,7 +32,9 @@ bool dtex_gl_out_of_memory();
 void dtex_gl_finish();
 
 // debug
-bool dtex_gl_istexture(unsigned int id);
+bool dtex_gl_is_texture(unsigned int id);
+int dtex_gl_get_curr_texrute();
+int dtex_gl_get_curr_target();
 
 #endif // dynamic_texture_gl_h
 

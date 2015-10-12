@@ -16,8 +16,8 @@
 #define MAX_TEX_COUNT 128
 #define MAX_FBO_COUNT 8
 
-//#define MAX_TEXTURE_SIZE 4096
-#define MAX_TEXTURE_SIZE 2048
+#define MAX_TEXTURE_SIZE 4096
+//#define MAX_TEXTURE_SIZE 2048
 
 struct tex_id {
 	unsigned int gl_id;
@@ -63,7 +63,7 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
         dtex_info("dtex_buffer: new texture %d\n", edge);
         
 		int gl_id, uid_3rd;
-		dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, &gl_id, &uid_3rd);
+		dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, &gl_id, &uid_3rd, true);
 
 		if (dtex_gl_out_of_memory()) {
 			// return 1 tex

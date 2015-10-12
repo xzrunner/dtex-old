@@ -139,7 +139,7 @@ dtexf_preload_pkg(const char* name, const char* path, int type, float scale) {
 
 void 
 dtexf_load_texture(struct dtex_package* pkg, int idx, float scale) {
-	dtex_load_texture(LOADER, BUF, pkg, idx, scale);
+	dtex_load_texture(LOADER, BUF, pkg, idx, scale, true);
 }
 
 //struct ej_sprite* 

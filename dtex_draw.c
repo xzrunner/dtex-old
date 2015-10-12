@@ -288,7 +288,7 @@ void dtex_debug_draw(unsigned int texid) {
 
 void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin, 
 							  float xmax, float ymax) {
-	assert(dtex_gl_istexture(texid));
+	assert(dtex_gl_is_texture(texid));
 
 	dtex_shader_program(PROGRAM_NORMAL);
 

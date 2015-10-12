@@ -386,7 +386,7 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 	bool tex_loaded = false;
 	if (tex->id == 0) {
 		tex_loaded = false;
-		dtex_load_texture_all(params->buf, is, tex);
+		dtex_load_texture_all(params->buf, is, tex, true);
 	} else {
 		tex_loaded = true;
 	}
@@ -438,7 +438,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buff
 			if (!async) {
 				if (ori_tex->id == 0) {
 					tex_loaded = false;
-					dtex_load_texture(loader, buf, dr->pkg, pkg_idx, ori_tex->t.RAW.scale);
+					dtex_load_texture(loader, buf, dr->pkg, pkg_idx, ori_tex->t.RAW.scale, false);
 				} else {
 					tex_loaded = true;
 				}
