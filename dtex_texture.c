@@ -57,13 +57,15 @@ dtex_texture_create_mid(struct dtex_buffer* buf) {
 		return NULL;
 	}
 
-	unsigned int tex_id = dtexbuf_fetch_texid(buf);
-	if (tex_id == 0) {
+	int gl_id, uid_3rd;
+	dtexbuf_fetch_texid(buf, &gl_id, &uid_3rd);
+	if (gl_id == 0) {
 		return NULL;
 	}
 
 	tex->type = DTEX_TT_MID;
-	tex->id = tex_id;
+	tex->id = gl_id;
+	tex->uid_3rd = uid_3rd;
 	int edge = dtexbuf_get_tex_edge(buf);
 	tex->width = tex->height = edge;
 	tex->inv_width = tex->inv_height = 1.0f / edge;
@@ -84,7 +86,7 @@ dtex_texture_release(struct dtex_buffer* buf, struct dtex_texture* tex) {
 			dtex_gl_release_texture(tex->t.RAW.id_alpha, 1);
 		}
 	} else if (tex->type == DTEX_TT_MID) {
-		if (tex->id != 0 && !dtexbuf_return_texid(buf, tex->id)) {
+		if (tex->id != 0 && !dtexbuf_return_texid(buf, tex->id, tex->uid_3rd)) {
 			dtex_gl_release_texture(tex->id, 0);
 		}
 		if (tex->t.MID.packer != NULL) {

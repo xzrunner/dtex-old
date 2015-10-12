@@ -15,8 +15,8 @@ void dtexbuf_release(struct dtex_buffer*);
 
 int dtexbuf_reserve(struct dtex_buffer*, int area_need);
 
-unsigned int dtexbuf_fetch_texid(struct dtex_buffer*);
-bool dtexbuf_return_texid(struct dtex_buffer*, unsigned int texid);
+void dtexbuf_fetch_texid(struct dtex_buffer*, int* gl_id, int* uid_3rd);
+bool dtexbuf_return_texid(struct dtex_buffer*, int gl_id, int uid_3rd);
 int dtexbuf_get_tex_edge(struct dtex_buffer*);
 
 struct dtex_target* dtex_buf_fetch_target(struct dtex_buffer*);

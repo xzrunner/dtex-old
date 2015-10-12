@@ -19,8 +19,13 @@
 //#define MAX_TEXTURE_SIZE 4096
 #define MAX_TEXTURE_SIZE 2048
 
+struct tex_id {
+	unsigned int gl_id;
+	int uid_3rd;
+};
+
 struct dtex_buffer {
-	unsigned int tex_pool[MAX_TEX_COUNT];
+	struct tex_id tex_pool[MAX_TEX_COUNT];
 	int next_tex, end_tex;
 	unsigned int tex_edge;
 
@@ -47,7 +52,7 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
 	// 	memset(empty_data, 0x00, edge*edge*4);		
 	// }
 
-	memset(empty_data, 0xaa, edge*edge*4);
+	memset(empty_data, 0x00, edge*edge*4);
 
 	int last_end = buf->end_tex;
 
@@ -59,15 +64,19 @@ _alloc_buffer(struct dtex_buffer* buf, int area_need) {
         
 		int gl_id, uid_3rd;
 		dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, &gl_id, &uid_3rd);
+
 		if (dtex_gl_out_of_memory()) {
 			// return 1 tex
 			--buf->end_tex;
-			dtex_gl_release_texture(buf->tex_pool[buf->end_tex], 0);
-			buf->tex_pool[buf->end_tex] = 0;
+			dtex_gl_release_texture(buf->tex_pool[buf->end_tex].gl_id, 0);
+			buf->tex_pool[buf->end_tex].gl_id = 0;
+			buf->tex_pool[buf->end_tex].uid_3rd = 0;
 			break;
 		}
 
-        buf->tex_pool[i] = gl_id;
+        buf->tex_pool[i].gl_id = gl_id;
+		buf->tex_pool[i].uid_3rd = uid_3rd;
+
         ++buf->end_tex;
 	}
 
@@ -98,7 +107,7 @@ dtexbuf_reserve(struct dtex_buffer* buf, int area_need) {
 void 
 dtexbuf_release(struct dtex_buffer* buf) {
 	for (int i = 0; i < buf->end_tex; ++i) {
-		dtex_gl_release_texture(buf->tex_pool[i], 0);
+		dtex_gl_release_texture(buf->tex_pool[i].gl_id, 0);
 	}
 	buf->next_tex = buf->end_tex = 0;
 
@@ -110,23 +119,28 @@ dtexbuf_release(struct dtex_buffer* buf) {
 	free(buf);
 }
 
-unsigned int 
-dtexbuf_fetch_texid(struct dtex_buffer* buf) {
-	unsigned int tex_id = 0;
+void
+dtexbuf_fetch_texid(struct dtex_buffer* buf, int* gl_id, int* uid_3rd) {
+	*gl_id = 0;
+	*uid_3rd = 0;
 	if (buf->next_tex < buf->end_tex) {
-		tex_id = buf->tex_pool[buf->next_tex];
+		*gl_id = buf->tex_pool[buf->next_tex].gl_id;
+		*uid_3rd = buf->tex_pool[buf->next_tex].uid_3rd;
 		++buf->next_tex;
 	}
-	return tex_id;
 }
 
 bool 
-dtexbuf_return_texid(struct dtex_buffer* buf, unsigned int texid) {
+dtexbuf_return_texid(struct dtex_buffer* buf, int gl_id, int uid_3rd) {
 	if (buf->next_tex > 0) {
-		buf->tex_pool[--buf->next_tex] = texid;
+		--buf->next_tex;
+		buf->tex_pool[buf->next_tex].gl_id = gl_id;
+		buf->tex_pool[buf->next_tex].uid_3rd = uid_3rd;
         return true;
 	} else if (buf->end_tex < MAX_TEX_COUNT - 1) {
-		buf->tex_pool[buf->end_tex++] = texid;
+		buf->tex_pool[buf->end_tex].gl_id = gl_id;
+		buf->tex_pool[buf->end_tex].uid_3rd = uid_3rd;
+		buf->end_tex++;
         return true;
 	} else {
 		return false;
