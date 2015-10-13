@@ -193,6 +193,11 @@ dtex_gl_finish() {
 	glFlush();
 }
 
+void 
+dtex_gl_bind_vertex_array(int id) {
+	glBindVertexArray(id);
+}
+
 bool
 dtex_gl_is_texture(unsigned int id) {
 	return glIsTexture(id);

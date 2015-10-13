@@ -29,6 +29,8 @@ bool dtex_gl_out_of_memory();
 
 void dtex_gl_finish();
 
+void dtex_gl_bind_vertex_array(int id);
+
 // debug
 bool dtex_gl_is_texture(unsigned int id);
 int dtex_gl_get_curr_texrute();
