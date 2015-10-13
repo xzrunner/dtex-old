@@ -365,6 +365,7 @@ dtex_debug_draw_ej(int uid_3rd, int pos) {
 	vb[2].tx = 0xffff;	vb[2].ty = 0xffff;
 	vb[3].tx = 0xffff;	vb[3].ty = 0;
 
+	ej_shader_program(PROGRAM_PICTURE, NULL);
 	ej_shader_texture(uid_3rd, 0);
 	ej_shader_draw(vb, 0xffffffff, 0, 0xff0000ff, 0x00ff00ff, 0x0000ffff);
 }
