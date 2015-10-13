@@ -174,19 +174,6 @@ dtex_gl_viewport(int x, int y, int w, int h) {
 	glViewport(x, y, w, h);
 }
 
-int 
-dtex_gl_get_max_texture_size() {
-	int max_size;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
-	return max_size;
-}
-
-bool 
-dtex_gl_out_of_memory() {
-	GLenum err = glGetError();
-	return err == GL_OUT_OF_MEMORY;
-}
-
 void 
 dtex_gl_finish() {
 	glFinish();
@@ -196,6 +183,12 @@ dtex_gl_finish() {
 void 
 dtex_gl_bind_vertex_array(int id) {
 	glBindVertexArray(id);
+}
+
+bool 
+dtex_gl_out_of_memory() {
+	GLenum err = glGetError();
+	return err == GL_OUT_OF_MEMORY;
 }
 
 bool

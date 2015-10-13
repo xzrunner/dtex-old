@@ -1,5 +1,4 @@
 #include "dtex_c2.h"
-#include "dtex_buffer.h"
 #include "dtex_packer.h"
 #include "dtex_draw.h"
 #include "dtex_loader.h"
@@ -8,6 +7,7 @@
 #include "dtex_ej_utility.h"
 #include "dtex_relocation.h"
 #include "dtex_texture.h"
+#include "dtex_res_cache.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -74,16 +74,14 @@ _reset_preload_list(struct dtex_c2* c2) {
 }
 
 struct dtex_c2* 
-dtex_c2_create(struct dtex_buffer* buf) {
+dtex_c2_create(int texture_size) {
 	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
 	size_t psize = PRELOAD_SIZE * sizeof(struct preload_node);
 	size_t sz = sizeof(struct dtex_c2) + nsize + psize;
 	struct dtex_c2* c2 = (struct dtex_c2*)malloc(sz);
 	memset(c2, 0, sz);
 
-	dtexbuf_reserve(buf, 1);
-
-	struct dtex_texture* tex = dtex_texture_create_mid(buf);
+	struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
 	tex->t.MID.packer = dtexpacker_create(tex->width, tex->height, PRELOAD_SIZE);
 	c2->textures[c2->tex_size++] = tex;
 
@@ -100,9 +98,9 @@ dtex_c2_create(struct dtex_buffer* buf) {
 }
 
 void 
-dtex_c2_release(struct dtex_c2* c2, struct dtex_buffer* buf) {
+dtex_c2_release(struct dtex_c2* c2) {
 	for (int i = 0; i < c2->tex_size; ++i) {
-		dtex_texture_release(buf, c2->textures[i]);
+		dtex_res_cache_return_mid_texture(c2->textures[i]);
 	}
 	free(c2);
 }
@@ -297,7 +295,7 @@ _set_rect_vb(struct preload_node* pn, struct dtex_node* n, bool rotate) {
 }
 
 static inline void
-_insert_node(struct dtex_c2* c2, struct dtex_buffer* buf, struct dtex_loader* loader, struct preload_node* pn, bool use_new_tex) {
+_insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct preload_node* pn, bool use_new_tex) {
 	struct hash_node* hn = _query_node(c2, pn->ori_tex->id, &pn->rect);
 	if (hn != NULL) {
 		return;
@@ -368,14 +366,14 @@ _insert_node(struct dtex_c2* c2, struct dtex_buffer* buf, struct dtex_loader* lo
 	c2->hash[idx] = hn;
 
 	if (rrp_pic) {
-//		dtex_draw_rrp_to_tex(buf, hn->n.ori_tex, rrp_pic, tex, pos, rotate);
+//		dtex_draw_rrp_to_tex(hn->n.ori_tex, rrp_pic, tex, pos, rotate);
 	} else {
-		dtex_draw_to_texture(buf, hn->n.ori_tex, tex, hn->n.trans_vb);
+		dtex_draw_to_texture(hn->n.ori_tex, tex, hn->n.trans_vb);
 	}
 }
 
 void 
-dtex_c2_load_end(struct dtex_c2* c2, struct dtex_buffer* buf, struct dtex_loader* loader, bool use_only_one_texture) {
+dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader, bool use_only_one_texture) {
 	if (--c2->loadable > 0 || c2->preload_size == 0) {
 		return;
 	}
@@ -390,7 +388,7 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_buffer* buf, struct dtex_loader
 	dtex_draw_before();
 	qsort((void*)c2->preload_list, c2->preload_size, sizeof(struct preload_node*), _compare_max_edge);	
 	for (int i = 0; i < c2->preload_size; ++i) {
-		_insert_node(c2, buf, loader, c2->preload_list[i], !use_only_one_texture);
+		_insert_node(c2, loader, c2->preload_list[i], !use_only_one_texture);
 	}
 	dtex_draw_after();
 

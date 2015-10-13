@@ -8,8 +8,8 @@ extern "C"
 
 struct dtex_target;
 
-struct dtex_target* dtex_new_target();
-void dtex_del_target(struct dtex_target*);
+struct dtex_target* dtex_target_create();
+void dtex_target_release(struct dtex_target*);
 
 void dtex_target_bind_texture(struct dtex_target*, int texid);
 void dtex_target_unbind_texture(struct dtex_target*);

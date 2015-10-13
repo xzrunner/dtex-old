@@ -5,7 +5,7 @@
 
 #define MAX_TEXTURES 512
 
-struct dtex_stat {
+struct stat {
 	int draw_call;
 	int last_draw_call;
 
@@ -15,7 +15,7 @@ struct dtex_stat {
 	bool in_draw;
 };
 
-static struct dtex_stat STAT;
+static struct stat STAT;
 
 void 
 dtex_stat_init() {

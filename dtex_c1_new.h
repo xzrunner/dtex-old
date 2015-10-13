@@ -10,8 +10,8 @@ extern "C"
 
 struct dtex_c1;
 
-struct dtex_c1* dtex_c1_create(struct dtex_buffer*);
-void dtex_c1_release(struct dtex_c1*, struct dtex_buffer*);
+struct dtex_c1* dtex_c1_create(int texture_size);
+void dtex_c1_release(struct dtex_c1*);
 
 void dtex_c1_update(struct dtex_c1*, struct dtex_c2*, struct dtex_package*, struct ej_sprite* spr);
 

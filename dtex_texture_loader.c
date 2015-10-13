@@ -70,7 +70,7 @@ dtex_load_texture_only_desc(struct dtex_import_stream* is, struct dtex_texture* 
 }
 
 void
-_scale_texture(struct dtex_buffer* buf, struct dtex_texture* tex, float scale, bool create_by_ej) {
+_scale_texture(struct dtex_texture* tex, float scale, bool create_by_ej) {
 	assert(tex->type == DTEX_TT_RAW);
 
 	uint16_t new_w = floor(tex->width * scale + 0.5f);
@@ -102,7 +102,7 @@ _scale_texture(struct dtex_buffer* buf, struct dtex_texture* tex, float scale, b
 	dst.t.MID.packer = NULL;
 
 	dtex_draw_before();
-	dtex_draw_to_texture(buf, tex, &dst, vb);
+	dtex_draw_to_texture(tex, &dst, vb);
 	dtex_draw_after();
 
 	dtex_gl_release_texture(tex->id, 0);
@@ -116,7 +116,7 @@ _scale_texture(struct dtex_buffer* buf, struct dtex_texture* tex, float scale, b
 }
 
 void 
-dtex_load_texture_all(struct dtex_buffer* buf, struct dtex_import_stream* is, struct dtex_texture* tex, bool create_by_ej) {
+dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex, bool create_by_ej) {
 	assert(tex->type == DTEX_TT_RAW);
 
 	int format = dtex_import_uint8(is);
@@ -151,6 +151,6 @@ dtex_load_texture_all(struct dtex_buffer* buf, struct dtex_import_stream* is, st
 	}
 
 	if (tex->t.RAW.scale != 1 && (tex->t.RAW.format == TEXTURE4 || tex->t.RAW.format == TEXTURE8)) {
-		_scale_texture(buf, tex, tex->t.RAW.scale, create_by_ej);
+		_scale_texture(tex, tex->t.RAW.scale, create_by_ej);
 	}
 }

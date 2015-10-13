@@ -1,5 +1,4 @@
 #include "dtex_c1_new.h"
-#include "dtex_buffer.h"
 #include "dtex_target.h"
 #include "dtex_screen.h"
 #include "dtex_shader.h"
@@ -7,6 +6,7 @@
 #include "dtex_draw.h"
 #include "dtex_gl.h"
 #include "dtex_texture.h"
+#include "dtex_res_cache.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -17,14 +17,13 @@ struct dtex_c1 {
 };
 
 struct dtex_c1* 
-dtex_c1_create(struct dtex_buffer* buf) {
+dtex_c1_create(int texture_size) {
 	struct dtex_c1* c1 = (struct dtex_c1*)malloc(sizeof(struct dtex_c1));
 	memset(c1, 0, sizeof(struct dtex_c1));
 
-	dtexbuf_reserve(buf, 1);
-	c1->texture = dtex_texture_create_mid(buf);
+	c1->texture = dtex_res_cache_fetch_mid_texture(texture_size);
 
-	c1->target = dtex_buf_fetch_target(buf);
+	c1->target = dtex_res_cache_fetch_target();
 
 	dtex_target_bind_texture(c1->target, c1->texture->id);
 
@@ -32,10 +31,10 @@ dtex_c1_create(struct dtex_buffer* buf) {
 }
 
 void 
-dtex_c1_release(struct dtex_c1* c1, struct dtex_buffer* buf) {
+dtex_c1_release(struct dtex_c1* c1) {
 	dtex_target_unbind_texture(c1->target);
-	dtex_texture_release(buf, c1->texture);
-	dtex_buf_return_target(buf, c1->target);
+	dtex_res_cache_return_mid_texture(c1->texture);
+	dtex_res_cache_return_target(c1->target);
 	free(c1);
 }
 

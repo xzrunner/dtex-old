@@ -15,7 +15,7 @@ struct dtex_loader* dtexloader_create();
 void dtexloader_release(struct dtex_loader*);
 
 struct dtex_package* dtex_preload_pkg(struct dtex_loader*, const char* name, const char* path, int type, float scale);
-void dtex_load_texture(struct dtex_loader*, struct dtex_buffer*, struct dtex_package*, int idx, float scale, bool create_by_ej);
+void dtex_load_texture(struct dtex_loader*, struct dtex_package*, int idx, float scale, bool create_by_ej);
 
 void dtex_load_file(const char* filepath, void (*unpack_func)(struct dtex_import_stream* is, void* ud), void* ud);
 

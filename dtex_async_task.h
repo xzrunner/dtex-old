@@ -8,10 +8,9 @@ extern "C"
 
 #include "ejoy2d.h"
 
-void dtex_async_load_texture(struct dtex_buffer* buf, struct dtex_package* pkg, int idx);
+void dtex_async_load_texture(struct dtex_package* pkg, int idx);
 
-void dtex_async_load_multi_textures(struct dtex_buffer* buf, struct dtex_package* pkg, 
-									struct dtex_array* texture_idx, void (*cb)(void* ud), void* ud);
+void dtex_async_load_multi_textures(struct dtex_package* pkg, struct dtex_array* texture_idx, void (*cb)(void* ud), void* ud);
 
 void dtex_async_load_epe(const char* filepath, void (*cb)(void* ud), void* ud);
 

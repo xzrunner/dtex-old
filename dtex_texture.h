@@ -38,10 +38,10 @@ struct dtex_texture {
 };
 
 struct dtex_texture* dtex_texture_create_raw();
-struct dtex_texture* dtex_texture_create_mid(struct dtex_buffer*);
-void dtex_texture_release(struct dtex_buffer*, struct dtex_texture*);
+struct dtex_texture* dtex_texture_create_mid(int edge);
+void dtex_texture_release(struct dtex_texture*);
 
-void dtex_texture_clear(struct dtex_buffer*, struct dtex_texture*);
+void dtex_texture_clear(struct dtex_texture*);
 
 void dtex_texture_pool_init();
 

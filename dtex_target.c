@@ -17,7 +17,7 @@ struct dtex_target {
 };
 
 struct dtex_target* 
-dtex_new_target() {
+dtex_target_create() {
     dtex_info("dtex_target: new target\n");
 	struct dtex_target* target = (struct dtex_target*)malloc(sizeof(struct dtex_target));
 	glGenFramebuffers(1, &target->target_id);
@@ -26,7 +26,7 @@ dtex_new_target() {
 }
 
 void 
-dtex_del_target(struct dtex_target* target) {
+dtex_target_release(struct dtex_target* target) {
 	glDeleteFramebuffers(1, &target->target_id);
 	free(target);
 }

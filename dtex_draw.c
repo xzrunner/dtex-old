@@ -1,11 +1,11 @@
 #include "dtex_draw.h"
 #include "dtex_target.h"
-#include "dtex_buffer.h"
 #include "dtex_typedef.h"
 #include "dtex_shader.h"
 #include "dtex_screen.h"
 #include "dtex_gl.h"
 #include "dtex_texture.h"
+#include "dtex_res_cache.h"
 
 #include "ejoy2d.h"
 
@@ -183,10 +183,9 @@ _before_draw(struct dtex_texture* tex) {
 //}
 
 static inline void 
-_before_target_draw(struct dtex_buffer* buf, struct dtex_texture* src, struct dtex_texture* dst, 
+_before_target_draw(struct dtex_texture* src, struct dtex_texture* dst, 
 				    struct dtex_target** target, float* scr_w, float* scr_h) {
-
-	*target = dtex_buf_fetch_target(buf);
+	*target = dtex_res_cache_fetch_target();
 	dtex_target_bind_texture(*target, dst->id);
 	dtex_target_bind(*target);
 
@@ -198,7 +197,7 @@ _before_target_draw(struct dtex_buffer* buf, struct dtex_texture* src, struct dt
 }
 
 static inline void
-_after_target_draw(struct dtex_buffer* buf, struct dtex_target* target, float scr_w, float scr_h) {
+_after_target_draw(struct dtex_target* target, float scr_w, float scr_h) {
 	dtex_shader_flush();
 
 	dtex_gl_viewport(0, 0, scr_w, scr_h);
@@ -206,7 +205,7 @@ _after_target_draw(struct dtex_buffer* buf, struct dtex_target* target, float sc
 	dtex_target_unbind();  
 	dtex_target_unbind_texture(target);
 
-	dtex_buf_return_target(buf, target);
+	dtex_res_cache_return_target(target);
 }
 
 void 
@@ -227,18 +226,18 @@ dtex_draw_after() {
 }
 
 void 
-dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]) {
+dtex_draw_to_texture(struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]) {
 	struct dtex_target* target = NULL;
 	float scr_w, scr_h;
-	_before_target_draw(buf, src, dst, &target, &scr_w, &scr_h);
+	_before_target_draw(src, dst, &target, &scr_w, &scr_h);
 
 	_draw(vb, src);
 
-	_after_target_draw(buf, target, scr_w, scr_h);
+	_after_target_draw(target, scr_w, scr_h);
 }
 
 //void 
-//dtex_draw_rrp_to_tex(struct dtex_buffer* buf, struct dtex_texture* src, struct rrp_picture* pic, 
+//dtex_draw_rrp_to_tex(struct dtex_texture* src, struct rrp_picture* pic, 
 //	struct dtex_texture* dst, struct dp_pos* pos, bool rotate) {
 //
 //	assert(pic);
@@ -253,7 +252,7 @@ dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_texture* src, struct d
 //
 //	struct dtex_target* target = NULL;
 //	struct ej_screen scr;
-//	_before_target_draw(buf, src, dst, &target, &scr);
+//	_before_target_draw(src, dst, &target, &scr);
 //
 //	for (int i = 0; i < pic->part_sz; ++i) {
 //		struct rrp_part* part = &pic->rect[i];
@@ -297,7 +296,7 @@ dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_texture* src, struct d
 //		_draw(trans_vb, src);
 //	}
 //
-//	_after_target_draw(buf, target, &scr);
+//	_after_target_draw(target, &scr);
 //}
 
 void dtex_debug_draw(unsigned int texid) {
