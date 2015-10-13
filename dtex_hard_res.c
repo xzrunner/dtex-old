@@ -5,6 +5,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <math.h>
 
 struct res {
 	int max_texture_size;

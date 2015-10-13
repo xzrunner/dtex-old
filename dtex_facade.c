@@ -65,15 +65,23 @@ _config(const char* str) {
 		dtex_info("dtex parse config fail!\n");
 	}
 
-	CFG.needed_texture = cJSON_GetObjectItem(root, "needed_texture")->valueint;
+	if (cJSON_GetObjectItem(root, "needed_texture")) {
+		CFG.needed_texture = cJSON_GetObjectItem(root, "needed_texture")->valueint;
+	}
 
 	CFG.open_c1 = cJSON_GetObjectItem(root, "open_c1")->valueint;
 	CFG.open_c2 = cJSON_GetObjectItem(root, "open_c2")->valueint;
 	CFG.open_c3 = cJSON_GetObjectItem(root, "open_c3")->valueint;
 
-	CFG.c1_tex_size = cJSON_GetObjectItem(root, "c1_tex_size")->valueint;
-	CFG.c2_tex_size = cJSON_GetObjectItem(root, "c2_tex_size")->valueint;
-	CFG.c3_tex_size = cJSON_GetObjectItem(root, "c3_tex_size")->valueint;
+	if (cJSON_GetObjectItem(root, "c1_tex_size")) {
+		CFG.c1_tex_size = cJSON_GetObjectItem(root, "c1_tex_size")->valueint;
+	}
+	if (cJSON_GetObjectItem(root, "c2_tex_size")) {
+		CFG.c2_tex_size = cJSON_GetObjectItem(root, "c2_tex_size")->valueint;
+	}
+	if (cJSON_GetObjectItem(root, "c3_tex_size")) {
+		CFG.c3_tex_size = cJSON_GetObjectItem(root, "c3_tex_size")->valueint;
+	}
 
 	cJSON_Delete(root);
 }
@@ -88,7 +96,7 @@ dtexf_create(const char* cfg) {
 
 	CFG.c1_tex_size = 1024;
 	CFG.c2_tex_size = 4096;
-	CFG.c1_tex_size = 2048;
+	CFG.c3_tex_size = 2048;
 
 	if (cfg) {
 		_config(cfg);		
