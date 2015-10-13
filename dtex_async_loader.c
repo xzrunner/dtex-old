@@ -99,6 +99,10 @@ dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream*
 
 void 
 dtex_async_loader_update() {
+	if (!parse_queue) {
+		return;
+	}
+
 	struct dtex_async_job* job = dtex_async_queue_front_and_pop(parse_queue);
 	if (!job) {
 		return;
