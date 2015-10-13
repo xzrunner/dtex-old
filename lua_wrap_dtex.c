@@ -70,8 +70,9 @@ lquery(lua_State* L) {
 
 	struct dtex_package* pkg = dtexf_query_pkg(pkg_name);
 	if (!pkg) {
-		int zz = 0;
+		return 0;
 	}
+
 	lua_pushlightuserdata(L, pkg->ej_pkg);
 
 	int spr_id = dtex_get_spr_id(pkg, spr_name);
