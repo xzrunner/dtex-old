@@ -209,7 +209,25 @@ _after_target_draw(struct dtex_buffer* buf, struct dtex_target* target, float sc
 	dtex_buf_return_target(buf, target);
 }
 
-void dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]) {
+void 
+dtex_draw_before() {
+#ifndef USED_IN_EDITOR
+	dtex_gl_bind_vertex_array(0);
+	dtex_shader_texture(0);
+	dtex_shader_program(PROGRAM_NULL);
+#endif // USED_IN_EDITOR
+}
+
+void 
+dtex_draw_after() {
+#ifndef USED_IN_EDITOR
+	ej_shader_texture(0, 0);
+	ej_shader_program(PROGRAM_PICTURE, NULL);
+#endif // USED_IN_EDITOR
+}
+
+void 
+dtex_draw_to_texture(struct dtex_buffer* buf, struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]) {
 	struct dtex_target* target = NULL;
 	float scr_w, scr_h;
 	_before_target_draw(buf, src, dst, &target, &scr_w, &scr_h);

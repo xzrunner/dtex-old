@@ -15,6 +15,8 @@ extern "C"
 // void dtex_draw_pts(struct dtex_texture* src_tex, struct dp_pos* src_pos, struct pts_picture* src_pts_pic,
 // 	struct draw_params* params, const int32_t part_screen[8]);
 
+void dtex_draw_before();
+void dtex_draw_after();
 // todo 应该是批量的在一个target上画完再切到下一个target
 void dtex_draw_to_texture(struct dtex_buffer*, struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]);
 //// todo 一个pic的part可能位于不同的tex中

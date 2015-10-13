@@ -387,10 +387,12 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_buffer* buf, struct dtex_loader
 	}
 
 	// insert
+	dtex_draw_before();
 	qsort((void*)c2->preload_list, c2->preload_size, sizeof(struct preload_node*), _compare_max_edge);	
 	for (int i = 0; i < c2->preload_size; ++i) {
 		_insert_node(c2, buf, loader, c2->preload_list[i], !use_only_one_texture);
 	}
+	dtex_draw_after();
 
 	_reset_preload_list(c2);
 }

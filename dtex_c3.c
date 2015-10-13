@@ -403,7 +403,9 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 	} else {
 		tex_loaded = true;
 	}
+	dtex_draw_before();
 	_relocate_node(params->buf, tex, params->node);
+	dtex_draw_after();
 	if (!tex_loaded) {
 		dtex_package_remove_texture_ref(params->node->pkg, tex);
 		dtex_texture_release(params->buf, tex);
@@ -517,55 +519,59 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, struct dtex_buf
 
 	/*float scale = */_pack_nodes(c3, alloc_scale);
 
+	dtex_draw_before();
 	_relocate_nodes(c3, loader, buf, async);
+	dtex_draw_after();
 
     c3->preload_size = 0;
 }
 
-struct dp_pos* 
-dtex_c3_load_tex(struct dtex_c3* c3, struct dtex_texture* tex, struct dtex_buffer* buf, struct dtex_texture** dst) {
-	// todo sort
-
-	// todo select dst texture
-	struct dtex_texture* dst_tex = c3->textures[0];
-	assert(dst_tex->type == DTEX_TT_MID);
-	*dst = dst_tex;
-
-	// insert
-	struct dp_pos* pos = dtexpacker_add(dst_tex->t.MID.packer, tex->width, tex->height, true);
-	if (!pos) {
-		return NULL;
-	}
-
-	// draw
-	// draw old tex to new 
-	float tx_min = 0, tx_max = 1,
-		  ty_min = 0, ty_max = 1;
-	float vx_min = (float)pos->r.xmin * dst_tex->inv_width  * 2 - 1,
-		  vx_max = (float)pos->r.xmax * dst_tex->inv_width  * 2 - 1,
-		  vy_min = (float)pos->r.ymin * dst_tex->inv_height * 2 - 1,
-		  vy_max = (float)pos->r.ymax * dst_tex->inv_height * 2 - 1;
-	float vb[16];
-	vb[0]  = vx_min; vb[1]  = vy_min;
-	vb[4]  = vx_min; vb[5]  = vy_max;
-	vb[8]  = vx_max; vb[9]  = vy_max;
-	vb[12] = vx_max; vb[13] = vy_min;
-	if (pos->is_rotated) {
-		vb[2]  = tx_max; vb[3]  = ty_min;
-		vb[6]  = tx_min; vb[7]  = ty_min;
-		vb[10] = tx_min; vb[11] = ty_max;
-		vb[14] = tx_max; vb[15] = ty_max;
-	} else {
-		vb[2]  = tx_min; vb[3]  = ty_min;
-		vb[6]  = tx_min; vb[7]  = ty_max;
-		vb[10] = tx_max; vb[11] = ty_max;
-		vb[14] = tx_max; vb[15] = ty_min;
-	}
-
-	dtex_draw_to_texture(buf, tex, dst_tex, vb);
-
-	return pos;
-}
+//struct dp_pos* 
+//dtex_c3_load_tex(struct dtex_c3* c3, struct dtex_texture* tex, struct dtex_buffer* buf, struct dtex_texture** dst) {
+//	// todo sort
+//
+//	// todo select dst texture
+//	struct dtex_texture* dst_tex = c3->textures[0];
+//	assert(dst_tex->type == DTEX_TT_MID);
+//	*dst = dst_tex;
+//
+//	// insert
+//	struct dp_pos* pos = dtexpacker_add(dst_tex->t.MID.packer, tex->width, tex->height, true);
+//	if (!pos) {
+//		return NULL;
+//	}
+//
+//	// draw
+//	// draw old tex to new 
+//	float tx_min = 0, tx_max = 1,
+//		  ty_min = 0, ty_max = 1;
+//	float vx_min = (float)pos->r.xmin * dst_tex->inv_width  * 2 - 1,
+//		  vx_max = (float)pos->r.xmax * dst_tex->inv_width  * 2 - 1,
+//		  vy_min = (float)pos->r.ymin * dst_tex->inv_height * 2 - 1,
+//		  vy_max = (float)pos->r.ymax * dst_tex->inv_height * 2 - 1;
+//	float vb[16];
+//	vb[0]  = vx_min; vb[1]  = vy_min;
+//	vb[4]  = vx_min; vb[5]  = vy_max;
+//	vb[8]  = vx_max; vb[9]  = vy_max;
+//	vb[12] = vx_max; vb[13] = vy_min;
+//	if (pos->is_rotated) {
+//		vb[2]  = tx_max; vb[3]  = ty_min;
+//		vb[6]  = tx_min; vb[7]  = ty_min;
+//		vb[10] = tx_min; vb[11] = ty_max;
+//		vb[14] = tx_max; vb[15] = ty_max;
+//	} else {
+//		vb[2]  = tx_min; vb[3]  = ty_min;
+//		vb[6]  = tx_min; vb[7]  = ty_max;
+//		vb[10] = tx_max; vb[11] = ty_max;
+//		vb[14] = tx_max; vb[15] = ty_min;
+//	}
+//
+//	dtex_draw_before();
+//	dtex_draw_to_texture(buf, tex, dst_tex, vb);
+//	dtex_draw_after();
+//
+//	return pos;
+//}
 
 // void 
 // dtexc3_preload_tex(struct dtex_c3* c3, struct dtex_texture* tex, struct dtex_buffer* buf) {

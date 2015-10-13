@@ -101,7 +101,9 @@ _scale_texture(struct dtex_buffer* buf, struct dtex_texture* tex, float scale, b
 	dst.type = DTEX_TT_MID;
 	dst.t.MID.packer = NULL;
 
+	dtex_draw_before();
 	dtex_draw_to_texture(buf, tex, &dst, vb);
+	dtex_draw_after();
 
 	dtex_gl_release_texture(tex->id, 0);
 
