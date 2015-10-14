@@ -62,6 +62,8 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
 	   } else {
 		   tex = dtex_texture_fetch(q->texid);
 	   }
+
+	   float c2_key[8];
 	   for (int j = 0; j < 4; j++) {
 		   int xx = q->screen_coord[j*2+0];
 		   int yy = q->screen_coord[j*2+1];
@@ -71,12 +73,14 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
 
 		   float tx = q->texture_coord[j*2+0];
 		   float ty = q->texture_coord[j*2+1];
+		   tx *= tex->inv_width;
+		   ty *= tex->inv_height;
+		   c2_key[j*2] = tx;
+		   c2_key[j*2+1] = ty;
 		   if (tex->type == DTEX_TT_RAW) {
 			   tx *= tex->t.RAW.lod_scale;
 			   ty *= tex->t.RAW.lod_scale;
 		   }
-		   tx *= tex->inv_width;
-		   ty *= tex->inv_height;
 
 		   vb[j*4+0] = vx;
 		   vb[j*4+1] = vy;
@@ -88,7 +92,7 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
 
 	   if (c2) {
 		   int new_texid = 0;
-		   float* tex_vb = dtex_c2_lookup_texcoords(c2, tex, vb, &new_texid);
+		   float* tex_vb = dtex_c2_lookup_texcoords(c2, tex, c2_key, &new_texid);
 		   if (tex_vb != NULL) {
 			   memcpy(vb+2, tex_vb, 2*sizeof(float));
 			   memcpy(vb+6, tex_vb+2, 2*sizeof(float));

@@ -87,9 +87,11 @@ _config(const char* str) {
 	}
 
 	cJSON* lod = cJSON_GetObjectItem(root, "LOD");
-	int lod_sz = cJSON_GetArraySize(lod);
-	for (int i = 0; i < lod_sz && i < 3; ++i) {
-		CFG.LOD[i] = cJSON_GetArrayItem(lod, i)->valueint;
+	if (lod) {
+		int lod_sz = cJSON_GetArraySize(lod);
+		for (int i = 0; i < lod_sz && i < 3; ++i) {
+			CFG.LOD[i] = cJSON_GetArrayItem(lod, i)->valueint;
+		}
 	}
 
 	cJSON_Delete(root);
