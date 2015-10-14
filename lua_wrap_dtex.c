@@ -5,6 +5,7 @@
 #include "dtex_gl.h"
 
 #include <string.h>
+#include <assert.h>
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -102,6 +103,29 @@ lc3_load_end(lua_State* L) {
 }
 
 /************************************************************************/
+/* c2                                                                   */
+/************************************************************************/
+
+static int
+lasync_load_with_c2_from_c3(lua_State* L) {
+	const char* pkg_name = luaL_checkstring(L, 1);
+	struct dtex_package* pkg = dtexf_query_pkg(pkg_name);
+	if (!pkg) {
+		return 0;
+	}
+
+	assert(lua_istable(L, 2));
+	int sprite_count = lua_rawlen(L, 2);
+	int sprite_ids[sprite_count];
+	for (int i = 0; i < sprite_count; ++i) {
+		lua_rawgeti(L, 2, i+1);
+		const char* spr_name = luaL_checkstring(L, -1);
+	}
+
+	return 0;
+}
+
+/************************************************************************/
 /* debug                                                                */
 /************************************************************************/
 
@@ -126,6 +150,9 @@ luaopen_dtex_c(lua_State* L) {
 		// C3
 		{ "c3_load", lc3_load },
 		{ "c3_load_end", lc3_load_end },
+
+		// C2
+		{ "async_load_with_c2_from_c3", lasync_load_with_c2_from_c3 },
 
 		// debug
 		{ "debug_draw", ldebug_draw },
