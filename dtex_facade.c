@@ -310,7 +310,7 @@ dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 
 void 
 dtexf_async_load_texture(struct dtex_package* pkg, int idx) {
-	dtex_async_load_texture(pkg, idx);
+	dtex_async_load_texture(pkg, idx, "normal");
 }
 
 /************************************************************************/
@@ -344,7 +344,7 @@ dtexf_async_load_texture_from_c3(struct dtex_package* pkg, int* sprite_ids, int 
 	params->pkg = pkg;
 	params->picture_ids = picture_ids;
 
-	dtex_async_load_multi_textures(pkg, tex_idx, _async_load_texture_from_c3_func, params);
+	dtex_async_load_multi_textures(pkg, tex_idx, _async_load_texture_from_c3_func, params, "only c3");
 	dtex_array_release(tex_idx);
 }
 
@@ -488,7 +488,7 @@ dtexf_async_load_texture_with_c2_from_c3(struct dtex_package* pkg, int* sprite_i
 	params->tex_idx = tex_idx;
 	
 	dtex_package_change_lod(pkg, 0);
-	dtex_async_load_multi_textures(pkg, tex_idx, _async_load_texture_with_c2_from_c3_func, params);
+	dtex_async_load_multi_textures(pkg, tex_idx, _async_load_texture_with_c2_from_c3_func, params, "c2 from c3");
 }
 
 /************************************************************************/

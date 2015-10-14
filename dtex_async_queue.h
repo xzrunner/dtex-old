@@ -15,6 +15,8 @@ struct dtex_async_job {
 
 	int type;
 	void* ud;
+
+	char desc[32];
 };
 
 struct dtex_async_queue;

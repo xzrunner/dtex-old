@@ -18,6 +18,7 @@ enum JOB_TYPE {
 
 struct load_file_params {
 	char* filepath;
+	char desc[32];
 	void (*cb)(struct dtex_import_stream* is, void* ud);
 	void* ud;
 };
@@ -52,12 +53,14 @@ _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 	params->size = sz;
 	params->data = buf;
 
-	params->cb = ((struct load_file_params*)ud)->cb;
-	params->ud = ((struct load_file_params*)ud)->ud;
+	struct load_file_params* prev_params = (struct load_file_params*)ud;
+	params->cb = prev_params->cb;
+	params->ud = prev_params->ud;
 
 	struct dtex_async_job* job = (struct dtex_async_job*)malloc(sizeof(*job));
 	job->type = JOB_PARSER_DATA;
 	job->ud = params;
+	memcpy(job->desc, prev_params->desc, sizeof(prev_params->desc));
 	dtex_async_queue_push(parse_queue, job);
 }
 
@@ -69,6 +72,7 @@ _load_file(void* arg) {
 	}
 
 	struct load_file_params* params = (struct load_file_params*)job->ud;
+	memcpy(params->desc, job->desc, sizeof(job->desc));
 	dtex_load_file(params->filepath, &_unpack_memory_to_job, params);
 	
 	free(params->filepath);
@@ -79,7 +83,7 @@ _load_file(void* arg) {
 }
 
 void 
-dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream* is, void* ud), void* ud) {
+dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream* is, void* ud), void* ud, const char* desc) {
 	struct load_file_params* params = (struct load_file_params*)malloc(sizeof(*params));
 
 	params->filepath = (char*)malloc(strlen(filepath) + 1);
@@ -92,6 +96,8 @@ dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream*
 	struct dtex_async_job* job = (struct dtex_async_job*)malloc(sizeof(*job));
 	job->type = JOB_LOAD_FILE;
 	job->ud = params;
+	strcpy(job->desc, desc);
+	job->desc[strlen(job->desc)] = 0;
 	dtex_async_queue_push(load_queue, job);
 
 	pthread_create(&job->id, NULL, _load_file, NULL);
