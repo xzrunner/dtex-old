@@ -121,8 +121,9 @@ static int
 lasync_load_with_c2_from_c3(lua_State* L) {
 	const char* pkg_name = luaL_checkstring(L, 1);
 	struct dtex_package* pkg = dtexf_query_pkg(pkg_name);
-	if (!pkg) {
-		return 0;
+	if (!pkg || pkg->c3_loading != 0) {
+		lua_pushboolean(L, 0);
+		return 1;
 	}
 
 	assert(lua_istable(L, 2));
@@ -136,7 +137,8 @@ lasync_load_with_c2_from_c3(lua_State* L) {
 
 	dtexf_async_load_texture_with_c2_from_c3(pkg, sprite_ids, sprite_count);
 
-	return 0;
+	lua_pushboolean(L, 1);
+	return 1;
 }
 
 /************************************************************************/

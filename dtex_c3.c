@@ -68,6 +68,16 @@ struct dtex_c3 {
 	int preload_size;
 };
 
+static inline void
+_reset_preload_list(struct dtex_c3* c3) {
+	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
+	struct preload_node* first_node = (struct preload_node*)((intptr_t)c3 + sizeof(struct dtex_c3) + nsize);
+	for (int i = 0; i < PRELOAD_SIZE; ++i) {
+		c3->preload_list[i] = first_node+i;
+	}
+	c3->preload_size = 0;
+}
+
 struct dtex_c3* 
 dtex_c3_create(int texture_size) {
 	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
@@ -85,10 +95,7 @@ dtex_c3_create(int texture_size) {
 	}
 	c3->freelist[NODE_SIZE-1].next_hash = NULL;
 
-	struct preload_node* first_node = (struct preload_node*)((intptr_t)c3->freelist + nsize);
-	for (int i = 0; i < PRELOAD_SIZE; ++i) {
-		c3->preload_list[i] = first_node+i;
-	}
+	_reset_preload_list(c3);
 
 	return c3;
 }
@@ -413,6 +420,8 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 		dtex_package_remove_texture_ref(node->pkg, tex);
 		dtex_texture_release(tex);
 	}
+
+	--node->pkg->c3_loading;
 }
 
 static inline void
@@ -461,9 +470,10 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 					tex_loaded = true;
 				}
 			} else {
+				++pkg->c3_loading;
 				char path_full[strlen(pkg->filepath) + 10];
 				dtex_get_texture_filepath(pkg->filepath, pkg_idx, pkg->LOD, path_full);
- 				dtex_async_load_file(path_full, _relocate_nodes_cb, dr);
+ 				dtex_async_load_file(path_full, _relocate_nodes_cb, dr, "c3");
  			}
 		}
 
@@ -524,7 +534,7 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 	_relocate_nodes(c3, loader, async);
 	dtex_draw_after();
 
-    c3->preload_size = 0;
+	_reset_preload_list(c3);
 }
 
 //struct dp_pos* 
