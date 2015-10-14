@@ -61,6 +61,8 @@ void dtex_package_remove_all_textures_ref(struct dtex_package*);
 
 int dtex_package_texture_idx(struct dtex_package*, struct dtex_texture*);
 
+void dtex_package_change_lod(struct dtex_package*, int lod);
+
 #endif // dynamic_texture_package_h
 
 #ifdef __cplusplus

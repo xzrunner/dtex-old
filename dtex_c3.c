@@ -350,6 +350,10 @@ _relocate_pic(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		for (int j = 0; j < 4; ++j) {
 			float x = (float)ej_q->texture_coord[j*2]   * src->inv_width;
 			float y = (float)ej_q->texture_coord[j*2+1] * src->inv_height;
+			if (src->type == DTEX_TT_RAW) {
+				x *= src->t.RAW.lod_scale;
+				y *= src->t.RAW.lod_scale;
+			}
 			ej_q->texture_coord[j*2]   = dr->dst_rect.xmin + (dr->dst_rect.xmax - dr->dst_rect.xmin) * x;
 			ej_q->texture_coord[j*2+1] = dr->dst_rect.ymin + (dr->dst_rect.ymax - dr->dst_rect.ymin) * y;
 		}

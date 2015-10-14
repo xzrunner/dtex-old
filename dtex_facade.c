@@ -55,6 +55,8 @@ struct dtex_config {
 	int c1_tex_size;
 	int c2_tex_size;
 	int c3_tex_size;
+
+	int LOD[3];
 };
 struct dtex_config CFG;
 
@@ -83,6 +85,12 @@ _config(const char* str) {
 		CFG.c3_tex_size = cJSON_GetObjectItem(root, "c3_tex_size")->valueint;
 	}
 
+	cJSON* lod = cJSON_GetObjectItem(root, "LOD");
+	int lod_sz = cJSON_GetArraySize(lod);
+	for (int i = 0; i < lod_sz && i < 3; ++i) {
+		CFG.LOD[i] = cJSON_GetArrayItem(lod, i)->valueint;
+	}
+
 	cJSON_Delete(root);
 }
 
@@ -98,6 +106,10 @@ dtexf_create(const char* cfg) {
 	CFG.c2_tex_size = 4096;
 	CFG.c3_tex_size = 2048;
 
+	CFG.LOD[0] = 100;
+	CFG.LOD[1] = 50;
+	CFG.LOD[2] = 25;
+
 	if (cfg) {
 		_config(cfg);		
 	}
@@ -105,6 +117,8 @@ dtexf_create(const char* cfg) {
 	dtex_hard_res_init(CFG.needed_texture * 2048 * 2048);
 
 	dtex_stat_init();
+
+	dtex_lod_init(CFG.LOD);
 
 	dtex_res_cache_create();
 
@@ -466,6 +480,7 @@ dtexf_async_load_texture_with_c2_from_c3(struct dtex_package* pkg, int* sprite_i
 	params->picture_ids = picture_ids;
 	params->tex_idx = tex_idx;
 	
+	dtex_package_change_lod(pkg, 0);
 	dtex_async_load_multi_textures(pkg, tex_idx, _async_load_texture_with_c2_from_c3_func, params);
 }
 

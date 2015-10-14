@@ -29,6 +29,7 @@ struct dtex_texture {
 			int id_alpha;	// for etc1
 			int format;
 			float scale;
+			float lod_scale;
 		} RAW;
 
 		struct {
@@ -37,7 +38,7 @@ struct dtex_texture {
 	} t;
 };
 
-struct dtex_texture* dtex_texture_create_raw();
+struct dtex_texture* dtex_texture_create_raw(int lod);
 struct dtex_texture* dtex_texture_create_mid(int edge);
 void dtex_texture_release(struct dtex_texture*);
 

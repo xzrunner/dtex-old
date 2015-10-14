@@ -1,4 +1,6 @@
 #include "dtex_package.h"
+#include "dtex_resource.h"
+#include "dtex_texture.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -71,4 +73,20 @@ dtex_package_texture_idx(struct dtex_package* pkg, struct dtex_texture* tex) {
 		}
 	}
 	return -1;
+}
+
+void 
+dtex_package_change_lod(struct dtex_package* pkg, int lod) {
+	if (pkg->LOD == lod) {
+		return;
+	}
+
+	pkg->LOD = lod;
+	float scale = dtex_lod_get_scale(lod);
+	for (int i = 0; i < pkg->texture_count; ++i) {
+		if (!pkg->textures[i]) {
+			continue;
+		}
+		pkg->textures[i]->t.RAW.lod_scale = scale;
+	}
 }

@@ -5,6 +5,7 @@
 #include "dtex_target.h"
 #include "dtex_res_cache.h"
 #include "dtex_hard_res.h"
+#include "dtex_resource.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -38,7 +39,7 @@ _get_free_texture() {
 }
 
 struct dtex_texture* 
-dtex_texture_create_raw() {
+dtex_texture_create_raw(int lod) {
 	struct dtex_texture* tex = _get_free_texture();
 	if (!tex) {
 		dtex_fault("dtex_create_raw_texture fail.");
@@ -47,6 +48,7 @@ dtex_texture_create_raw() {
 
 	tex->type = DTEX_TT_RAW;
 	tex->t.RAW.scale = 1;
+	tex->t.RAW.lod_scale = dtex_lod_get_scale(lod);
 
 	return tex;
 }
@@ -88,7 +90,7 @@ dtex_texture_create_mid(int edge) {
 	return tex;
 }
 
-void 
+void
 dtex_texture_release(struct dtex_texture* tex) {
 	if (!tex) { return; }
 

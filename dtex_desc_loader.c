@@ -109,7 +109,9 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 	qsort(pkg->export_names, pkg->export_size, sizeof(struct export_name), _comp_export);
 
 	struct ej_sprite_pack* ej_pkg = ej_pkg_import((void*)is->stream, body_sz, tex, maxid, unpack_sz);
-	dtex_ej_pkg_traverse(ej_pkg, _scale_pic, &scale);
+	if (scale != 1) {
+		dtex_ej_pkg_traverse(ej_pkg, _scale_pic, &scale);
+	}
 	pkg->ej_pkg = ej_pkg;
 
 	_load_sprites_extend_info(pkg);

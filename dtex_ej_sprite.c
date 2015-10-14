@@ -71,6 +71,10 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
 
 		   float tx = q->texture_coord[j*2+0];
 		   float ty = q->texture_coord[j*2+1];
+		   if (tex->type == DTEX_TT_RAW) {
+			   tx *= tex->t.RAW.lod_scale;
+			   ty *= tex->t.RAW.lod_scale;
+		   }
 		   tx *= tex->inv_width;
 		   ty *= tex->inv_height;
 

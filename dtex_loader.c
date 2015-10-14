@@ -235,7 +235,7 @@ _unpack_memory_to_preload_texture(struct dtex_import_stream* is, void* ud) {
 
 	struct dtex_package* pkg = params->pkg;
 
-	struct dtex_texture* tex = dtex_texture_create_raw();
+	struct dtex_texture* tex = dtex_texture_create_raw(pkg->LOD);
 	if (!tex) {
 		dtex_fault("_unpack_memory_to_preload_texture dtex_texture_create_raw err.");
 	}
