@@ -63,10 +63,11 @@ struct dtex_c2 {
 	int preload_size;
 };
 
-void
+static inline void
 _reset_preload_list(struct dtex_c2* c2) {
 	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
-	struct preload_node* first_node = (struct preload_node*)((intptr_t)c2->freelist + nsize);
+	struct preload_node* first_node = (struct preload_node*)((intptr_t)c2 + sizeof(struct dtex_c2) + nsize);
+	memset(first_node, 0, sizeof(struct preload_node) * PRELOAD_SIZE);
 	for (int i = 0; i < PRELOAD_SIZE; ++i) {
 		c2->preload_list[i] = first_node+i;
 	}
