@@ -399,10 +399,10 @@ static inline void
 _get_pic_ori_rect(int ori_w, int ori_h, float* ori_vb, struct dtex_rect* rect) {
 	float xmin = 1, ymin = 1, xmax = 0, ymax = 0;
 	for (int i = 0; i < 4; ++i) {
-		if (ori_vb[i*4+2] < xmin) xmin = ori_vb[i*4+2];
-		if (ori_vb[i*4+2] > xmax) xmax = ori_vb[i*4+2];
-		if (ori_vb[i*4+3] < ymin) ymin = ori_vb[i*4+3];
-		if (ori_vb[i*4+3] > ymax) ymax = ori_vb[i*4+3];
+		if (ori_vb[i*2] < xmin) xmin = ori_vb[i*2];
+		if (ori_vb[i*2] > xmax) xmax = ori_vb[i*2];
+		if (ori_vb[i*2+1] < ymin) ymin = ori_vb[i*2+1];
+		if (ori_vb[i*2+1] > ymax) ymax = ori_vb[i*2+1];
 	}
 	rect->xmin = ori_w * xmin;
 	rect->ymin = ori_h * ymin;
@@ -411,7 +411,7 @@ _get_pic_ori_rect(int ori_w, int ori_h, float* ori_vb, struct dtex_rect* rect) {
 }
 
 float* 
-dtex_c2_lookup_texcoords(struct dtex_c2* c2, struct dtex_texture* tex, float vb[16], int* out_texid) {
+dtex_c2_lookup_texcoords(struct dtex_c2* c2, struct dtex_texture* tex, float vb[8], int* out_texid) {
 	struct dtex_rect rect;
 	_get_pic_ori_rect(tex->width, tex->height, vb, &rect);
 

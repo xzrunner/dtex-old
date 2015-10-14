@@ -26,6 +26,7 @@
 #include "dtex_array.h"
 #include "dtex_hard_res.h"
 #include "dtex_res_cache.h"
+#include "dtex_resource.h"
 
 #include <cJSON.h>
 
@@ -420,12 +421,16 @@ _async_load_texture_with_c2_from_c3_func(void* ud) {
 
 	dtex_swap_quad_src_info(pkg, params->picture_ids);
 
+	dtex_info("+++++++++++++++ c2 [[[[, %s \n", pkg->name);
+
 	dtex_c2_load_begin(C2); 
 	for (int i = 0; i < params->sprite_count; ++i) {
 		dtexf_c2_load(pkg, params->sprite_ids[i]);
 	}
 	free(params->sprite_ids);
 	dtex_c2_load_end(C2, LOADER, true);
+
+	dtex_info("+++++++++++++++ c2 ]]]], %s \n", pkg->name);
 
 	struct dtex_texture* dst_textures[pkg->texture_count];
 	struct dtex_rect* dst_regions[pkg->texture_count];
