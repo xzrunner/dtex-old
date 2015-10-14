@@ -5,9 +5,11 @@
 #include "dtex_desc_loader.h"
 #include "dtex_texture.h"
 #include "dtex_array.h"
+#include "dtex_resource.h"
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 /************************************************************************/
 /* load one texture                                                     */
