@@ -35,25 +35,35 @@ lrelease(lua_State* L) {
 /************************************************************************/
 
 static int
-lpreload_pkg(lua_State* L) {
+lload_package(lua_State* L) {
 	const char* name = luaL_checkstring(L, 1);
 	const char* path = luaL_checkstring(L, 2);
 	const char* stype = luaL_checkstring(L, 3);
 	float scale = luaL_optnumber(L, 4, 1);
+	int lod = luaL_optinteger(L, 5, 0);
 
 	int itype = FILE_INVALID;
-	if (strcmp(stype, "ept") == 0) {
-		itype = FILE_EPT;
-	} else if (strcmp(stype, "epe") == 0) {
+	if (strcmp(stype, "epe") == 0) {
 		itype = FILE_EPE;
 	} else {
 		luaL_error(L, "unknown file type %s", stype);
 	}
-	
- 	struct dtex_package* pkg = dtexf_preload_pkg(name, path, itype, scale);
- 	lua_pushlightuserdata(L, pkg);
+
+	struct dtex_package* pkg = dtexf_load_pkg(name, path, itype, scale, lod);
+	lua_pushlightuserdata(L, pkg);
 
 	return 1;
+}
+
+static int
+lpreload_texture(lua_State* L) {
+	struct dtex_package* pkg = lua_touserdata(L, 1);
+	int idx = lua_tointeger(L, 2);
+	float scale = luaL_optnumber(L, 3, 1);
+
+	dtexf_preload_texture(pkg, idx, scale);
+
+	return 0;
 }
 
 static int
@@ -62,7 +72,8 @@ lload_texture(lua_State* L) {
 	int idx = (int)lua_tointeger(L, 2);
 	float scale = luaL_optnumber(L, 3, 1);
 
-	dtexf_load_texture(pkg, idx, scale);
+	dtexf_load_texture(pkg, idx, scale, true);
+
 	return 0;
 }
 
@@ -147,7 +158,8 @@ luaopen_dtex_c(lua_State* L) {
 		{ "release", lrelease },
 
 		// normal
-		{ "preload_pkg", lpreload_pkg },
+		{ "load_package", lload_package },
+		{ "preload_texture", lpreload_texture },
 		{ "load_texture", lload_texture },
 		{ "query", lquery },
 

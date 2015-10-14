@@ -28,10 +28,12 @@ struct dtex_package* dtexf_query_pkg(const char* name);
 void dtexf_sprite_draw(struct dtex_package*, struct ej_sprite*, struct ej_srt*);
 
 /************************************************************************/
-/* sync load desc file (epe, pts...) and texture                        */
+/* common load                                                          */
 /************************************************************************/
-struct dtex_package* dtexf_preload_pkg(const char* name, const char* path, int type, float scale);
-void dtexf_load_texture(struct dtex_package* pkg, int idx, float scale);
+struct dtex_package* dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lod);
+void dtexf_preload_texture(struct dtex_package* pkg, int idx, float scale);
+void dtexf_load_texture(struct dtex_package*, int idx, float scale, bool create_by_ej);
+
 // todo sort sprite list for C3
 //struct ej_sprite* dtexf_create_sprite(const char* path);
 

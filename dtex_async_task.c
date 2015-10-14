@@ -21,7 +21,9 @@ _load_texture_func(struct dtex_import_stream* is, void* ud) {
 
 void 
 dtex_async_load_texture(struct dtex_package* pkg, int idx) {
-	dtex_async_load_file(pkg->texture_filepaths[idx], _load_texture_func, pkg->textures[idx]);
+	char path_full[strlen(pkg->filepath) + 10];
+	dtex_get_texture_filepath(pkg->filepath, idx, pkg->LOD, path_full);
+	dtex_async_load_file(path_full, _load_texture_func, pkg->textures[idx]);
 }
 
 /************************************************************************/
@@ -87,7 +89,9 @@ dtex_async_load_multi_textures(struct dtex_package* pkg, struct dtex_array* text
 		}
 		params->tex = pkg->textures[idx];
 
-		dtex_async_load_file(pkg->texture_filepaths[idx], _load_multi_textures_func, params);
+		char path_full[strlen(pkg->filepath) + 10];
+		dtex_get_texture_filepath(pkg->filepath, idx, pkg->LOD, path_full);
+		dtex_async_load_file(path_full, _load_multi_textures_func, params);
 	}
 }
 

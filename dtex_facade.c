@@ -164,13 +164,18 @@ dtexf_sprite_draw(struct dtex_package* pkg, struct ej_sprite* spr, struct ej_srt
 /************************************************************************/
 
 struct dtex_package* 
-dtexf_preload_pkg(const char* name, const char* path, int type, float scale) {
-	return dtex_preload_pkg(LOADER, name, path, type, scale);
+dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lod) {
+	return dtex_load_pkg(LOADER, name, path, type, scale, lod);
 }
 
 void 
-dtexf_load_texture(struct dtex_package* pkg, int idx, float scale) {
-	dtex_load_texture(LOADER, pkg, idx, scale, true);
+dtexf_preload_texture(struct dtex_package* pkg, int idx, float scale) {
+	dtex_preload_texture(LOADER, pkg, idx, scale);
+}
+
+void
+dtexf_load_texture(struct dtex_package* pkg, int idx, float scale, bool create_by_ej) {
+	dtex_load_texture(LOADER, pkg, idx, scale, create_by_ej);
 }
 
 //struct ej_sprite* 

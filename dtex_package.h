@@ -31,10 +31,11 @@ struct pic_ext_info {
 
 struct dtex_package {
 	char* name;
+	char* filepath;
 
 	struct dtex_texture* textures[DTEX_PACK_TEX_SZ];
-	char* texture_filepaths[DTEX_PACK_TEX_SZ];
 	int texture_count;
+	int LOD;
 
 	struct export_name* export_names;
 	int export_size;

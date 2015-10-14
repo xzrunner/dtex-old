@@ -13,6 +13,7 @@
 #include "dtex_async_loader.h"
 #include "dtex_texture.h"
 #include "dtex_res_cache.h"
+#include "dtex_resource.h"
 
 #include "ejoy2d.h"
 
@@ -428,8 +429,10 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 	struct dtex_package* last_pkg = NULL;
 	for (int i = 0; i < count; ++i) {
 		struct dtex_node* dr = nodes[i];
+		struct dtex_package* pkg = dr->pkg;
+
 		// change package should flush shader, as texture maybe removed
-		if (last_pkg != NULL && dr->pkg != last_pkg) {
+		if (last_pkg != NULL && pkg != last_pkg) {
 			dtex_flush_shader();
 		}
 
@@ -437,36 +440,38 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 
 		bool tex_loaded = false;
 		struct dtex_texture* ori_tex = NULL;
-		if (dr->pkg->rrr_pkg) {
-//			ori_tex = dtex_rrr_load_tex(dr->pkg->rrr_pkg, dr->pkg, dr->raw_tex_idx);
-		} else if (dr->pkg->b4r_pkg) {
-//			ori_tex = dtex_b4r_load_tex(dr->pkg->b4r_pkg, dr->pkg, dr->raw_tex_idx);
+		if (pkg->rrr_pkg) {
+//			ori_tex = dtex_rrr_load_tex(pkg->rrr_pkg, pkg, dr->raw_tex_idx);
+		} else if (pkg->b4r_pkg) {
+//			ori_tex = dtex_b4r_load_tex(pkg->b4r_pkg, pkg, dr->raw_tex_idx);
 		} else {
-			ori_tex = dr->pkg->textures[dr->src_tex_idx];
+			ori_tex = pkg->textures[dr->src_tex_idx];
 			assert(ori_tex && ori_tex->type == DTEX_TT_RAW);
-			int pkg_idx = dtex_package_texture_idx(dr->pkg, ori_tex);
+			int pkg_idx = dtex_package_texture_idx(pkg, ori_tex);
 			assert(pkg_idx != -1);
 			if (!async) {
 				if (ori_tex->id == 0) {
 					tex_loaded = false;
-					dtex_load_texture(loader, dr->pkg, pkg_idx, ori_tex->t.RAW.scale, false);
+					dtex_load_texture(loader, pkg, pkg_idx, ori_tex->t.RAW.scale, false);
 				} else {
 					tex_loaded = true;
 				}
 			} else {
- 				dtex_async_load_file(dr->pkg->texture_filepaths[pkg_idx], _relocate_nodes_cb, dr);
+				char path_full[strlen(pkg->filepath) + 10];
+				dtex_get_texture_filepath(pkg->filepath, pkg_idx, pkg->LOD, path_full);
+ 				dtex_async_load_file(path_full, _relocate_nodes_cb, dr);
  			}
 		}
 
  		if (!async) {
  			_relocate_node(ori_tex, dr);
  			if (!tex_loaded) {
-				dtex_package_remove_texture_ref(dr->pkg, ori_tex);
+				dtex_package_remove_texture_ref(pkg, ori_tex);
 				dtex_texture_release(ori_tex);
  			}
  		}
 
-		last_pkg = dr->pkg;
+		last_pkg = pkg;
 	}
 }
 
