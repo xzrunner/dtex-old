@@ -37,7 +37,7 @@ _check_framebuffer_status() {
 	switch(status)
 	{
 	case GL_FRAMEBUFFER_COMPLETE:
-		dtex_info("++ target: Framebuffer complete.\n");
+//		dtex_info("++ target: Framebuffer complete.\n");
 		return 1;
 	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
 		dtex_info("++ target: [ERROR] Framebuffer incomplete: Attachment is NOT complete.\n");

@@ -472,7 +472,16 @@ dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struc
 
 void 
 dtex_c2_debug_draw(struct dtex_c2* c2) {
+#ifdef USED_IN_EDITOR
 	dtex_debug_draw(c2->textures[0]->id);
+#else
+	if (c2->tex_size > 0) {
+		dtex_debug_draw_ej(c2->textures[0]->uid_3rd, 1);
+		if (c2->tex_size > 1) {
+			dtex_debug_draw_ej(c2->textures[1]->uid_3rd, 4);
+		}
+	}
+#endif // USED_IN_EDITOR
 
 	// const float edge = 0.5f;
 	// int col = 2 / edge;

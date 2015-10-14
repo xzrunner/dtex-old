@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -116,11 +117,14 @@ lasync_load_with_c2_from_c3(lua_State* L) {
 
 	assert(lua_istable(L, 2));
 	int sprite_count = lua_rawlen(L, 2);
-	int sprite_ids[sprite_count];
+	int* sprite_ids = malloc(sizeof(int) * sprite_count);
 	for (int i = 0; i < sprite_count; ++i) {
 		lua_rawgeti(L, 2, i+1);
 		const char* spr_name = luaL_checkstring(L, -1);
+		sprite_ids[i] = dtex_get_spr_id(pkg, spr_name);
 	}
+
+	dtexf_async_load_texture_with_c2_from_c3(pkg, sprite_ids, sprite_count);
 
 	return 0;
 }

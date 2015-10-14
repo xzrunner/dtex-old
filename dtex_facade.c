@@ -405,6 +405,7 @@ _async_load_texture_with_c2_from_c3_func(void* ud) {
 	for (int i = 0; i < params->sprite_count; ++i) {
 		dtexf_c2_load(pkg, params->sprite_ids[i]);
 	}
+	free(params->sprite_ids);
 	dtex_c2_load_end(C2, LOADER, true);
 
 	struct dtex_texture* dst_textures[pkg->texture_count];
