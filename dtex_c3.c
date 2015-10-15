@@ -62,18 +62,9 @@ struct dtex_c3 {
 
 	struct dtex_hash* hash;
 
-	struct preload_node* preload_list[PRELOAD_SIZE];
-	int preload_size;
+	int preload_size;	
+	struct preload_node preload_list[1];
 };
-
-static inline void
-_reset_preload_list(struct dtex_c3* c3) {
-	struct preload_node* first = (struct preload_node*)(c3 + 1);
-	for (int i = 0; i < PRELOAD_SIZE; ++i) {
-		c3->preload_list[i] = first + i;
-	}
-	c3->preload_size = 0;
-}
 
 struct dtex_c3* 
 dtex_c3_create(int texture_size) {
@@ -88,7 +79,7 @@ dtex_c3_create(int texture_size) {
 
 	c3->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
 
-	_reset_preload_list(c3);
+	c3->preload_size = 0;
 
 	return c3;
 }
@@ -103,15 +94,17 @@ void dtex_c3_release(struct dtex_c3* c3) {
 
 void 
 dtex_c3_load(struct dtex_c3* c3, struct dtex_package* pkg, float scale) {
-	for (int i = 0; i < c3->preload_size; ++i) {
-		if (pkg == c3->preload_list[i]->pkg) {
-			return;
-		}
+	struct c3_node* node = (struct c3_node*)dtex_hash_query(c3->hash, pkg->name);
+	if (node) {
+		return;
 	}
 
 	for (int i = 0; i < pkg->texture_count; ++i) {
-		assert(c3->preload_size <= MAX_TEX_SIZE);
-		struct preload_node* n = c3->preload_list[c3->preload_size++];
+		if (c3->preload_size == MAX_TEX_SIZE) {
+			dtex_warning("dtex_c3_load preload full");
+			return;
+		}
+		struct preload_node* n = &c3->preload_list[c3->preload_size++];
 		n->pkg = pkg;
 		n->tex_idx = i;
 		n->scale = scale;
@@ -173,14 +166,18 @@ _compare_preload_length(const void *arg1, const void *arg2) {
 }
 
 static inline void
-_unique_nodes(struct dtex_c3* c3) {
-	qsort((void*)c3->preload_list, c3->preload_size, sizeof(struct preload_node*), _compare_preload_name);
+_get_unique_prenodes(struct dtex_c3* c3, struct preload_node** ret_set, int* ret_sz) {
+	for (int i = 0; i < c3->preload_size; ++i) {
+		ret_set[i] = &c3->preload_list[i];
+	}
+	qsort((void*)ret_set, c3->preload_size, sizeof(struct preload_node*), _compare_preload_name);
+
 	struct preload_node* unique[PRELOAD_SIZE];
-	unique[0] = c3->preload_list[0];
+	unique[0] = ret_set[0];
 	int unique_size = 1;
 	for (int i = 1; i < c3->preload_size; ++i) {
 		struct preload_node* last = unique[unique_size-1];
-		struct preload_node* curr = c3->preload_list[i];
+		struct preload_node* curr = ret_set[i];
 		if (strcmp(curr->pkg->name, last->pkg->name) == 0 && curr->tex_idx == last->tex_idx) {
 			;
 		} else {
@@ -188,8 +185,8 @@ _unique_nodes(struct dtex_c3* c3) {
 			++unique_size;
 		}
 	}
-	memcpy(c3->preload_list, unique, unique_size*sizeof(struct preload_node*));
-	c3->preload_size = unique_size;	
+	memcpy(ret_set, unique, unique_size * sizeof(struct preload_node*));
+	*ret_sz = unique_size;	
 }
 
 static inline bool
@@ -233,7 +230,7 @@ _pack_preload_node(struct dtex_c3* c3, float scale, struct preload_node* pre_nod
 }
 
 static inline bool
-_pack_preload_list_with_scale(struct dtex_c3* c3, float scale) {
+_pack_preload_list_with_scale(struct dtex_c3* c3, struct preload_node** pre_list, int pre_sz, float scale) {
 	// init rect packer
 	for (int i = 0; i < c3->tex_size; ++i) {
 		struct dtex_texture* tex = c3->textures[i];
@@ -252,8 +249,8 @@ _pack_preload_list_with_scale(struct dtex_c3* c3, float scale) {
 
 	// insert
 	int first_try_idx = 0;
-	for (int i = 0; i < c3->preload_size; ++i) {
-		struct preload_node* node = c3->preload_list[i];
+	for (int i = 0; i < pre_sz; ++i) {
+		struct preload_node* node = pre_list[i];
 		bool success = false;
 		for (int j = 0; j < c3->tex_size; ++j) {
 			struct dtex_texture* tex = c3->textures[(first_try_idx+ j) % c3->tex_size];
@@ -271,13 +268,12 @@ _pack_preload_list_with_scale(struct dtex_c3* c3, float scale) {
 }
 
 static inline float
-_pack_nodes(struct dtex_c3* c3, float alloc_scale) {
-	qsort((void*)c3->preload_list, c3->preload_size, 
-		sizeof(struct _pack_nodes*), _compare_preload_length);
+_pack_nodes(struct dtex_c3* c3, struct preload_node** pre_list, int pre_sz, float alloc_scale) {
+	qsort((void*)pre_list, pre_sz, sizeof(struct preload_node*), _compare_preload_length);
 
 	float scale = alloc_scale;
 	while (scale > MIN_SCALE) {
-		bool success = _pack_preload_list_with_scale(c3, scale);
+		bool success = _pack_preload_list_with_scale(c3, pre_list, pre_sz, scale);
 		if (!success) {
 			scale *= SCALE_EVERTIME;
         } else {
@@ -457,10 +453,10 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 }
 
 static inline float
-_alloc_texture(struct dtex_c3* c3) {
+_alloc_texture(struct dtex_c3* c3, struct preload_node** pre_list, int pre_sz) {
 	float area = 0;
-	for (int i = 0; i < c3->preload_size; ++i) {
-		struct preload_node* n = c3->preload_list[i];
+	for (int i = 0; i < pre_sz; ++i) {
+		struct preload_node* n = pre_list[i];
 		struct dtex_texture* tex = n->pkg->textures[n->tex_idx];
 		int w = tex->width * n->scale,
 			h = tex->height * n->scale;
@@ -491,17 +487,19 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 		return;
 	}
 
-	_unique_nodes(c3);
+	struct preload_node* unique_set[c3->preload_size];
+	int unique_sz = 0;
+	_get_unique_prenodes(c3, unique_set, &unique_sz);
 
-	float alloc_scale = _alloc_texture(c3);
+	float alloc_scale = _alloc_texture(c3, unique_set, unique_sz);
 
-	/*float scale = */_pack_nodes(c3, alloc_scale);
+	/*float scale = */_pack_nodes(c3, unique_set, unique_sz, alloc_scale);
 
 	dtex_draw_before();
 	_relocate_nodes(c3, loader, async);
 	dtex_draw_after();
 
-	_reset_preload_list(c3);
+	c3->preload_size = 0;
 }
 
 //struct dp_pos* 
