@@ -1,4 +1,5 @@
 #include "dtex_hash.h"
+#include "dtex_array.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -110,6 +111,19 @@ dtex_hash_query(struct dtex_hash* hash, void* key) {
 	while (hn) {
 		if (hash->equal_func(key, hn->key)) {
 			return hn->val;
+		}
+		hn = hn->next;
+	}
+	return NULL;
+}
+
+void 
+dtex_hash_query_all(struct dtex_hash* hash, void* key, struct dtex_array* ret) {
+	unsigned int idx = hash->hash_func(hash->c->hash_sz, key);
+	struct hash_node* hn = hash->c->hashlist[idx];
+	while (hn) {
+		if (hash->equal_func(key, hn->key)) {
+			dtex_array_add(ret, &hn->val);
 		}
 		hn = hn->next;
 	}

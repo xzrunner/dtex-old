@@ -16,6 +16,7 @@
 #include "dtex_resource.h"
 #include "dtex_hash.h"
 #include "dtex_log.h"
+#include "dtex_array.h"
 
 #include "ejoy2d.h"
 
@@ -62,6 +63,8 @@ struct dtex_c3 {
 
 	struct dtex_hash* hash;
 
+	struct dtex_array* tmp_array;	// cache for dtex_c3_query_map_info
+
 	int prenode_size;	
 	struct c3_prenode prenodes[1];
 };
@@ -79,6 +82,8 @@ dtex_c3_create(int texture_size) {
 
 	c3->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
 
+	c3->tmp_array = dtex_array_create(128, sizeof(struct c3_node));
+
 	c3->prenode_size = 0;
 
 	return c3;
@@ -88,7 +93,11 @@ void dtex_c3_release(struct dtex_c3* c3) {
 	for (int i = 0; i < c3->tex_size; ++i) {
 		dtex_res_cache_return_mid_texture(c3->textures[i]);
 	}
+
 	dtex_hash_release(c3->hash);
+
+	dtex_array_release(c3->tmp_array);
+
 	free(c3);
 }
 
@@ -624,10 +633,12 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 
 void
 dtex_c3_query_map_info(struct dtex_c3* c3, struct dtex_package* pkg, struct dtex_texture** textures, struct dtex_rect** regions) {
-	struct c3_node* node = (struct c3_node*)dtex_hash_query(c3->hash, pkg->name);
-	if (node) {
+	dtex_hash_query_all(c3->hash, pkg->name, c3->tmp_array);
+	int sz = dtex_array_size(c3->tmp_array);
+	for (int i = 0; i < sz; ++i) {
+		struct c3_node* node = *(struct c3_node**)dtex_array_fetch(c3->tmp_array, i);
 		textures[node->src_tex_idx] = node->dst_tex;
-		regions[node->src_tex_idx]  = &node->dst_rect;
+		regions[node->src_tex_idx]  = &node->dst_rect;		
 	}
 }
 
