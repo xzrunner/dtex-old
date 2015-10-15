@@ -38,3 +38,13 @@ dtex_info(const char* format, ...) {
 	pf_vprint(format+1, ap);
 	va_end(ap);
 }
+
+void 
+dtex_warning(const char* format, ...) {
+	pf_log("[DTEX] warning: ");
+	va_list ap;
+	va_start(ap, format);
+	pf_vprint(format+1, ap);
+	va_end(ap);	
+	pf_log("\n");
+}
