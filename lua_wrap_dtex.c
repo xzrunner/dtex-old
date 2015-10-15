@@ -86,7 +86,7 @@ lquery(lua_State* L) {
 		return 0;
 	}
 
-	lua_pushlightuserdata(L, pkg->ej_pkg);
+	lua_pushlightuserdata(L, pkg);
 
 	int spr_id = dtex_get_spr_id(pkg, spr_name);
 	lua_pushinteger(L, spr_id);
