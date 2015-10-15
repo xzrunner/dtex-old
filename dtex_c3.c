@@ -60,7 +60,7 @@ struct dtex_c3 {
 	struct c3_node nodes[NODE_SIZE];
 	int node_size;
 
-	struct dtex_hash* hash_zz;
+	struct dtex_hash* hash;
 
 	struct preload_node* preload_list[PRELOAD_SIZE];
 	int preload_size;
@@ -86,7 +86,7 @@ dtex_c3_create(int texture_size) {
 
 	c3->tex_edge = texture_size;
 
-	c3->hash_zz = dtex_hash_create(100, 100, 1, dtex_string_hash_func, dtex_string_equal_func);
+	c3->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
 
 	_reset_preload_list(c3);
 
@@ -97,7 +97,7 @@ void dtex_c3_release(struct dtex_c3* c3) {
 	for (int i = 0; i < c3->tex_size; ++i) {
 		dtex_res_cache_return_mid_texture(c3->textures[i]);
 	}
-	dtex_hash_release(c3->hash_zz);
+	dtex_hash_release(c3->hash);
 	free(c3);
 }
 
@@ -227,8 +227,7 @@ _pack_preload_node(struct dtex_c3* c3, float scale, struct preload_node* pre_nod
 
 	pos->ud = node;
 
-	assert(dtex_hash_query(c3->hash_zz, pre_node->pkg->name) == NULL);
-	dtex_hash_insert(c3->hash_zz, pre_node->pkg->name, node, true);
+	dtex_hash_insert(c3->hash, pre_node->pkg->name, node, true);
 
 	return true;
 }
@@ -614,19 +613,9 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 //	}
 //}
 
-struct dtex_package* 
-dtex_c3_query_pkg(struct dtex_c3* c3, const char* name) {
-	struct c3_node* node = (struct c3_node*)dtex_hash_query(c3->hash_zz, (void*)name);
-	if (node) {
-		return node->pkg;
-	} else {
-		return NULL;
-	}
-}
-
 void
 dtex_c3_query_map_info(struct dtex_c3* c3, struct dtex_package* pkg, struct dtex_texture** textures, struct dtex_rect** regions) {
-	struct c3_node* node = (struct c3_node*)dtex_hash_query(c3->hash_zz, pkg->name);
+	struct c3_node* node = (struct c3_node*)dtex_hash_query(c3->hash, pkg->name);
 	if (node) {
 		textures[node->src_tex_idx] = node->dst_tex;
 		regions[node->src_tex_idx]  = &node->dst_rect;
