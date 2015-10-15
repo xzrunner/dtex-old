@@ -8,6 +8,8 @@
 #include "dtex_relocation.h"
 #include "dtex_texture.h"
 #include "dtex_res_cache.h"
+#include "dtex_hash.h"
+#include "dtex_log.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -17,12 +19,16 @@
 #define MAX_TEX_SIZE 128
 
 #define NODE_SIZE 4096*2
-#define HASH_SIZE 7561
 #define PRELOAD_SIZE 4096*2
 
 #define PADDING 1
 
-struct dtex_node {
+struct hash_key {
+	unsigned int texid;
+	struct dtex_rect* rect;
+};
+
+struct c2_node {
 	// ori info
 	struct dtex_texture* ori_tex;
 	struct dtex_rect ori_rect;
@@ -34,14 +40,12 @@ struct dtex_node {
 
 	// draw ori to dst
 	float trans_vb[16];
+
+	// hash
+	struct hash_key hk;
 };
 
-struct hash_node {
-	struct hash_node* next_hash;
-	struct dtex_node n;
-};
-
-struct preload_node {
+struct c2_prenode {
 	struct ej_sprite_pack* ej_pkg;
 	struct ej_pack_quad* ej_quad;
 	struct dtex_texture* ori_tex;
@@ -49,51 +53,57 @@ struct preload_node {
 	struct dtex_rect rect;
 };
 
-// todo hash preload_list
+// todo hash prenodes
 struct dtex_c2 {
 	int loadable;
 
 	struct dtex_texture* textures[MAX_TEX_SIZE];
 	int tex_size;
 
-	struct hash_node* freelist;
-	struct hash_node* hash[HASH_SIZE];
+	struct c2_node nodes[NODE_SIZE];
+	int node_size;
 
-	struct preload_node* preload_list[PRELOAD_SIZE];
-	int preload_size;
+	struct dtex_hash* hash;
+
+	int prenode_size;	
+	struct c2_prenode prenodes[1];
 };
 
-static inline void
-_reset_preload_list(struct dtex_c2* c2) {
-	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
-	struct preload_node* first_node = (struct preload_node*)((intptr_t)c2 + sizeof(struct dtex_c2) + nsize);
-	memset(first_node, 0, sizeof(struct preload_node) * PRELOAD_SIZE);
-	for (int i = 0; i < PRELOAD_SIZE; ++i) {
-		c2->preload_list[i] = first_node+i;
-	}
-	c2->preload_size = 0;
+static inline unsigned int 
+_hash_func(int hash_sz, void* key) {
+	struct hash_key* hk = (struct hash_key*)key;
+	int cx = (int)(0.5f * (hk->rect->xmin + hk->rect->xmax)),
+		cy = (int)(0.5f * (hk->rect->ymin + hk->rect->ymax));
+	return (cx ^ (cy * 97) ^ (hk->texid * 101)) % hash_sz;
+}
+
+static inline bool 
+_equal_func(void* key0, void* key1) {
+	struct hash_key* hk0 = (struct hash_key*)key0;
+	struct hash_key* hk1 = (struct hash_key*)key1;
+	return hk0->rect->xmin == hk1->rect->xmin 
+		&& hk0->rect->ymin == hk1->rect->ymin 
+		&& hk0->rect->xmax == hk1->rect->xmax 
+		&& hk0->rect->ymax == hk1->rect->ymax
+		&& hk0->texid == hk1->texid;
 }
 
 struct dtex_c2* 
 dtex_c2_create(int texture_size) {
-	size_t nsize = NODE_SIZE * sizeof(struct hash_node);
-	size_t psize = PRELOAD_SIZE * sizeof(struct preload_node);
-	size_t sz = sizeof(struct dtex_c2) + nsize + psize;
+	size_t sz = sizeof(struct dtex_c2) + sizeof(struct c2_prenode) * PRELOAD_SIZE;
 	struct dtex_c2* c2 = (struct dtex_c2*)malloc(sz);
+	if (!c2) {
+		return NULL;
+	}
 	memset(c2, 0, sz);
 
 	struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
 	tex->t.MID.packer = dtexpacker_create(tex->width, tex->height, PRELOAD_SIZE);
 	c2->textures[c2->tex_size++] = tex;
 
-	c2->freelist = (struct hash_node*)(c2 + 1);
-	for (int i = 0; i < NODE_SIZE - 1; ++i) {
-		struct hash_node* hn = &c2->freelist[i];
-		hn->next_hash = &c2->freelist[i+1];
-	}
-	c2->freelist[NODE_SIZE-1].next_hash = NULL;
+	c2->hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
 
-	_reset_preload_list(c2);
+	c2->prenode_size = 0;
 
 	return c2;
 }
@@ -103,6 +113,7 @@ dtex_c2_release(struct dtex_c2* c2) {
 	for (int i = 0; i < c2->tex_size; ++i) {
 		dtex_res_cache_return_mid_texture(c2->textures[i]);
 	}
+	dtex_hash_release(c2->hash);
 	free(c2);
 }
 
@@ -110,8 +121,6 @@ void
 dtex_c2_load_begin(struct dtex_c2* c2) {
 	c2->loadable++;
 }
-
-// todo hash pic for preload_list
 
 struct preload_picture_params {
 	struct dtex_c2* c2;
@@ -122,16 +131,21 @@ static inline void
 _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	struct preload_picture_params* params = (struct preload_picture_params*)ud;
 
-	if (params->c2->loadable == 0 || params->c2->preload_size >= PRELOAD_SIZE - 1) {
+	if (params->c2->loadable == 0) {
+		return;
+	}
+
+	if (params->c2->prenode_size >= PRELOAD_SIZE - 1) {
+		dtex_warning("c2 prenode full.");
 		return;
 	}
 
 	for (int i = 0; i < ej_pic->n; ++i) {
-		if (params->c2->preload_size == PRELOAD_SIZE - 1) {
+		if (params->c2->prenode_size == PRELOAD_SIZE - 1) {
 			break;
 		}
 		struct ej_pack_quad* ej_q = &ej_pic->rect[i];
-		struct preload_node* pn = params->c2->preload_list[params->c2->preload_size++];
+		struct c2_prenode* pn = &params->c2->prenodes[params->c2->prenode_size++];
 		pn->ej_pkg = params->pkg->ej_pkg;
 		pn->ej_quad = ej_q;
 		if (ej_q->texid < QUAD_TEXID_IN_PKG_MAX) {
@@ -143,12 +157,16 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	}
 }
 
-// todo hash sprite for preload_list
 void 
 dtex_c2_load(struct dtex_c2* c2, struct dtex_package* pkg, int spr_id) {
 	assert(spr_id >= 0);
 
-	if (c2->loadable == 0 || c2->preload_size >= PRELOAD_SIZE - 1) {
+	if (c2->loadable == 0) {
+		return;
+	}
+
+	if (c2->prenode_size >= PRELOAD_SIZE - 1) {
+		dtex_warning("c2 prenode full.");
 		return;
 	}
 
@@ -160,10 +178,10 @@ dtex_c2_load(struct dtex_c2* c2, struct dtex_package* pkg, int spr_id) {
 
 static inline int 
 _compare_bound(const void *arg1, const void *arg2) {
-	struct preload_node *node1, *node2;
+	struct c2_prenode *node1, *node2;
 
-	node1 = *((struct preload_node**)(arg1));
-	node2 = *((struct preload_node**)(arg2));
+	node1 = *((struct c2_prenode**)(arg1));
+	node2 = *((struct c2_prenode**)(arg2));
 
 	if(node1->rect.xmin < node2->rect.xmin) return -1;
 	if(node1->rect.xmin > node2->rect.xmin) return 1;
@@ -183,41 +201,35 @@ _compare_bound(const void *arg1, const void *arg2) {
 	return 0;
 }
 
-static inline bool 
-_is_rect_same(struct dtex_rect* r0, struct dtex_rect* r1) {
-	return r0->xmin == r1->xmin 
-		&& r0->ymin == r1->ymin 
-		&& r0->xmax == r1->xmax 
-		&& r0->ymax == r1->ymax;		
-}
-
 static inline void
-_unique_nodes(struct dtex_c2* c2) {
-	qsort((void*)c2->preload_list, c2->preload_size, sizeof(struct preload_node*), _compare_bound);
+_get_unique_prenodes(struct dtex_c2* c2, struct c2_prenode** ret_set, int* ret_sz) {
+	for (int i = 0; i < c2->prenode_size; ++i) {
+		ret_set[i] = &c2->prenodes[i];
+	}
+	qsort((void*)ret_set, c2->prenode_size, sizeof(struct c2_prenode*), _compare_bound);
 
-	struct preload_node* unique[PRELOAD_SIZE];
-	unique[0] = c2->preload_list[0];
+	struct c2_prenode* unique[PRELOAD_SIZE];
+	unique[0] = ret_set[0];
 	int unique_size = 1;
-	for (int i = 1; i < c2->preload_size; ++i) {
-		struct preload_node* last = unique[unique_size-1];
-		struct preload_node* curr = c2->preload_list[i];
-		if ((curr->ori_tex->id == last->ori_tex->id) && 
-			_is_rect_same(&curr->rect, &last->rect)) {
+	for (int i = 1; i < c2->prenode_size; ++i) {
+		struct c2_prenode* last = unique[unique_size-1];
+		struct c2_prenode* curr = ret_set[i];
+		if (_compare_bound(&curr, &last) == 0) {
 			;
 		} else {
 			unique[unique_size++] = curr;
 		}
 	}
-	memcpy(c2->preload_list, unique, unique_size*sizeof(struct preload_node*));
-	c2->preload_size = unique_size;
+	memcpy(ret_set, unique, sizeof(struct c2_prenode*) * unique_size);
+	*ret_sz = unique_size;
 }
 
 static inline int
 _compare_max_edge(const void *arg1, const void *arg2) {
-	struct preload_node *node1, *node2;
+	struct c2_prenode *node1, *node2;
 
-	node1 = *((struct preload_node**)(arg1));
-	node2 = *((struct preload_node**)(arg2));
+	node1 = *((struct c2_prenode**)(arg1));
+	node2 = *((struct c2_prenode**)(arg2));
 
 	int16_t w1 = node1->rect.xmax - node1->rect.xmin,
 			h1 = node1->rect.ymax - node1->rect.ymin;
@@ -250,39 +262,16 @@ _compare_max_edge(const void *arg1, const void *arg2) {
 	}
 }
 
-static inline unsigned int
-_hash_node(unsigned int texid, struct dtex_rect* rect) {
-	int cx = (int)(0.5f * (rect->xmin + rect->xmax)),
-		cy = (int)(0.5f * (rect->ymin + rect->ymax));
-	return (cx ^ (cy * 97) ^ (texid * 101)) % HASH_SIZE;
-}
-
-static inline struct hash_node*
+static inline struct c2_node*
 _query_node(struct dtex_c2* c2, unsigned int texid, struct dtex_rect* rect) {
-	unsigned int idx = _hash_node(texid, rect);
-	struct hash_node* hn = c2->hash[idx];
-	while (hn) {
-		struct dtex_node* n = &hn->n;
-		if (n->ori_tex->id == texid && _is_rect_same(&n->ori_rect, rect)) {
-			return hn;
-		}
-		hn = hn->next_hash;
-	}
-	return NULL;
-}
-
-static inline struct hash_node* 
-_new_hash_rect(struct dtex_c2* c2) {
-	if (c2->freelist == NULL) {
-		return NULL;
-	}
-	struct hash_node* ret = c2->freelist;
-	c2->freelist = ret->next_hash;
-	return ret;
+	struct hash_key hk;
+	hk.texid = texid;
+	hk.rect = rect;
+	return (struct c2_node*)dtex_hash_query(c2->hash, &hk);
 }
 
 static inline void
-_set_rect_vb(struct preload_node* pn, struct dtex_node* n, bool rotate) {
+_set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 	struct dtex_inv_size src_sz;
 	src_sz.inv_w = pn->ori_tex->inv_width;
 	src_sz.inv_h = pn->ori_tex->inv_height;
@@ -296,9 +285,8 @@ _set_rect_vb(struct preload_node* pn, struct dtex_node* n, bool rotate) {
 }
 
 static inline void
-_insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct preload_node* pn, bool use_new_tex) {
-	struct hash_node* hn = _query_node(c2, pn->ori_tex->id, &pn->rect);
-	if (hn != NULL) {
+_insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* pn, bool use_new_tex) {
+	if (_query_node(c2, pn->ori_tex->id, &pn->rect)) {
 		return;
 	}
 
@@ -345,40 +333,48 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct preload_node
              (!pos->is_rotated && rotate);
 
 	// save info
-	pos->ud = &hn->n;
-	hn = _new_hash_rect(c2);
-	if (hn == NULL) {
+
+	struct c2_node* node = NULL;
+	if (c2->node_size == NODE_SIZE) {
+		dtex_warning(" c2 nodes empty.");
 		return;
 	}
+	node = &c2->nodes[c2->node_size++];
+
 	assert(tex);
-	hn->n.ori_tex = pn->ori_tex;
-	hn->n.ori_rect = pn->rect;
-	hn->n.dst_tex = tex;
-	hn->n.dst_pos = pos;
-	hn->n.dst_pos->r.xmin += PADDING;
-	hn->n.dst_pos->r.ymin += PADDING;
-	hn->n.dst_pos->r.xmax -= PADDING;
-	hn->n.dst_pos->r.ymax -= PADDING;
+	node->ori_tex = pn->ori_tex;
+	node->ori_rect = pn->rect;
+	node->dst_tex = tex;
+	node->dst_pos = pos;
+	node->dst_pos->r.xmin += PADDING;
+	node->dst_pos->r.ymin += PADDING;
+	node->dst_pos->r.xmax -= PADDING;
+	node->dst_pos->r.ymax -= PADDING;
 
-	_set_rect_vb(pn, &hn->n, rotate);
+	node->hk.texid = pn->ori_tex->id;
+	node->hk.rect = &pn->rect;
+	dtex_hash_insert(c2->hash, &node->hk, node, true);
 
-	unsigned int idx = _hash_node(pn->ori_tex->id, &pn->rect);
-	hn->next_hash = c2->hash[idx];
-	c2->hash[idx] = hn;
+	_set_rect_vb(pn, node, rotate);
+
+	pos->ud = node;
 
 	if (rrp_pic) {
-//		dtex_draw_rrp_to_tex(hn->n.ori_tex, rrp_pic, tex, pos, rotate);
+//		dtex_draw_rrp_to_tex(node->ori_tex, rrp_pic, tex, pos, rotate);
 	} else {
-		dtex_draw_to_texture(hn->n.ori_tex, tex, hn->n.trans_vb);
+		dtex_draw_to_texture(node->ori_tex, tex, node->trans_vb);
 	}
 }
 
 void 
 dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader, bool use_only_one_texture) {
-	if (--c2->loadable > 0 || c2->preload_size == 0) {
+	if (--c2->loadable > 0 || c2->prenode_size == 0) {
 		return;
 	}
-	_unique_nodes(c2);
+
+	struct c2_prenode* unique_set[c2->prenode_size];
+	int unique_sz = 0;
+	_get_unique_prenodes(c2, unique_set, &unique_sz);
 
 	// todo scale
 	if (use_only_one_texture) {
@@ -387,13 +383,13 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader, bool use_only_o
 
 	// insert
 	dtex_draw_before();
-	qsort((void*)c2->preload_list, c2->preload_size, sizeof(struct preload_node*), _compare_max_edge);	
-	for (int i = 0; i < c2->preload_size; ++i) {
-		_insert_node(c2, loader, c2->preload_list[i], !use_only_one_texture);
+	qsort((void*)unique_set, unique_sz, sizeof(struct c2_prenode*), _compare_max_edge);	
+	for (int i = 0; i < unique_sz; ++i) {
+		_insert_node(c2, loader, unique_set[i], !use_only_one_texture);
 	}
 	dtex_draw_after();
 
-	_reset_preload_list(c2);
+	c2->prenode_size = 0;
 }
 
 static inline void
@@ -416,59 +412,44 @@ dtex_c2_lookup_texcoords(struct dtex_c2* c2, struct dtex_texture* tex, float vb[
 	struct dtex_rect rect;
 	_get_pic_ori_rect(tex->width, tex->height, vb, &rect);
 
-	struct hash_node* hn = _query_node(c2, tex->id, &rect);
-	if (hn == NULL) {
+	struct c2_node* node = _query_node(c2, tex->id, &rect);
+	if (!node) {
 		return NULL;
 	}
 
-	*out_texid = hn->n.dst_tex->id;
-	return hn->n.dst_vb;
+	*out_texid = node->dst_tex->id;
+	return node->dst_vb;
 }
 
 void 
 dtexc2_lookup_node(struct dtex_c2* c2, int texid, struct dtex_rect* rect,
 	               struct dtex_texture** out_tex, struct dp_pos** out_pos) {
-	struct hash_node* hn = _query_node(c2, texid, rect);
-	if (hn == NULL) {
+	struct c2_node* node = _query_node(c2, texid, rect);
+	if (node) {
+		*out_tex = node->dst_tex;
+		*out_pos = node->dst_pos;
+	} else {
 		*out_tex = NULL;
 		*out_pos = NULL;
-		return;
 	}
-	*out_tex = hn->n.dst_tex;
-	*out_pos = hn->n.dst_pos;
 }
 
 void 
 dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struct dtex_texture_with_rect* dst) {    
-	unsigned int idx = _hash_node(src->tex->id, &src->rect);
-	struct hash_node* last = NULL;
-	struct hash_node* curr = c2->hash[idx];
-	while (curr) {
-		struct dtex_node* n = &curr->n;
-		if ((n->ori_tex == src->tex) && _is_rect_same(&n->ori_rect, &src->rect)) {
-			break;
-		}
-		last = curr;
-
-		curr = curr->next_hash;
-	}
-
-	if (!curr) {
+	struct hash_key old_hk;
+	old_hk.texid = src->tex->id;
+	old_hk.rect = &src->rect;
+	struct c2_node* node = (struct c2_node*)dtex_hash_remove(c2->hash, &old_hk);
+	if (!node) {
 		return;
 	}
-	assert(curr);
 
-	curr->n.ori_tex = dst->tex;
-	curr->n.ori_rect = dst->rect;
-
-	if (last) {
-		last->next_hash = curr->next_hash;
-	} else {
-		c2->hash[idx] = curr->next_hash;
-	}
-	unsigned int new_idx = _hash_node(dst->tex->id, &dst->rect);
-	curr->next_hash = c2->hash[new_idx];
-	c2->hash[new_idx] = curr;
+	node->ori_tex = dst->tex;
+	node->ori_rect = dst->rect;
+	
+	node->hk.texid = dst->tex->id;
+	node->hk.rect = &dst->rect;
+	dtex_hash_insert(c2->hash, &node->hk, node, true);
 }
 
 void 

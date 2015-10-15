@@ -234,6 +234,31 @@ dtex_hash_insert(struct dtex_hash* hash, void* key, void* val, bool force) {
 	hash->c->hashlist[idx] = hn;
 }
 
+void* 
+dtex_hash_remove(struct dtex_hash* hash, void* key) {
+	unsigned int idx = hash->hash_func(hash->c->hash_sz, key);
+	struct hash_node* prev = NULL;
+	struct hash_node* curr = hash->c->hashlist[idx];
+	while (curr) {
+		if (hash->equal_func(key, curr->key)) {
+			break;
+		}
+		prev = curr;
+		curr = curr->next;
+	}
+
+	if (!curr) {
+		return NULL;
+	}
+
+	if (prev) {
+		prev->next = curr->next;
+	} else {
+		hash->c->hashlist[idx] = curr->next;
+	}
+	return curr;
+}
+
 void 
 dtex_hash_clear(struct dtex_hash* hash) {
 	_init_changeable(hash->c, hash->c->free_cap, hash->c->hash_sz);

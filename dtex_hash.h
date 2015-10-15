@@ -17,6 +17,7 @@ void dtex_hash_release(struct dtex_hash*);
 
 void* dtex_hash_query(struct dtex_hash*, void* key);
 void dtex_hash_insert(struct dtex_hash*, void* key, void* val, bool force);
+void* dtex_hash_remove(struct dtex_hash*, void* key);
 void dtex_hash_clear(struct dtex_hash*);
 
 unsigned int dtex_string_hash_func(int hash_sz, void* key);
