@@ -100,7 +100,7 @@ dtex_c3_load(struct dtex_c3* c3, struct dtex_package* pkg, float scale) {
 	}
 
 	for (int i = 0; i < pkg->texture_count; ++i) {
-		if (c3->preload_size == MAX_TEX_SIZE) {
+		if (c3->preload_size == PRELOAD_SIZE) {
 			dtex_warning("dtex_c3_load preload full");
 			return;
 		}
