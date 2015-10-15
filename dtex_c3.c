@@ -475,6 +475,9 @@ _alloc_texture(struct dtex_c3* c3, struct preload_node** pre_list, int pre_sz) {
  	}
 
 	while (area > 0) {
+		if (c3->tex_size == MAX_TEX_SIZE) {
+			dtex_fault("c3 texture full.");
+		}
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(c3->tex_edge);
 		c3->textures[c3->tex_size++] = tex;
 		area -= c3->tex_edge * c3->tex_edge;
