@@ -77,7 +77,7 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
 		   ty *= tex->inv_height;
 		   c2_key[j*2] = tx;
 		   c2_key[j*2+1] = ty;
-		   if (tex->type == DTEX_TT_RAW) {
+		   if (tex->type == DTEX_TT_RAW && tex->t.RAW.lod_scale != 1) {
 			   tx *= tex->t.RAW.lod_scale;
 			   ty *= tex->t.RAW.lod_scale;
 		   }

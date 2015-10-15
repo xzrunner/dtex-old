@@ -330,7 +330,7 @@ _relocate_pic(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		for (int j = 0; j < 4; ++j) {
 			float x = (float)ej_q->texture_coord[j*2]   * src->inv_width;
 			float y = (float)ej_q->texture_coord[j*2+1] * src->inv_height;
-			if (src->type == DTEX_TT_RAW) {
+			if (src->type == DTEX_TT_RAW && src->t.RAW.lod_scale != 1) {
 				x *= src->t.RAW.lod_scale;
 				y *= src->t.RAW.lod_scale;
 			}
@@ -433,7 +433,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 			if (!async) {
 				if (ori_tex->id == 0) {
 					tex_loaded = false;
-					dtex_load_texture(loader, pkg, pkg_idx, ori_tex->t.RAW.scale, false);
+					dtex_load_texture(loader, pkg, pkg_idx, false);
 				} else {
 					tex_loaded = true;
 				}

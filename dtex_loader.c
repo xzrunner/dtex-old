@@ -328,7 +328,7 @@ dtex_preload_texture(struct dtex_loader* loader, struct dtex_package* pkg, int i
 }
 
 void 
-dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx, float scale, bool create_by_ej) {
+dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx, bool create_by_ej) {
 	char path_full[strlen(pkg->filepath) + 10];
 	dtex_get_texture_filepath(pkg->filepath, idx, pkg->LOD, path_full);
 

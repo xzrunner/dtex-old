@@ -191,8 +191,8 @@ dtexf_preload_texture(struct dtex_package* pkg, int idx, float scale) {
 }
 
 void
-dtexf_load_texture(struct dtex_package* pkg, int idx, float scale, bool create_by_ej) {
-	dtex_load_texture(LOADER, pkg, idx, scale, create_by_ej);
+dtexf_load_texture(struct dtex_package* pkg, int idx, bool create_by_ej) {
+	dtex_load_texture(LOADER, pkg, idx, create_by_ej);
 }
 
 //struct ej_sprite* 

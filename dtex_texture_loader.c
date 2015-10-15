@@ -97,6 +97,8 @@ _scale_texture(struct dtex_texture* tex, float scale, bool create_by_ej) {
 	dst.uid_3rd = uid_3rd;
 	dst.width = new_w;
 	dst.height = new_h;
+	dst.inv_width = 1.0f / new_w;
+	dst.inv_height = 1.0f / new_h;
 	dst.uid = -1;
 	dst.type = DTEX_TT_MID;
 	dst.t.MID.packer = NULL;
@@ -113,6 +115,8 @@ _scale_texture(struct dtex_texture* tex, float scale, bool create_by_ej) {
 	tex->t.RAW.id_alpha = 0;
 	tex->width = new_w;
 	tex->height = new_h;
+	tex->inv_width = 1.0f / new_w;
+	tex->inv_height = 1.0f / new_h;
 }
 
 void 
