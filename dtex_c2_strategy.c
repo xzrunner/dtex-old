@@ -46,7 +46,14 @@ _load_c2(struct dtex_package* pkg) {
 		}
 	}
 
-	dtexf_async_load_texture_with_c2_from_c3(pkg, spr_ids, spr_count);
+	if (pkg->c3_loading != 0) {
+		return;
+	}
+
+	bool succ = dtexf_async_load_texture_with_c2_from_c3(pkg, spr_ids, spr_count);
+	if (!succ) {
+		return;
+	}
 
 	stg->tot_draw_count = 0;
 	for (int i = 0; i < pkg->ej_pkg->n; ++i) {

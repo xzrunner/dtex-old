@@ -48,6 +48,7 @@ struct dtex_package {
 	struct dtex_rrr* rrr_pkg;		// regular rect raw (only for pvr)
 	struct dtex_b4r* b4r_pkg;		// block4 raw (only for pvr)
 
+	int c2_loading;
 	int c3_loading;	
 
 	struct dtex_c2_strategy* c2_stg;

@@ -365,9 +365,14 @@ _async_load_texture_with_c2_func(void* ud) {
 	}
 
 	struct async_load_texture_with_c2_params* params = (struct async_load_texture_with_c2_params*)ud;
+
+	struct dtex_package* pkg = params->pkg;
+	assert(params->pkg->c2_loading == 2);
+	params->pkg->c2_loading = 0;
+
 	dtex_c2_load_begin(C2);
 	for (int i = 0; i < params->sprite_count; ++i) {
-		dtexf_c2_load(params->pkg, params->sprite_ids[i]);
+		dtexf_c2_load(pkg, params->sprite_ids[i]);
 	}
 	dtex_c2_load_end(C2, LOADER, true);
 	free(params);
@@ -386,13 +391,20 @@ _async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprit
 //	dtex_async_load_multi_textures(pkg, uids, count, cb, ud);
 }
 
-void 
+bool 
 dtexf_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
+	if (pkg->c2_loading) {
+		return false;
+	}
+	pkg->c2_loading = 2;
+
 	struct async_load_texture_with_c2_params* params = (struct async_load_texture_with_c2_params*)malloc(sizeof(*params));
 	params->pkg = pkg;
 	params->sprite_ids = sprite_ids;
 	params->sprite_count = sprite_count;
 	_async_load_texture_with_c2(pkg, sprite_ids, sprite_count, _async_load_texture_with_c2_func, params);
+
+	return true;
 }
 
 /************************************************************************/
@@ -420,6 +432,9 @@ _async_load_texture_with_c2_from_c3_func(void* ud) {
 	}
 
 	struct dtex_package* pkg = params->pkg;
+
+	assert(pkg->c2_loading == 1);
+	pkg->c2_loading = 0;
 
 	dtex_swap_quad_src_info(pkg, params->picture_ids);
 
@@ -468,8 +483,13 @@ _async_load_texture_with_c2_from_c3_func(void* ud) {
 	free(params);
 }
 
-void 
+bool 
 dtexf_async_load_texture_with_c2_from_c3(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
+	if (pkg->c2_loading) {
+		return false;
+	}
+	pkg->c2_loading = 1;
+
 	// swap to origin data, get texture idx info
 	struct dtex_array* picture_ids = dtex_get_picture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
 	dtex_swap_quad_src_info(pkg, picture_ids);
@@ -485,6 +505,8 @@ dtexf_async_load_texture_with_c2_from_c3(struct dtex_package* pkg, int* sprite_i
 	
 	dtex_package_change_lod(pkg, 0);
 	dtex_async_load_multi_textures(pkg, tex_idx, _async_load_texture_with_c2_from_c3_func, params, "c2 from c3");
+
+	return true;
 }
 
 /************************************************************************/

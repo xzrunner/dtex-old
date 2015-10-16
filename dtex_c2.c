@@ -120,7 +120,7 @@ dtex_c2_release(struct dtex_c2* c2) {
 
 static inline void
 dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
-	dtex_info("c2 clear");
+	dtex_warning(" c2 clear");
 
 	c2->loadable = 0;
 
