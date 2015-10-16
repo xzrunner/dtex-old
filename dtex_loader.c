@@ -90,7 +90,7 @@ _buf_reserve(struct dtex_loader* loader, uint32_t sz) {
 	free(loader->buf);
 	loader->buf = buf;
 
-	dtex_info("dtex_loader buf size:%0.1fM\n", (float)new_sz / 1024 / 1024);
+	dtex_info("dtex_loader buf size:%0.1fM", (float)new_sz / 1024 / 1024);
 }
 
 static inline void
@@ -360,12 +360,10 @@ dtex_load_file(const char* filepath, void (*unpack_func)(struct dtex_import_stre
 	dtex_file_close(file);
 }
 
-struct dtex_package* 
-dtex_fetch_pkg(struct dtex_loader* loader, int idx) {
-	if (idx < 0 || idx >= loader->pkg_size) {
-		return NULL;
-	} else {
-		return &loader->packages[idx];
+void 
+dtex_package_traverse(struct dtex_loader* loader, void (*pkg_func)(struct dtex_package* pkg)) {
+	for (int i = 0; i < loader->pkg_size; ++i) {
+		pkg_func(&loader->packages[i]);
 	}
 }
 

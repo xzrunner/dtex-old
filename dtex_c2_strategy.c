@@ -74,3 +74,14 @@ dtex_c2_on_draw_sprite(struct ej_sprite* spr) {
 		_load_c2(pkg);
 	}
 }
+
+void 
+dtex_c2_strategy_clear(struct dtex_package* pkg) {
+	struct dtex_c2_strategy* stg = pkg->c2_stg;
+	if (!stg) {
+		return;
+	}
+
+	size_t sz = sizeof(struct dtex_c2_strategy) + sizeof(int) * pkg->ej_pkg->n;
+	memset(stg, 0, sz);
+}

@@ -10,6 +10,7 @@
 #include "dtex_res_cache.h"
 #include "dtex_hash.h"
 #include "dtex_log.h"
+#include "dtex_c2_strategy.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -115,6 +116,28 @@ dtex_c2_release(struct dtex_c2* c2) {
 	}
 	dtex_hash_release(c2->hash);
 	free(c2);
+}
+
+static inline void
+dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
+	dtex_info("c2 clear");
+
+	c2->loadable = 0;
+
+	for (int i = 0; i < c2->tex_size; ++i) {
+		struct dtex_texture* tex = c2->textures[i];
+		dtex_texture_clear(tex);
+		assert(tex->type == DTEX_TT_MID);
+		dtex_tp_clear(tex->t.MID.packer);
+	}
+
+	c2->node_size = 0;
+
+	dtex_hash_clear(c2->hash);
+
+	c2->prenode_size = 0;
+
+	dtex_package_traverse(loader, dtex_c2_strategy_clear);
 }
 
 void 
@@ -284,10 +307,10 @@ _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 	dtex_relocate_quad(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb, n->dst_vb);
 }
 
-static inline void
+static inline bool
 _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* pn, bool use_new_tex) {
 	if (_query_node(c2, pn->ori_tex->id, &pn->rect)) {
-		return;
+		return true;
 	}
 
 	// insert to packer
@@ -325,8 +348,9 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 		if (use_new_tex) {
 			// todo
 		} else {
-			return;
+			dtex_c2_clear(c2, loader);
 		}
+		return false;
 	}
     
     rotate = (pos->is_rotated && !rotate) ||
@@ -337,7 +361,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	struct c2_node* node = NULL;
 	if (c2->node_size == NODE_SIZE) {
 		dtex_warning(" c2 nodes empty.");
-		return;
+		return false;
 	}
 	node = &c2->nodes[c2->node_size++];
 
@@ -364,6 +388,8 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	} else {
 		dtex_draw_to_texture(node->ori_tex, tex, node->trans_vb);
 	}
+
+	return true;
 }
 
 void 
@@ -385,7 +411,10 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader, bool use_only_o
 	dtex_draw_before();
 	qsort((void*)unique_set, unique_sz, sizeof(struct c2_prenode*), _compare_max_edge);	
 	for (int i = 0; i < unique_sz; ++i) {
-		_insert_node(c2, loader, unique_set[i], !use_only_one_texture);
+		bool succ = _insert_node(c2, loader, unique_set[i], !use_only_one_texture);
+		if (!succ) {
+			break;
+		}
 	}
 	dtex_draw_after();
 
