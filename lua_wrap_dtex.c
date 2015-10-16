@@ -113,44 +113,6 @@ lc3_load_end(lua_State* L) {
 	return 0;
 }
 
-/************************************************************************/
-/* c2                                                                   */
-/************************************************************************/
-
-static int
-lasync_load_with_c2_from_c3(lua_State* L) {
-	const char* pkg_name = luaL_checkstring(L, 1);
-	struct dtex_package* pkg = dtexf_query_pkg(pkg_name);
-	if (!pkg || pkg->c3_loading != 0) {
-		lua_pushboolean(L, 0);
-		return 1;
-	}
-
-	assert(lua_istable(L, 2));
-	int sprite_count = lua_rawlen(L, 2);
-	int* sprite_ids = malloc(sizeof(int) * sprite_count);
-	for (int i = 0; i < sprite_count; ++i) {
-		lua_rawgeti(L, 2, i+1);
-		const char* spr_name = luaL_checkstring(L, -1);
-		sprite_ids[i] = dtex_get_spr_id(pkg, spr_name);
-	}
-
-	dtexf_async_load_texture_with_c2_from_c3(pkg, sprite_ids, sprite_count);
-
-	lua_pushboolean(L, 1);
-	return 1;
-}
-
-/************************************************************************/
-/* debug                                                                */
-/************************************************************************/
-
-static int
-ldebug_draw(lua_State* L) {
-	dtexf_debug_draw();
-	return 0;
-}
-
 int
 luaopen_dtex_c(lua_State* L) {
 	luaL_Reg l[] = {
@@ -167,12 +129,6 @@ luaopen_dtex_c(lua_State* L) {
 		// C3
 		{ "c3_load", lc3_load },
 		{ "c3_load_end", lc3_load_end },
-
-		// C2
-		{ "async_load_with_c2_from_c3", lasync_load_with_c2_from_c3 },
-
-		// debug
-		{ "debug_draw", ldebug_draw },
 
 		{ NULL, NULL },		
 	};
