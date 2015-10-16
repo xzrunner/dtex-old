@@ -165,6 +165,7 @@ struct unpack_pkg_params {
 	struct dtex_package* pkg;
 	int file_format;
 	float scale;
+	bool use_c2;
 };
 
 struct unpack_tex_params {
@@ -200,7 +201,7 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 	struct dtex_package* pkg = params->pkg;
 	switch (params->file_format) {
 	case FILE_EPE:
-		dtex_load_epe(is, pkg, params->scale);
+		dtex_load_epe(is, pkg, params->scale, params->use_c2);
 		break;
 	case FILE_RRP:
 		pkg->rrp_pkg = dtex_load_rrp(is);
@@ -281,7 +282,7 @@ _new_package(struct dtex_loader* loader, const char* name, const char* filepath)
 }
 
 struct dtex_package* 
-dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* filepath, int format, float scale, int lod) {
+dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* filepath, int format, float scale, int lod, int use_c2) {
 	assert(format != FILE_EPT);
 	char path_full[strlen(filepath) + 10];
 	dtex_get_resource_filepath(filepath, format, path_full);
@@ -302,6 +303,7 @@ dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* filepath
 	params.pkg = pkg;
 	params.file_format = format;
 	params.scale = scale;
+	params.use_c2 = use_c2;
 	_unpack_file(loader, file, &_unpack_memory_to_pkg, &params);
 
 	dtex_file_close(file);

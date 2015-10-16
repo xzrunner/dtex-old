@@ -40,6 +40,7 @@ lload_package(lua_State* L) {
 	const char* path = luaL_checkstring(L, 2);
 	const char* stype = luaL_checkstring(L, 3);
 	int lod = luaL_optinteger(L, 4, 0);
+	bool use_c2 = lua_isboolean(L, 5) ? lua_toboolean(L, 5) : false;
 
 	int itype = FILE_INVALID;
 	if (strcmp(stype, "epe") == 0) {
@@ -48,7 +49,7 @@ lload_package(lua_State* L) {
 		luaL_error(L, "unknown file type %s", stype);
 	}
 
-	struct dtex_package* pkg = dtexf_load_pkg(name, path, itype, 1, lod);
+	struct dtex_package* pkg = dtexf_load_pkg(name, path, itype, 1, lod, use_c2);
 	lua_pushlightuserdata(L, pkg);
 
 	return 1;

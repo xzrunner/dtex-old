@@ -12,3 +12,5 @@
 #include "dtex_statistics.h"
 
 #include "dtex_ej_sprite.h"
+
+#include "dtex_c2_strategy.h"

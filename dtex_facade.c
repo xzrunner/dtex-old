@@ -181,8 +181,8 @@ dtexf_sprite_draw(struct dtex_package* pkg, struct ej_sprite* spr, struct ej_srt
 /************************************************************************/
 
 struct dtex_package* 
-dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lod) {
-	return dtex_load_pkg(LOADER, name, path, type, scale, lod);
+dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lod, int use_c2) {
+	return dtex_load_pkg(LOADER, name, path, type, scale, lod, use_c2);
 }
 
 void 
