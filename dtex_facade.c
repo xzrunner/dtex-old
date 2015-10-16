@@ -65,7 +65,7 @@ static inline void
 _config(const char* str) {
 	cJSON* root = cJSON_Parse(str);
 	if (!root) {
-		dtex_info("dtex parse config fail!\n");
+		dtex_warning("dtex parse config fail!");
 	}
 
 	if (cJSON_GetObjectItem(root, "needed_texture")) {

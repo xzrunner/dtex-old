@@ -33,10 +33,12 @@ dtex_fault(const char* format, ...) {
 
 void 
 dtex_info(const char* format, ...) {
+	pf_log("[DTEX] info: ");
 	va_list ap;
 	va_start(ap, format);
 	pf_vprint(format+1, ap);
 	va_end(ap);
+	pf_log("\n");
 }
 
 void 
