@@ -69,9 +69,8 @@ static int
 lload_texture(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
 	int idx = (int)lua_tointeger(L, 2);
-	float scale = luaL_optnumber(L, 3, 1);
 
-	dtexf_load_texture(pkg, idx, scale, true);
+	dtexf_load_texture(pkg, idx, true);
 
 	return 0;
 }

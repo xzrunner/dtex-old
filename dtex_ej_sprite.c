@@ -10,14 +10,14 @@
 #include <assert.h>
 
 struct ej_sprite* 
-dtex_ej_sprite_create(struct ej_sprite_pack* ej_pkg, int spr_id) {
-	int sz = ej_sprite_size(ej_pkg, spr_id);
+dtex_ej_sprite_create(struct dtex_package* pkg, int spr_id) {
+	int sz = ej_sprite_size(pkg, spr_id);
 	if (sz == 0) {
 		return NULL;
 	}
 
 	struct ej_sprite* spr = (struct ej_sprite*)malloc(sz);
-	ej_sprite_init(spr, ej_pkg, spr_id, sz);
+	ej_sprite_init(spr, pkg, spr_id, sz);
 
 	for (int i = 0; ; ++i) {
 		int childid = ej_sprite_component(spr, i);
@@ -25,7 +25,7 @@ dtex_ej_sprite_create(struct ej_sprite_pack* ej_pkg, int spr_id) {
 			break;
 		}
 
-		struct ej_sprite* c = dtex_ej_sprite_create(ej_pkg, childid);
+		struct ej_sprite* c = dtex_ej_sprite_create(pkg, childid);
 		if (c) {
 			c->name = ej_sprite_childname(spr, i);
 			sprite_mount(spr, i, c);

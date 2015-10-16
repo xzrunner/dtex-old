@@ -48,3 +48,13 @@ dtex_warning(const char* format, ...) {
 	va_end(ap);	
 	pf_log("\n");
 }
+
+void 
+dtex_debug(const char* format, ...) {
+	pf_log("++++++++++++++ [DTEX] debug: ");
+	va_list ap;
+	va_start(ap, format);
+	pf_vprint(format+1, ap);
+	va_end(ap);	
+	pf_log("\n");
+}

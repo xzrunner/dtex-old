@@ -640,6 +640,7 @@ dtex_c3_query_map_info(struct dtex_c3* c3, struct dtex_package* pkg, struct dtex
 		textures[node->src_tex_idx] = node->dst_tex;
 		regions[node->src_tex_idx]  = &node->dst_rect;		
 	}
+	dtex_array_clear(c3->tmp_array);
 }
 
 void 

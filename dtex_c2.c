@@ -25,7 +25,7 @@
 
 struct hash_key {
 	unsigned int texid;
-	struct dtex_rect* rect;
+	struct dtex_rect rect;
 };
 
 struct c2_node {
@@ -72,8 +72,8 @@ struct dtex_c2 {
 static inline unsigned int 
 _hash_func(int hash_sz, void* key) {
 	struct hash_key* hk = (struct hash_key*)key;
-	int cx = (int)(0.5f * (hk->rect->xmin + hk->rect->xmax)),
-		cy = (int)(0.5f * (hk->rect->ymin + hk->rect->ymax));
+	int cx = (int)(0.5f * (hk->rect.xmin + hk->rect.xmax)),
+		cy = (int)(0.5f * (hk->rect.ymin + hk->rect.ymax));
 	return (cx ^ (cy * 97) ^ (hk->texid * 101)) % hash_sz;
 }
 
@@ -81,10 +81,10 @@ static inline bool
 _equal_func(void* key0, void* key1) {
 	struct hash_key* hk0 = (struct hash_key*)key0;
 	struct hash_key* hk1 = (struct hash_key*)key1;
-	return hk0->rect->xmin == hk1->rect->xmin 
-		&& hk0->rect->ymin == hk1->rect->ymin 
-		&& hk0->rect->xmax == hk1->rect->xmax 
-		&& hk0->rect->ymax == hk1->rect->ymax
+	return hk0->rect.xmin == hk1->rect.xmin 
+		&& hk0->rect.ymin == hk1->rect.ymin 
+		&& hk0->rect.xmax == hk1->rect.xmax 
+		&& hk0->rect.ymax == hk1->rect.ymax
 		&& hk0->texid == hk1->texid;
 }
 
@@ -266,7 +266,7 @@ static inline struct c2_node*
 _query_node(struct dtex_c2* c2, unsigned int texid, struct dtex_rect* rect) {
 	struct hash_key hk;
 	hk.texid = texid;
-	hk.rect = rect;
+	hk.rect = *rect;
 	return (struct c2_node*)dtex_hash_query(c2->hash, &hk);
 }
 
@@ -352,7 +352,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	node->dst_pos->r.ymax -= PADDING;
 
 	node->hk.texid = pn->ori_tex->id;
-	node->hk.rect = &pn->rect;
+	node->hk.rect = pn->rect;
 	dtex_hash_insert(c2->hash, &node->hk, node, true);
 
 	_set_rect_vb(pn, node, rotate);
@@ -438,7 +438,7 @@ void
 dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struct dtex_texture_with_rect* dst) {    
 	struct hash_key old_hk;
 	old_hk.texid = src->tex->id;
-	old_hk.rect = &src->rect;
+	old_hk.rect = src->rect;
 	struct c2_node* node = (struct c2_node*)dtex_hash_remove(c2->hash, &old_hk);
 	if (!node) {
 		return;
@@ -448,7 +448,7 @@ dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struc
 	node->ori_rect = dst->rect;
 	
 	node->hk.texid = dst->tex->id;
-	node->hk.rect = &dst->rect;
+	node->hk.rect = dst->rect;
 	dtex_hash_insert(c2->hash, &node->hk, node, true);
 }
 
