@@ -28,6 +28,7 @@ _create_texture_ej(int type, int width, int height, const void* data, int channe
 	}
 
 	*uid_3rd = ej_render_texture_create(EJ_R, width, height, EJ_TEXTURE_RGBA8, TEXTURE_2D, 0);
+
 	ej_render_texture_update(EJ_R, *uid_3rd, width, height, data, 0, 0);
 
 	*gl_id = ej_render_get_texture_gl_id(EJ_R, *uid_3rd);
@@ -161,6 +162,11 @@ dtex_gl_release_texture(unsigned int id, int channel) {
 	dtex_shader_texture(0);
 
 	dtex_stat_delete_texture(id);
+}
+
+void 
+dtex_release_ej_texture(int uid_3rd) {
+	ej_render_release(EJ_R, EJ_TEXTURE, uid_3rd);
 }
 
 void 

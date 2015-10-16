@@ -46,9 +46,11 @@ extern "C"
 // "render.h"
 #define ej_render					render
 #define EJ_TEXTURE_RGBA8			TEXTURE_RGBA8
+#define EJ_TEXTURE					TEXTURE
 #define ej_render_texture_create	render_texture_create
 #define ej_render_texture_update	render_texture_update
 #define ej_render_get_texture_gl_id	render_get_texture_gl_id
+#define ej_render_release			render_release
 
 // "renderbuffer.h"
 #define ej_vertex_pack				vertex_pack

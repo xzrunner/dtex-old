@@ -18,6 +18,7 @@ _draw(const float vb[16], struct dtex_texture* src) {
 	if (src->type == DTEX_TT_RAW && src->t.RAW.format == PKMC) {
 //		shader_draw_separate(vb, src->id, src->id_alpha);
 	} else { 
+		assert(src->id != 0);
 		dtex_shader_texture(src->id);
 		dtex_shader_draw(vb);
 	}
