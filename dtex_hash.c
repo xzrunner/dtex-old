@@ -127,7 +127,6 @@ dtex_hash_query_all(struct dtex_hash* hash, void* key, struct dtex_array* ret) {
 		}
 		hn = hn->next;
 	}
-	return NULL;
 }
 
 static inline void
@@ -142,7 +141,7 @@ _enlarge_freelist(struct dtex_hash* hash) {
 		return;
 	}
 
-	memset(new, 0, free_list_sz + hash_list_sz);
+	memset(new + 1, 0, free_list_sz + hash_list_sz);
 
 	new->free_next = old->free_next;
 	new->free_cap = new_cap;
@@ -160,7 +159,7 @@ _enlarge_freelist(struct dtex_hash* hash) {
 	}
 
 	new->hash_sz = old->hash_sz;
-	new->hashlist = (struct hash_node**)((intptr_t)new + sizeof(struct changeable) + free_list_sz);
+	new->hashlist = (struct hash_node**)((intptr_t)(new + 1) + free_list_sz);
 	for (int i = 0; i < new->hash_sz; ++i) {
 		if (old->hashlist[i]) {
 			int ptr_idx = old->hashlist[i] - old->freelist;
@@ -199,12 +198,12 @@ _enlarge_hashlist(struct dtex_hash* hash) {
 	size_t new_hash_sz = _find_next_hash_sz(old->hash_sz);
 	size_t free_list_sz = sizeof(struct hash_node) * old->free_cap;
 	size_t hash_list_sz = sizeof(struct hash_node*) * new_hash_sz;
-	struct changeable* new = (struct changeable*)malloc(free_list_sz + hash_list_sz);
+	struct changeable* new = (struct changeable*)malloc(sizeof(struct changeable) + free_list_sz + hash_list_sz);
 	if (!new) {
 		return;
 	}
 	
-	memset(new, 0, free_list_sz + hash_list_sz);
+	memset(new + 1, 0, free_list_sz + hash_list_sz);
 
 	new->free_next = 0;
 	new->free_cap = old->free_cap;
@@ -214,8 +213,11 @@ _enlarge_hashlist(struct dtex_hash* hash) {
 	hash->c = new;
 
 	new->hash_sz = new_hash_sz;
-	new->hashlist = (struct hash_node**)((intptr_t)new + sizeof(struct changeable) + free_list_sz);
+	new->hashlist = (struct hash_node**)((intptr_t)(new + 1) + free_list_sz);
 	for (int i = 0; i < old_free_sz; ++i) {
+		if (!keys[i]) {
+			continue;
+		}
 		dtex_hash_insert(hash, keys[i], vals[i], true);
 	}
 }
@@ -270,7 +272,10 @@ dtex_hash_remove(struct dtex_hash* hash, void* key) {
 	} else {
 		hash->c->hashlist[idx] = curr->next;
 	}
-	return curr;
+
+	void* val = curr->val;
+	memset(curr, 0, sizeof(struct hash_node));
+	return val;
 }
 
 void 
