@@ -20,7 +20,7 @@ void dtex_c3_load(struct dtex_c3*, struct dtex_package*, float scale);
 void dtex_c3_load_end(struct dtex_c3*, struct dtex_loader*, bool async);
 
 //// todo cache and sort
-//struct dp_pos* dtex_c3_load_tex(struct dtex_c3*, struct dtex_texture*, struct dtex_texture** dst);
+//struct dtex_tp_pos* dtex_c3_load_tex(struct dtex_c3*, struct dtex_texture*, struct dtex_texture** dst);
 
 void dtex_c3_query_map_info(struct dtex_c3*, struct dtex_package*, struct dtex_texture** textures, struct dtex_rect** regions);
 

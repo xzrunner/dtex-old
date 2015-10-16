@@ -101,7 +101,7 @@ _scale_texture(struct dtex_texture* tex, float scale, bool create_by_ej) {
 	dst.inv_height = 1.0f / new_h;
 	dst.uid = -1;
 	dst.type = DTEX_TT_MID;
-	dst.t.MID.packer = NULL;
+	dst.t.MID.tp = NULL;
 
 	dtex_draw_before();
 	dtex_draw_to_texture(tex, &dst, vb);

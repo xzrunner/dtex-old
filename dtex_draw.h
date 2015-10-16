@@ -12,7 +12,7 @@ extern "C"
 // void dtex_draw_rrp(struct dtex_texture* src, struct rrp_picture* pic, 
 // 	struct draw_params* params, const int32_t part_screen[8]);
 // 
-// void dtex_draw_pts(struct dtex_texture* src_tex, struct dp_pos* src_pos, struct pts_picture* src_pts_pic,
+// void dtex_draw_pts(struct dtex_texture* src_tex, struct dtex_tp_pos* src_pos, struct pts_picture* src_pts_pic,
 // 	struct draw_params* params, const int32_t part_screen[8]);
 
 void dtex_draw_before();
@@ -21,7 +21,7 @@ void dtex_draw_after();
 void dtex_draw_to_texture(struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]);
 //// todo 一个pic的part可能位于不同的tex中
 //void dtex_draw_rrp_to_tex(struct dtex_texture* src, struct rrp_picture* pic, 
-//	struct dtex_texture* dst, struct dp_pos* pos, bool rotate);
+//	struct dtex_texture* dst, struct dtex_tp_pos* pos, bool rotate);
 
 void dtex_debug_draw(unsigned int texid);
 void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin, float xmax, float ymax);

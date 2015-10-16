@@ -9,7 +9,7 @@
 #include "dtex_draw.h"
 #include "dtex_pvr.h"
 #include "dtex_etc1.h"
-#include "dtex_packer.h"
+#include "dtex_tp.h"
 #include "dtex_sprite.h"
 #include "dtex_gl.h"
 #include "dtex_file.h"
@@ -204,7 +204,7 @@ dtexf_load_texture(struct dtex_package* pkg, int idx, bool create_by_ej) {
 //	struct dtex_texture* src_tex = dtexloader_load_image(path);
 //
 //	struct dtex_texture* dst_tex = NULL;
-//	struct dp_pos* pos = dtex_c3_load_tex(C3, src_tex, &dst_tex);
+//	struct dtex_tp_pos* pos = dtex_c3_load_tex(C3, src_tex, &dst_tex);
 //
 //	dtexloader_unload_tex(src_tex);
 //	free(src_tex);
@@ -266,7 +266,7 @@ dtexf_c2_lookup_texcoords(struct dtex_texture* ori_tex, float* ori_vb, int* dst_
 
 //void 
 //dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, 
-//	struct dtex_texture** out_tex, struct dp_pos** out_pos) {
+//	struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos) {
 //
 //	if (C2 == NULL) {
 //		return;
@@ -520,7 +520,7 @@ dtexf_update() {
 //
 //bool 
 //dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id, 
-//	struct dp_pos* src_pos, struct draw_params* params, const int32_t part_screen[8]) {
+//	struct dtex_tp_pos* src_pos, struct draw_params* params, const int32_t part_screen[8]) {
 //
 //	struct dtex_pts* pts = dtexloader_query_pts(LOADER, pkg);
 //	if (pts == NULL) {

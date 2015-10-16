@@ -1,6 +1,6 @@
 #include "dtex_texture.h"
 #include "dtex_log.h"
-#include "dtex_packer.h"
+#include "dtex_tp.h"
 #include "dtex_gl.h"
 #include "dtex_target.h"
 #include "dtex_res_cache.h"
@@ -85,7 +85,7 @@ dtex_texture_create_mid(int edge) {
 	tex->uid_3rd = uid_3rd;
 	tex->width = tex->height = edge;
 	tex->inv_width = tex->inv_height = 1.0f / edge;
-	tex->t.MID.packer = NULL;
+	tex->t.MID.tp = NULL;
 
 	return tex;
 }
@@ -105,8 +105,8 @@ dtex_texture_release(struct dtex_texture* tex) {
 		if (tex->id != 0) {
 			dtex_gl_release_texture(tex->id, 0);
 		}
-		if (tex->t.MID.packer != NULL) {
-			dtexpacker_release(tex->t.MID.packer); 
+		if (tex->t.MID.tp != NULL) {
+			dtex_tp_release(tex->t.MID.tp); 
 		}
 	}
 

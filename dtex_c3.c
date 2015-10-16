@@ -1,5 +1,5 @@
 #include "dtex_c3.h"
-#include "dtex_packer.h"
+#include "dtex_tp.h"
 #include "dtex_draw.h"
 #include "dtex_rrp.h"
 #include "dtex_rrr.h"
@@ -210,12 +210,12 @@ _pack_preload_node(struct dtex_c3* c3, float scale, struct c3_prenode* pre_node,
 	struct dtex_texture* tex = pre_node->pkg->textures[pre_node->tex_idx];
 	int w = tex->width * pre_node->scale * scale,
 		h = tex->height * pre_node->scale * scale;
-	struct dp_pos* pos = NULL;
+	struct dtex_tp_pos* pos = NULL;
 	// todo padding
 	if (w >= h) {
-		pos = dtexpacker_add(texture->t.MID.packer, w, h, true);
+		pos = dtex_tp_add(texture->t.MID.tp, w, h, true);
 	} else {
-		pos = dtexpacker_add(texture->t.MID.packer, h, w, true);
+		pos = dtex_tp_add(texture->t.MID.tp, h, w, true);
 	}
 	if (!pos) {
 		dtex_warning("c3 insert fail.");
@@ -245,20 +245,20 @@ _pack_preload_node(struct dtex_c3* c3, float scale, struct c3_prenode* pre_node,
 
 static inline bool
 _pack_preload_list_with_scale(struct dtex_c3* c3, struct c3_prenode** pre_list, int pre_sz, float scale) {
-	// init rect packer
+	// init rect tp
 	for (int i = 0; i < c3->tex_size; ++i) {
 		struct dtex_texture* tex = c3->textures[i];
 		assert(tex->type == DTEX_TT_MID);
 
-		if (!tex->t.MID.packer) {
-			tex->t.MID.packer = dtexpacker_create(tex->width, tex->height, c3->prenode_size + 100);
+		if (!tex->t.MID.tp) {
+			tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, c3->prenode_size + 100);
 		}
 
-// 		if (tex->t.MID.packer) {
-// 			dtexpacker_release(tex->t.MID.packer);
+// 		if (tex->t.MID.tp) {
+// 			dtex_tp_release(tex->t.MID.tp);
 // 		}
-// 		// packer's capacity should larger for later inserting
-// 		tex->t.MID.packer = dtexpacker_create(tex->width, tex->height, c3->prenode_size + 100);
+// 		// tp's capacity should larger for later inserting
+// 		tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, c3->prenode_size + 100);
 	}
 
 	// insert
@@ -482,7 +482,7 @@ _alloc_texture(struct dtex_c3* c3, struct c3_prenode** pre_list, int pre_sz) {
 	area *= TOT_AREA_SCALE;	
 
  	for (int i = 0; i < c3->tex_size; ++i) {
- 		area -= dtexpacker_get_remain_area(c3->textures[i]->t.MID.packer);
+ 		area -= dtex_tp_get_free_space(c3->textures[i]->t.MID.tp);
  	}
  	if (area <= 0) {
  		return 1.0f;
@@ -522,7 +522,7 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 	c3->prenode_size = 0;
 }
 
-//struct dp_pos* 
+//struct dtex_tp_pos* 
 //dtex_c3_load_tex(struct dtex_c3* c3, struct dtex_texture* tex, struct dtex_texture** dst) {
 //	// todo sort
 //
@@ -532,7 +532,7 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 //	*dst = dst_tex;
 //
 //	// insert
-//	struct dp_pos* pos = dtexpacker_add(dst_tex->t.MID.packer, tex->width, tex->height, true);
+//	struct dtex_tp_pos* pos = dtex_tp_add(dst_tex->t.MID.tp, tex->width, tex->height, true);
 //	if (!pos) {
 //		return NULL;
 //	}
@@ -578,7 +578,7 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 // 	assert(dst_tex->type == DTEX_TT_MID);
 // 
 // 	// insert
-// 	struct dp_pos* pos = dtexpacker_add(dst_tex->t.MID.packer, tex->width, tex->height, true);
+// 	struct dtex_tp_pos* pos = dtex_tp_add(dst_tex->t.MID.tp, tex->width, tex->height, true);
 // 	if (!pos) {
 // 		return;
 // 	}

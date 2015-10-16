@@ -12,7 +12,7 @@ extern "C"
 
 // todo
 struct dtex_texture;
-struct dp_pos;
+struct dtex_tp_pos;
 
 /************************************************************************/
 /* dtexf overall                                                        */
@@ -50,7 +50,7 @@ void dtexf_c2_load_begin();
 void dtexf_c2_load(struct dtex_package* pkg, int spr_id);
 void dtexf_c2_load_end();
 float* dtexf_c2_lookup_texcoords(struct dtex_texture* ori_tex, float* ori_vb, int* dst_tex);
-//void dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dp_pos** out_pos);
+//void dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos);
 
 /************************************************************************/
 /* C1                                                                   */
@@ -95,7 +95,7 @@ void dtexf_update();
 //
 //// PTS
 //bool dtexf_draw_pts(struct ej_package* pkg, struct dtex_texture* src, int src_id, 
-//	struct dp_pos* src_pos, struct draw_params* params, const int32_t part_screen[8]);
+//	struct dtex_tp_pos* src_pos, struct draw_params* params, const int32_t part_screen[8]);
 //
 /************************************************************************/
 /* debug                                                                */

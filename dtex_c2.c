@@ -1,5 +1,5 @@
 #include "dtex_c2.h"
-#include "dtex_packer.h"
+#include "dtex_tp.h"
 #include "dtex_draw.h"
 #include "dtex_loader.h"
 #include "dtex_rrp.h"
@@ -36,7 +36,7 @@ struct c2_node {
 
 	// dst info
 	struct dtex_texture* dst_tex;
-	struct dp_pos* dst_pos;
+	struct dtex_tp_pos* dst_pos;
 	float dst_vb[8];
 
 	// draw ori to dst
@@ -99,7 +99,7 @@ dtex_c2_create(int texture_size) {
 	memset(c2, 0, sz);
 
 	struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
-	tex->t.MID.packer = dtexpacker_create(tex->width, tex->height, PRELOAD_SIZE);
+	tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, PRELOAD_SIZE);
 	c2->textures[c2->tex_size++] = tex;
 
 	c2->hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
@@ -128,7 +128,7 @@ dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 		struct dtex_texture* tex = c2->textures[i];
 		dtex_texture_clear(tex);
 		assert(tex->type == DTEX_TT_MID);
-		dtex_tp_clear(tex->t.MID.packer);
+		dtex_tp_clear(tex->t.MID.tp);
 	}
 
 	c2->node_size = 0;
@@ -313,7 +313,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 		return true;
 	}
 
-	// insert to packer
+	// insert to tp
 	int w = pn->rect.xmax - pn->rect.xmin,
 		h = pn->rect.ymax - pn->rect.ymin;
 	// rrp
@@ -328,7 +328,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 // 		w = rrp_pic->w;
 // 		h = rrp_pic->h;
 	}
-	struct dp_pos* pos = NULL;
+	struct dtex_tp_pos* pos = NULL;
 	struct dtex_texture* tex = NULL;
 	bool rotate = false;
 	for (int i = 0; i < c2->tex_size && pos == NULL; ++i) {
@@ -336,10 +336,10 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 		assert(tex->type == DTEX_TT_MID);
 		// todo padding and rotate
 	//	if (w >= h) {
-			pos = dtexpacker_add(tex->t.MID.packer, w + PADDING * 2, h + PADDING * 2, true);
+			pos = dtex_tp_add(tex->t.MID.tp, w + PADDING * 2, h + PADDING * 2, true);
 			rotate = false;
 	//	} else {
-	//		pos = dtexpacker_add(tex->packer, h, w, true);
+	//		pos = dtex_tp_add(tex->tp, h, w, true);
 	//		rotate = true;
 	//	}
 	}
@@ -452,7 +452,7 @@ dtex_c2_lookup_texcoords(struct dtex_c2* c2, struct dtex_texture* tex, float vb[
 
 void 
 dtexc2_lookup_node(struct dtex_c2* c2, int texid, struct dtex_rect* rect,
-	               struct dtex_texture** out_tex, struct dp_pos** out_pos) {
+	               struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos) {
 	struct c2_node* node = _query_node(c2, texid, rect);
 	if (node) {
 		*out_tex = node->dst_tex;

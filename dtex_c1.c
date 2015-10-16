@@ -1,7 +1,7 @@
 //#include "dtex_c1.h"
 //#include "dtex_typedef.h"
 //#include "dtex_mid_tex.h"
-//#include "dtex_packer.h"
+//#include "dtex_tp.h"
 //#include "dtex_buffer.h"
 //#include "dtex_target.h"
 //#include "dtex_draw.h"
@@ -27,7 +27,7 @@
 //
 //	// dest info
 //	float vb[8];
-//	struct dp_pos* pos;
+//	struct dtex_tp_pos* pos;
 //};
 //
 //struct hash_node {
@@ -245,7 +245,7 @@
 //
 //static inline void
 //_draw_animation(struct dtex_c1* dtex, struct ej_sprite_pack* pkg, struct animation* ani, int action, int frame, 
-//				struct dp_pos* pos, struct dtex_rect* rect, bool need_clear, struct dtex_target* fbo) {
+//				struct dtex_tp_pos* pos, struct dtex_rect* rect, bool need_clear, struct dtex_target* fbo) {
 //	struct dtex_mid_tex* tex = dtex->texture;
 //
 //	dtex_target_bind_texture(fbo, tex);
@@ -318,17 +318,17 @@
 //		return;
 //	}
 //
-//	// insert to packer
+//	// insert to tp
 //	struct dtex_rect rect = _get_animation_region(pkg, ani, action);
 //	int w = rect.xmax - rect.xmin,
 //		h = rect.ymax - rect.ymin;
 //	struct dtex_mid_tex* tex = dtex->texture;
-//	struct dp_pos* pos = NULL;
+//	struct dtex_tp_pos* pos = NULL;
 //	// todo padding and rotate
 ////	if (w >= h) {
-//		pos = dtexpacker_add(tex->packer, w, h, true);
+//		pos = dtex_tp_add(tex->tp, w, h, true);
 ////	} else {
-////		pos = dtexpacker_add(tex->packer, h, w, true);
+////		pos = dtex_tp_add(tex->tp, h, w, true);
 ////	}
 //	if (pos == NULL) {
 //		return;

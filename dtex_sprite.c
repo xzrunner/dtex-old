@@ -1,13 +1,13 @@
 //#include "dtex_sprite.h"
 //#include "dtex_mid_tex.h"
-//#include "dtex_packer.h"
+//#include "dtex_tp.h"
 //
 //#include "sprite.h"
 //
 //#include <stdlib.h>
 //
 //struct ej_sprite* 
-//dtex_sprite_create(struct dtex_mid_tex* dst_tex, struct dp_pos* pos) {
+//dtex_sprite_create(struct dtex_mid_tex* dst_tex, struct dtex_tp_pos* pos) {
 //	size_t pkg_sz = sizeof(struct ej_package) + sizeof(struct ej_texture);
 //	size_t pic_sz = sizeof(struct ej_pack_picture) + sizeof(struct pack_quad);
 //	struct ej_sprite* spr = (struct ej_sprite*)malloc(sizeof(*spr) + pkg_sz + pic_sz);

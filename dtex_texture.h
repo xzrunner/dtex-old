@@ -33,7 +33,7 @@ struct dtex_texture {
 		} RAW;
 
 		struct {
-			struct dtex_packer* packer;
+			struct dtex_tp* tp;
 		} MID;
 	} t;
 };
