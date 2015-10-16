@@ -1,6 +1,5 @@
 #include "dtex_packer.h"
 
-//#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -21,15 +20,14 @@ struct dtex_packer {
 
 	struct dp_node* root;
 
-	int capacity;
-	struct dp_node** node_list;
-	int node_sz;
+	size_t free_next, free_cap;
+	struct dp_node freelist[1];
 };
 
 static inline struct dp_node*
 _new_node(struct dtex_packer* packer) {
-	if (packer->node_sz < packer->capacity) {
-		return packer->node_list[packer->node_sz++];
+	if (packer->free_next < packer->free_cap) {
+		return &packer->freelist[packer->free_next++];
 	} else {
 		return NULL;
 	}
@@ -61,25 +59,16 @@ _init_root(struct dtex_packer* packer, int width, int height) {
 
 struct dtex_packer* 
 dtexpacker_create(int width, int height, int size) {
-    size_t sz = size * 3 + 2;
-	size_t ptr_sz = sizeof(struct dp_node*) * sz;
-	size_t node_sz = sizeof(struct dp_node) * sz;
-	size_t packer_sz = sizeof(struct dtex_packer) + ptr_sz + node_sz;
-	struct dtex_packer* packer = (struct dtex_packer*)malloc(packer_sz);
-	memset(packer, 0, packer_sz);
+    size_t node_sz = size * 3 + 2;
+	size_t sz = sizeof(struct dtex_packer) + sizeof(struct dp_node) * node_sz;
+	struct dtex_packer* packer = (struct dtex_packer*)malloc(sz);
+	memset(packer, 0, sz);
 
 	packer->w = width;
 	packer->h = height;
 
-	packer->capacity = sz;
-
-	void* ptr = packer + 1;
-	packer->node_list = (struct dp_node**)ptr;
-	struct dp_node* first_node = (struct dp_node*)((intptr_t)(packer->node_list) + ptr_sz);
-	for (int i = 0; i < sz; ++i) {
-		struct dp_node* ptr = first_node + i;
-		packer->node_list[i] = ptr;
-	}
+	packer->free_next = 0;
+	packer->free_cap = node_sz;
 
 	_init_root(packer, width, height);
 
@@ -91,6 +80,14 @@ dtexpacker_release(struct dtex_packer* packer) {
 	if (packer) {
 		free(packer);
 	}
+}
+
+void 
+dtex_tp_clear(struct dtex_packer* tp) {
+	tp->free_next = 0;
+	memset(tp->freelist, 0, sizeof(struct dp_node) * tp->free_cap);
+
+	_init_root(tp, tp->w, tp->h);
 }
 
 static inline void
