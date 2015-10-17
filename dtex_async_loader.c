@@ -3,12 +3,31 @@
 #include "dtex_loader.h"
 #include "dtex_stream_import.h"
 
+#include <pthread.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-static struct dtex_async_queue* load_queue;
-static struct dtex_async_queue* parse_queue;
+struct job {
+	struct job* next;
+
+	pthread_t id;
+	int type;
+	void* ud;
+
+	char desc[32];
+};
+
+struct job_queue {
+ 	struct job* head;
+ 	struct job* tail;
+ 	pthread_rwlock_t lock;
+};
+
+static struct job_queue JOB_FREE_QUEUE;
+static struct job_queue JOB_LOAD_QUEUE;
+static struct job_queue JOB_PARSE_QUEUE;
 
 enum JOB_TYPE {
 	JOB_INVALID = 0,
@@ -16,35 +35,61 @@ enum JOB_TYPE {
 	JOB_PARSER_DATA	
 };
 
-struct load_file_params {
-	char* filepath;
+struct load_params {
+	struct load_params* next;
+
+	char filepath[512];
 	char desc[32];
 	void (*cb)(struct dtex_import_stream* is, void* ud);
 	void* ud;
 };
 
-struct parse_data_params {
+struct load_params_queue {
+	struct load_params* head;
+	struct load_params* tail;
+	pthread_rwlock_t lock;
+};
+
+static struct load_params_queue PARAMS_LOAD_QUEUE;
+
+struct parse_params {
+	struct parse_params* next;
+
 	char* data;
 	size_t size;
 	void (*cb)(struct dtex_import_stream* is, void* ud);
 	void* ud;
 };
 
+struct parse_params_queue {
+	struct parse_params* head;
+	struct parse_params* tail;
+	pthread_rwlock_t lock;
+};
+
+static struct parse_params_queue PARAMS_PARSE_QUEUE;
+
 void 
 dtex_async_loader_init() {
-	load_queue = dtex_async_queue_create();
-	parse_queue = dtex_async_queue_create();
+	DTEX_ASYNC_QUEUE_INIT(JOB_FREE_QUEUE);
+	DTEX_ASYNC_QUEUE_INIT(JOB_LOAD_QUEUE);
+	DTEX_ASYNC_QUEUE_INIT(JOB_PARSE_QUEUE);
+	DTEX_ASYNC_QUEUE_INIT(PARAMS_LOAD_QUEUE);
+	DTEX_ASYNC_QUEUE_INIT(PARAMS_PARSE_QUEUE);
 }
 
 void 
 dtex_async_loader_release() {
-	dtex_async_queue_release(parse_queue);
-	dtex_async_queue_release(load_queue);
+	
 }
 
 static inline void
 _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
-	struct parse_data_params* params = (struct parse_data_params*)malloc(sizeof(*params));
+	struct parse_params* params = NULL;
+	DTEX_ASYNC_QUEUE_POP(PARAMS_PARSE_QUEUE, params);
+	if (!params) {
+		params = (struct parse_params*)malloc(sizeof(*params));
+	}
 
 	size_t sz = is->size;
 	char* buf = (char*)malloc(sz);
@@ -53,68 +98,77 @@ _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 	params->size = sz;
 	params->data = buf;
 
-	struct load_file_params* prev_params = (struct load_file_params*)ud;
+	struct load_params* prev_params = (struct load_params*)ud;
 	params->cb = prev_params->cb;
 	params->ud = prev_params->ud;
 
-	struct dtex_async_job* job = (struct dtex_async_job*)malloc(sizeof(*job));
+	struct job* job = NULL;
+	DTEX_ASYNC_QUEUE_POP(JOB_FREE_QUEUE, job);
+	if (!job) {
+		job = (struct job*)malloc(sizeof(*job));
+	}
 	job->type = JOB_PARSER_DATA;
 	job->ud = params;
 	memcpy(job->desc, prev_params->desc, sizeof(prev_params->desc));
-	dtex_async_queue_push(parse_queue, job);
+	DTEX_ASYNC_QUEUE_PUSH(JOB_PARSE_QUEUE, job);
 }
 
 static inline void*
 _load_file(void* arg) {
-	struct dtex_async_job* job = dtex_async_queue_front_and_pop(load_queue);
+	struct job* job = NULL;
+	DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
 	if (!job) {
 		return NULL;
 	}
 
-	struct load_file_params* params = (struct load_file_params*)job->ud;
+	struct load_params* params = (struct load_params*)job->ud;
 	memcpy(params->desc, job->desc, sizeof(job->desc));
 	dtex_load_file(params->filepath, &_unpack_memory_to_job, params);
-	
-	free(params->filepath);
-	free(params);
-	free(job);
+
+	DTEX_ASYNC_QUEUE_PUSH(PARAMS_LOAD_QUEUE, params);
+	DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
 
 	return NULL;
 }
 
 void 
 dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream* is, void* ud), void* ud, const char* desc) {
-	struct load_file_params* params = (struct load_file_params*)malloc(sizeof(*params));
+	struct load_params* params = NULL;
+	DTEX_ASYNC_QUEUE_POP(PARAMS_LOAD_QUEUE, params);
+	if (!params) {
+		params = (struct load_params*)malloc(sizeof(*params));
+	}
 
-	params->filepath = (char*)malloc(strlen(filepath) + 1);
 	strcpy(params->filepath, filepath);
 	params->filepath[strlen(filepath)] = 0;
 
 	params->cb = cb;
 	params->ud = ud;
 
-	struct dtex_async_job* job = (struct dtex_async_job*)malloc(sizeof(*job));
+	struct job* job = NULL;
+	DTEX_ASYNC_QUEUE_POP(JOB_FREE_QUEUE, job);
+	if (!job) {
+		job = (struct job*)malloc(sizeof(*job));
+	}
+
 	job->type = JOB_LOAD_FILE;
 	job->ud = params;
 	strcpy(job->desc, desc);
 	job->desc[strlen(job->desc)] = 0;
-	dtex_async_queue_push(load_queue, job);
+	DTEX_ASYNC_QUEUE_PUSH(JOB_LOAD_QUEUE, job);
 
 	pthread_create(&job->id, NULL, _load_file, NULL);
 }
 
 void 
 dtex_async_loader_update() {
-	if (!parse_queue) {
-		return;
-	}
-
-	struct dtex_async_job* job = dtex_async_queue_front_and_pop(parse_queue);
+	struct job* job = NULL;
+	DTEX_ASYNC_QUEUE_POP(JOB_PARSE_QUEUE, job);
 	if (!job) {
 		return;
 	}
 
-	struct parse_data_params* params = (struct parse_data_params*)job->ud;
+	struct parse_params* params = (struct parse_params*)job->ud;
 	if (params->cb) {
 		struct dtex_import_stream is;
 		is.stream = params->data;
@@ -122,13 +176,14 @@ dtex_async_loader_update() {
 		params->cb(&is, params->ud);
 	}
 
-	free(params->data);
-	free(params);
-	free(job);
+	free(params->data), params->data = NULL;
+	params->size = 0;
+	DTEX_ASYNC_QUEUE_PUSH(PARAMS_PARSE_QUEUE, params);
+	DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
 }
 
 bool 
 dtex_async_loader_empty() {
-	return dtex_async_queue_empty(load_queue) 
-		&& dtex_async_queue_empty(parse_queue);
+	return DTEX_ASYNC_QUEUE_EMPTY(JOB_LOAD_QUEUE)
+		&& DTEX_ASYNC_QUEUE_EMPTY(JOB_PARSE_QUEUE);
 }

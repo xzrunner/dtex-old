@@ -18,7 +18,6 @@
 #include "dtex_statistics.h"
 #include "dtex_ej_sprite.h"
 #include "dtex_async_loader.h"
-#include "dtex_async_task.h"
 #include "dtex_array.h"
 #include "dtex_utility.h"
 #include "dtex_relocation.h"
@@ -27,6 +26,8 @@
 #include "dtex_hard_res.h"
 #include "dtex_res_cache.h"
 #include "dtex_resource.h"
+#include "dtex_async_one_tex_task.h"
+#include "dtex_async_multi_tex_task.h"
 
 #include <cJSON.h>
 
@@ -126,6 +127,8 @@ dtexf_create(const char* cfg) {
 	dtex_res_cache_create();
 
 	dtex_async_loader_init();
+
+	dtex_async_load_multi_textures_init();
 
 	dtex_texture_pool_init();
 
@@ -310,7 +313,7 @@ dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 
 void 
 dtexf_async_load_texture(struct dtex_package* pkg, int idx) {
-	dtex_async_load_texture(pkg, idx, "normal");
+	dtex_async_load_one_texture(pkg, idx, "normal");
 }
 
 /************************************************************************/

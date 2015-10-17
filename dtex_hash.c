@@ -1,5 +1,6 @@
 #include "dtex_hash.h"
 #include "dtex_array.h"
+#include "dtex_log.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -132,7 +133,7 @@ dtex_hash_query_all(struct dtex_hash* hash, void* key, struct dtex_array* ret) {
 static inline void
 _enlarge_freelist(struct dtex_hash* hash) {
 	struct changeable* old = hash->c;
-
+	dtex_info(" [hash] node resize %d -> %d", old->free_cap, old->free_cap * 2);
 	size_t new_cap = old->free_cap * 2;
 	size_t free_list_sz = sizeof(struct hash_node) * new_cap;
 	size_t hash_list_sz = sizeof(struct hash_node*) * old->hash_sz;
@@ -196,6 +197,7 @@ _enlarge_hashlist(struct dtex_hash* hash) {
 	}
 
 	size_t new_hash_sz = _find_next_hash_sz(old->hash_sz);
+	dtex_info(" [hash] rehash %d -> %d", old->hash_sz, new_hash_sz);
 	size_t free_list_sz = sizeof(struct hash_node) * old->free_cap;
 	size_t hash_list_sz = sizeof(struct hash_node*) * new_hash_sz;
 	struct changeable* new = (struct changeable*)malloc(sizeof(struct changeable) + free_list_sz + hash_list_sz);

@@ -3,34 +3,45 @@ extern "C"
 {
 #endif
 
-#ifndef dynamic_texture_async_queue_h
-#define dynamic_texture_async_queue_h
+#ifndef dynamic_texture_async_queue_new_h
+#define dynamic_texture_async_queue_new_h
 
-#include <pthread.h>
-#include <stdbool.h>
+// #include <pthread.h>
+// #include <stdbool.h>
 
-struct dtex_async_job {
-	struct dtex_async_job* next;
-	pthread_t id;
+#define DTEX_ASYNC_QUEUE_INIT(queue) do { \
+	(queue).head = NULL; \
+	(queue).tail = NULL; \
+	pthread_rwlock_init(&(queue).lock, NULL); \
+} while (0)
 
-	int type;
-	void* ud;
+#define DTEX_ASYNC_QUEUE_POP(queue, front) do { \
+	pthread_rwlock_wrlock(&(queue).lock); \
+	(front) = (queue).head; \
+	if ((queue).head != NULL) { \
+		(queue).head = (queue).head->next; \
+	} \
+	pthread_rwlock_unlock(&(queue).lock); \
+} while (0)
 
-	char desc[32];
-};
+#define DTEX_ASYNC_QUEUE_PUSH(queue, back) do { \
+	pthread_rwlock_wrlock(&(queue).lock); \
+	(back)->next = NULL; \
+	if ((queue).head == NULL) { \
+		(queue).head = (back); \
+		(queue).tail = (back); \
+	} else { \
+		assert((queue).tail != NULL); \
+		(queue).tail->next = (back); \
+		(queue).tail = (back); \
+	} \
+	pthread_rwlock_unlock(&(queue).lock); \
+} while (0)
 
-struct dtex_async_queue;
+#define DTEX_ASYNC_QUEUE_EMPTY(queue) \
+	(pthread_rwlock_rdlock(&queue.lock), queue.head == NULL)
 
-struct dtex_async_queue* dtex_async_queue_create();
-void dtex_async_queue_release(struct dtex_async_queue* queue);
-
-struct dtex_async_job* dtex_async_queue_front_and_pop(struct dtex_async_queue* queue);
-void dtex_async_queue_push(struct dtex_async_queue* queue, struct dtex_async_job* job);
-//struct dtex_async_job* dtex_job_queue_find(struct dtex_async_queue* queue, pthread_t id);
-
-bool dtex_async_queue_empty(struct dtex_async_queue* queue);
-
-#endif // dynamic_texture_async_queue_h
+#endif // dynamic_texture_async_queue_new_h
 
 #ifdef __cplusplus
 }
