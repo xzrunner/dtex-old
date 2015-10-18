@@ -273,6 +273,11 @@ dtexf_c2_lookup_texcoords(struct dtex_texture* ori_tex, float* ori_vb, int* dst_
 	}
 }
 
+void 
+dtexf_c2_debug() {
+	dtex_c2_debug(C2);
+}
+
 //void 
 //dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, 
 //	struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos) {

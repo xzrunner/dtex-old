@@ -6,6 +6,7 @@
 #include "dtex_res_cache.h"
 #include "dtex_hard_res.h"
 #include "dtex_resource.h"
+#include "dtex_shader.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -129,6 +130,41 @@ dtex_texture_clear(struct dtex_texture* tex) {
 	dtex_target_bind(target);
 
 	dtex_gl_clear_color(0, 0, 0, 0);
+
+	dtex_target_unbind();
+	dtex_target_unbind_texture(target);
+	dtex_res_cache_return_target(target);
+}
+
+void 
+dtex_texture_clear_part(struct dtex_texture* tex, struct dtex_rect* rect) {
+	if (!tex) {
+		return;
+	}
+
+	struct dtex_target* target = dtex_res_cache_fetch_target();
+	dtex_target_bind_texture(target, tex->id);
+	dtex_target_bind(target);
+
+	dtex_shader_program(PROGRAM_SHAPE);
+	dtex_shader_texture(0);
+
+	float coords[2 * 3 * 2];
+	coords[0] = rect->xmin;
+	coords[1] = rect->ymin;
+	coords[2] = rect->xmax;
+	coords[3] = rect->ymax;
+	coords[4] = rect->xmin;
+	coords[5] = rect->ymax;
+	coords[6] = rect->xmin;
+	coords[7] = rect->ymin;
+	coords[8] = rect->xmax;
+	coords[9] = rect->ymin;
+	coords[10] = rect->xmax;
+	coords[11] = rect->ymax;
+	dtex_shader_draw_triangle(coords, 2);
+
+	dtex_shader_program(PROGRAM_NORMAL);
 
 	dtex_target_unbind();
 	dtex_target_unbind_texture(target);

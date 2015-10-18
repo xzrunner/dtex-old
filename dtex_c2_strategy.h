@@ -10,7 +10,7 @@ extern "C"
 
 struct dtex_c2_strategy;
 
-struct dtex_c2_strategy* dtex_c2_strategy_create(int n);
+struct dtex_c2_strategy* dtex_c2_strategy_create(int n, bool clear);
 void dtex_c2_strategy_release(struct dtex_c2_strategy*);
 
 void dtex_c2_on_draw_sprite(struct ej_sprite* spr);

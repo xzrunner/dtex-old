@@ -230,10 +230,20 @@ dtex_shader_load() {
 		"}  \n"
 		;	
 
+	static const char * shape_fs =
+		FLOAT_PRECISION
+		"\n"
+		"void main()  \n"
+		"{  \n"
+		"  gl_FragColor = gl_Color;  \n"
+		"}  \n"
+		;
+
 	_rs_init();
 
 	_program_init(&PROG[PROGRAM_NORMAL], sprite_vs, sprite_fs);
 	_program_init(&PROG[PROGRAM_ETC1], sprite_vs, etc1_fs);
+	_program_init(&PROG[PROGRAM_SHAPE], sprite_vs, shape_fs);
 
 	dtex_shader_program(PROGRAM_NORMAL);
 
@@ -394,6 +404,30 @@ dtex_shader_draw(const float vb[16]) {
 	if (++RS->object >= MAX_COMMBINE) {
 		_rs_commit();
 	}
+}
+
+void 
+dtex_shader_draw_triangle(const float* coords, size_t tri_count) {
+	size_t count = tri_count * 3;
+
+	float color[count];
+	for (int i = 0; i < count; ++i) {
+		color[i * 4] = 1;
+		color[i * 4 + 1] = 0;
+		color[i * 4 + 2] = 0;
+		color[i * 4 + 3] = 1;
+	}
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(2, GL_FLOAT, 0, (const GLvoid*)coords);
+
+	glEnableClientState(GL_COLOR_ARRAY);
+	glColorPointer(4, GL_FLOAT, 0, (const GLvoid*)color);
+
+	glDrawArrays(GL_TRIANGLES, 0, count);
+
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 void 

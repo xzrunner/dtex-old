@@ -9,6 +9,7 @@ extern "C"
 #define PROGRAM_NULL	0
 #define PROGRAM_NORMAL	1
 #define PROGRAM_ETC1	2
+#define PROGRAM_SHAPE	3
 
 void dtex_shader_load();
 void dtex_shader_unload();
@@ -21,6 +22,8 @@ void dtex_shader_target(int id);
 int dtex_shader_get_target();
 
 void dtex_shader_draw(const float vb[16]);
+void dtex_shader_draw_triangle(const float* coords, size_t tri_count);
+
 void dtex_shader_flush();
 
 #endif // dynamic_texture_shader_h

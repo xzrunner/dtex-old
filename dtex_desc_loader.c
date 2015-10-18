@@ -116,7 +116,7 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 	pkg->ej_pkg = ej_pkg;
 
 	if (load_c2) {
-		pkg->c2_stg = dtex_c2_strategy_create(ej_pkg->n);
+		pkg->c2_stg = dtex_c2_strategy_create(ej_pkg->n, true);
 	}
 
 	_load_sprites_extend_info(pkg);

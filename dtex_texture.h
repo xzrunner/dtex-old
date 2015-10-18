@@ -43,6 +43,7 @@ struct dtex_texture* dtex_texture_create_mid(int edge);
 void dtex_texture_release(struct dtex_texture*);
 
 void dtex_texture_clear(struct dtex_texture*);
+void dtex_texture_clear_part(struct dtex_texture*, struct dtex_rect* rect);
 
 void dtex_texture_pool_init();
 

@@ -9,15 +9,20 @@
 #define MAX_PKG_DRAW_COUNT 1024
 
 struct dtex_c2_strategy {
+	bool clear;
+
  	int tot_draw_count;
 	int spr_draw_count[1];
 };
 
 struct dtex_c2_strategy* 
-dtex_c2_strategy_create(int n) {
+dtex_c2_strategy_create(int n, bool clear) {
 	size_t sz = sizeof(struct dtex_c2_strategy) + sizeof(int) * n;
 	struct dtex_c2_strategy* stg = (struct dtex_c2_strategy*)malloc(sz);
 	memset(stg, 0, sz);
+
+	stg->clear = clear;
+
 	return stg;
 }
 
@@ -77,9 +82,11 @@ dtex_c2_on_draw_sprite(struct ej_sprite* spr) {
 	++stg->tot_draw_count;
 	++stg->spr_draw_count[spr->id];
 
-	if (stg->tot_draw_count > MAX_PKG_DRAW_COUNT) {
-		_load_c2(pkg);
-	}
+	dtexf_c2_debug();
+
+// 	if (stg->tot_draw_count > MAX_PKG_DRAW_COUNT) {
+// 		_load_c2(pkg);
+// 	}
 }
 
 void 
