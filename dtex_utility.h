@@ -8,9 +8,9 @@ extern "C"
 
 #include "ejoy2d.h"
 
-struct dtex_array* dtex_get_picture_id_unique_set(struct ej_sprite_pack*, int* spr_ids, int spr_count);
+void dtex_get_picture_id_unique_set(struct ej_sprite_pack*, int* spr_ids, int spr_count, struct dtex_array* uni_set);
 
-struct dtex_array* dtex_get_texture_id_unique_set(struct ej_sprite_pack*, int* spr_ids, int spr_count);
+void dtex_get_texture_id_unique_set(struct ej_sprite_pack*, int* spr_ids, int spr_count, struct dtex_array* uni_set);
 
 #endif // dynamic_texture_utility2_h
 

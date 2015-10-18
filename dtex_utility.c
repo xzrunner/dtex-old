@@ -49,14 +49,16 @@ _unique_int_array(struct dtex_array* array) {
 	}
 }
 
-struct dtex_array* 
-dtex_get_picture_id_unique_set(struct ej_sprite_pack* ej_pkg, int* spr_ids, int spr_count) {
-	struct dtex_array* array = dtex_array_create(10, sizeof(int));
+void
+dtex_get_picture_id_unique_set(struct ej_sprite_pack* ej_pkg, 
+							   int* spr_ids, 
+							   int spr_count, 
+                               struct dtex_array* uni_set) {
+	dtex_array_clear(uni_set);
 	for (int i = 0; i < spr_count; ++i) {
-		dtex_ej_spr_traverse(ej_pkg, spr_ids[i], _get_picture_id, array);
+		dtex_ej_spr_traverse(ej_pkg, spr_ids[i], _get_picture_id, uni_set);
 	}
-	_unique_int_array(array);
-	return array;
+	_unique_int_array(uni_set);
 }
 
 static inline void
@@ -67,12 +69,14 @@ _get_texture_id(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	}
 }
 
-struct dtex_array* 
-dtex_get_texture_id_unique_set(struct ej_sprite_pack* ej_pkg, int* spr_ids, int spr_count) {
-	struct dtex_array* array = dtex_array_create(10, sizeof(int));
+void
+dtex_get_texture_id_unique_set(struct ej_sprite_pack* ej_pkg, 
+							   int* spr_ids, 
+							   int spr_count, 
+                               struct dtex_array* uni_set) {
+    dtex_array_clear(uni_set);
 	for (int i = 0; i < spr_count; ++i) {
-		dtex_ej_spr_traverse(ej_pkg, spr_ids[i], _get_texture_id, array);
+		dtex_ej_spr_traverse(ej_pkg, spr_ids[i], _get_texture_id, uni_set);
 	}
-	_unique_int_array(array);
-	return array;
+	_unique_int_array(uni_set);
 }

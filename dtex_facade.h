@@ -66,21 +66,9 @@ void dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr);
 /* async load texture                                                   */
 /************************************************************************/
 void dtexf_async_load_texture(struct dtex_package* pkg, int idx);
-
-/************************************************************************/
-/* 1. C3 load small scale 2. async load origin size texture             */
-/************************************************************************/
-void dtexf_async_load_texture_from_c3(struct dtex_package* pkg, int* sprite_ids, int sprite_count);
-
-/************************************************************************/
-/* 1. normal loading 2. async load needed texture and pack to C2        */
-/************************************************************************/
-bool dtexf_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count);
-
-/************************************************************************/
-/* 1. C3 loading 2. async load needed texture and pack to C2            */
-/************************************************************************/
-bool dtexf_async_load_texture_with_c2_from_c3(struct dtex_package* pkg, int* sprite_ids, int sprite_count);
+bool dtexf_async_load_texture_with_c3(struct dtex_package* pkg, int* spr_ids, int spr_count);
+bool dtexf_async_load_texture_with_c2(struct dtex_package* pkg, int* spr_ids, int spr_count);
+bool dtexf_async_load_texture_with_c2_from_c3(struct dtex_package* pkg, int* spr_ids, int spr_count);
 
 /************************************************************************/
 /* update for async loading                                             */

@@ -28,6 +28,9 @@
 #include "dtex_resource.h"
 #include "dtex_async_one_tex_task.h"
 #include "dtex_async_multi_tex_task.h"
+#include "dtex_async_c3_task.h"
+#include "dtex_async_c2_task.h"
+#include "dtex_async_c2_from_c3_task.h"
 
 #include <cJSON.h>
 
@@ -126,9 +129,12 @@ dtexf_create(const char* cfg) {
 
 	dtex_res_cache_create();
 
+	// async load
 	dtex_async_loader_init();
-
 	dtex_async_load_multi_textures_init();
+	dtex_async_load_c3_init();
+	dtex_async_load_c2_init();
+	dtex_async_load_c2_from_c3_init();
 
 	dtex_texture_pool_init();
 
@@ -141,7 +147,7 @@ dtexf_create(const char* cfg) {
  		C1 = dtex_c1_create(CFG.c1_tex_size);		
  	}
  	if (CFG.open_c2) {
- 		C2 = dtex_c2_create(CFG.c2_tex_size);		
+ 		C2 = dtex_c2_create(CFG.c2_tex_size, false);		
  	}
 }
 
@@ -254,7 +260,7 @@ dtexf_c2_load(struct dtex_package* pkg, int spr_id) {
 void 
 dtexf_c2_load_end() {
 	if (C2) {
-		dtex_c2_load_end(C2, LOADER, true);
+		dtex_c2_load_end(C2, LOADER);
 	}
 }
 
@@ -316,200 +322,19 @@ dtexf_async_load_texture(struct dtex_package* pkg, int idx) {
 	dtex_async_load_one_texture(pkg, idx, "normal");
 }
 
-/************************************************************************/
-/* 1. C3 load small scale 2. async load origin size texture             */
-/************************************************************************/
-
-struct async_load_texture_from_c3_params {
-	struct dtex_package* pkg;
-	struct dtex_array* picture_ids;
-};
-
-static inline void
-_async_load_texture_from_c3_func(void* ud) {
-	struct async_load_texture_from_c3_params* params = (struct async_load_texture_from_c3_params*)ud;
-	
-	dtex_swap_quad_src_info(params->pkg, params->picture_ids);
-
-	dtex_array_release(params->picture_ids);
-	free(params);
-}
-
-void 
-dtexf_async_load_texture_from_c3(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
-	// swap to origin data, get texture idx info
-	struct dtex_array* picture_ids = dtex_get_picture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
-	dtex_swap_quad_src_info(pkg, picture_ids);
-	struct dtex_array* tex_idx = dtex_get_texture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
-	dtex_swap_quad_src_info(pkg, picture_ids);
-
-	struct async_load_texture_from_c3_params* params = malloc(sizeof(struct async_load_texture_from_c3_params));
-	params->pkg = pkg;
-	params->picture_ids = picture_ids;
-
-	dtex_async_load_multi_textures(pkg, tex_idx, _async_load_texture_from_c3_func, params, "only c3");
-	dtex_array_release(tex_idx);
-}
-
-/************************************************************************/
-/* 1. normal loading 2. async load needed texture and pack to C2        */
-/************************************************************************/
-
-struct async_load_texture_with_c2_params {
-	struct dtex_package* pkg;
-	int* sprite_ids;
-	int sprite_count;
-};
-
-static inline void
-_async_load_texture_with_c2_func(void* ud) {
-	if (!C2) {
-		return;
-	}
-
-	struct async_load_texture_with_c2_params* params = (struct async_load_texture_with_c2_params*)ud;
-
-	struct dtex_package* pkg = params->pkg;
-	assert(params->pkg->c2_loading == 2);
-	params->pkg->c2_loading = 0;
-
-	dtex_c2_load_begin(C2);
-	for (int i = 0; i < params->sprite_count; ++i) {
-		dtexf_c2_load(pkg, params->sprite_ids[i]);
-	}
-	dtex_c2_load_end(C2, LOADER, true);
-	free(params);
-}
-
-void
-_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count, void (*cb)(void* ud), void* ud) {
-	struct dtex_array* tex_idx = dtex_get_texture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
-	int count = dtex_array_size(tex_idx);
-	int uids[count];
-	for (int i = 0; i < count; ++i) {
-		uids[i] = *(int*)dtex_array_fetch(tex_idx, i);
-	}
-	dtex_array_release(tex_idx);
-
-//	dtex_async_load_multi_textures(pkg, uids, count, cb, ud);
+bool 
+dtexf_async_load_texture_with_c3(struct dtex_package* pkg, int* spr_ids, int spr_count) {
+	return dtex_async_load_c3(LOADER, C3, pkg, spr_ids, spr_count);
 }
 
 bool 
-dtexf_async_load_texture_with_c2(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
-	if (pkg->c2_loading) {
-		return false;
-	}
-	pkg->c2_loading = 2;
-
-	struct async_load_texture_with_c2_params* params = (struct async_load_texture_with_c2_params*)malloc(sizeof(*params));
-	params->pkg = pkg;
-	params->sprite_ids = sprite_ids;
-	params->sprite_count = sprite_count;
-	_async_load_texture_with_c2(pkg, sprite_ids, sprite_count, _async_load_texture_with_c2_func, params);
-
-	return true;
-}
-
-/************************************************************************/
-/* 1. C3 loading 2. async load needed texture and pack to C2            */
-/************************************************************************/
-
-struct async_load_texture_with_c2_from_c3_params {
-	struct dtex_package* pkg;
-	int* sprite_ids;
-	int sprite_count;
-	struct dtex_array* picture_ids;
-	struct dtex_array* tex_idx;
-};
-
-static inline void
-_async_load_texture_with_c2_from_c3_func(void* ud) {
-	struct async_load_texture_with_c2_from_c3_params* params = (struct async_load_texture_with_c2_from_c3_params*)ud;
-
-	if (!C2) {
-		dtex_swap_quad_src_info(params->pkg, params->picture_ids);
-		dtex_array_release(params->picture_ids);
-		dtex_array_release(params->tex_idx);
-		free(params);
-		return;
-	}
-
-	struct dtex_package* pkg = params->pkg;
-
-	assert(pkg->c2_loading == 1);
-	pkg->c2_loading = 0;
-
-	dtex_swap_quad_src_info(pkg, params->picture_ids);
-
-	dtex_c2_load_begin(C2); 
-	for (int i = 0; i < params->sprite_count; ++i) {
-		dtexf_c2_load(pkg, params->sprite_ids[i]);
-	}
-	free(params->sprite_ids);
-	dtex_c2_load_end(C2, LOADER, true);
-
-	struct dtex_texture* dst_textures[pkg->texture_count];
-	struct dtex_rect* dst_regions[pkg->texture_count];
-	dtex_c3_query_map_info(C3, pkg, dst_textures, dst_regions);
-
-	int sz = dtex_array_size(params->tex_idx);
- 	for (int i = 0; i < sz; ++i) {
-		int idx = *(int*)dtex_array_fetch(params->tex_idx, i);
-
-		struct dtex_texture *src_tex = pkg->textures[idx], 
-			*dst_tex = dst_textures[idx];
-
-		assert(src_tex->type == DTEX_TT_RAW && dst_tex->type == DTEX_TT_MID);
- 		struct dtex_texture_with_rect src, dst;
-
-		src.tex = src_tex;
-		src.rect.xmin = src.rect.ymin = 0;
-		src.rect.xmax = src_tex->width;
-		src.rect.ymax = src_tex->height;
-
-		dst.tex = dst_tex;
-		dst.rect = *dst_regions[idx];
-
- 		dtex_relocate_c2_key(C2, pkg, idx, params->picture_ids, &src, &dst);
- 	}
-
-	dtex_swap_quad_src_info(pkg, params->picture_ids);
-
-	for (int i = 0; i < sz; ++i) {
-		int idx = *(int*)dtex_array_fetch(params->tex_idx, i);
-		dtex_texture_release(pkg->textures[idx]);
-	}
-	dtex_package_remove_all_textures_ref(pkg);
-
-	dtex_array_release(params->picture_ids);
-	dtex_array_release(params->tex_idx);
-	free(params);
+dtexf_async_load_texture_with_c2(struct dtex_package* pkg, int* spr_ids, int spr_count) {
+	return dtex_async_load_c2(LOADER, C2, pkg, spr_ids, spr_count);
 }
 
 bool 
-dtexf_async_load_texture_with_c2_from_c3(struct dtex_package* pkg, int* sprite_ids, int sprite_count) {
-	if (pkg->c2_loading) {
-		return false;
-	}
-	pkg->c2_loading = 1;
-
-	// swap to origin data, get texture idx info
-	struct dtex_array* picture_ids = dtex_get_picture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
-	dtex_swap_quad_src_info(pkg, picture_ids);
-	struct dtex_array* tex_idx = dtex_get_texture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count);
-	dtex_swap_quad_src_info(pkg, picture_ids);
-
-	struct async_load_texture_with_c2_from_c3_params* params = (struct async_load_texture_with_c2_from_c3_params*)malloc(sizeof(*params));
-	params->pkg = pkg;
-	params->sprite_ids = sprite_ids;
-	params->sprite_count = sprite_count;
-	params->picture_ids = picture_ids;
-	params->tex_idx = tex_idx;
-	
-	dtex_package_change_lod(pkg, 0);
-	dtex_async_load_multi_textures(pkg, tex_idx, _async_load_texture_with_c2_from_c3_func, params, "c2 from c3");
-
-	return true;
+dtexf_async_load_texture_with_c2_from_c3(struct dtex_package* pkg, int* spr_ids, int spr_count) {
+	return dtex_async_load_c2_from_c3(LOADER, C2, C3, pkg, spr_ids, spr_count);
 }
 
 /************************************************************************/
