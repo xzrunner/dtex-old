@@ -14,15 +14,18 @@ dtex_package_create() {
 
 void 
 dtex_package_release(struct dtex_package* pkg) {
+	free(pkg->name);
+	free(pkg->filepath);
+
 	free(pkg->ej_pkg);
 	// 	dtex_rrp_release(pkg->rrp_pkg);
 	// 	dtex_pts_release(pkg->pts_pkg);
 	// 	dtex_rrr_release(pkg->rrr_pkg);
 	// 	dtex_b4r_release(pkg->b4r_pkg);
 
-	free(pkg->filepath);
-	free(pkg->name);
+	free(pkg->c2_stg);
 
+	free(pkg);
 	memset(pkg, 0, sizeof(*pkg));
 }
 
