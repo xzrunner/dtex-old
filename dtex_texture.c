@@ -7,6 +7,7 @@
 #include "dtex_hard_res.h"
 #include "dtex_resource.h"
 #include "dtex_shader.h"
+#include "dtex_screen.h"
 
 #include <opengl.h>
 
@@ -73,7 +74,7 @@ dtex_texture_create_mid(int edge) {
 		dtex_fault("dtex_texture_create_mid malloc fail.");
 		return NULL;
 	}
-	memset(empty_data, 0xaa, edge*edge*4);
+	memset(empty_data, 0x00, edge*edge*4);
 
 	int gl_id, uid_3rd;
 	dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, &gl_id, &uid_3rd, true);
@@ -137,56 +138,93 @@ dtex_texture_clear(struct dtex_texture* tex) {
 	dtex_target_unbind_texture(target);
 	dtex_res_cache_return_target(target);
 }
-
 void 
 dtex_texture_clear_part(struct dtex_texture* tex, float xmin, float ymin, float xmax, float ymax) {
 	if (!tex) {
 		return;
 	}
 
+	float scr_s, scr_w, scr_h;
+	dtex_get_screen(&scr_w, &scr_h, &scr_s);
+	dtex_gl_viewport(0, 0, tex->width, tex->height);
+
+	dtex_gl_scissor(
+		tex->width * xmin, 
+		tex->height * ymin, 
+		tex->width * (xmax - xmin), 
+		tex->height * (ymax - ymin));
+
 	struct dtex_target* target = dtex_res_cache_fetch_target();
 	dtex_target_bind_texture(target, tex->id);
 	dtex_target_bind(target);
 
-	dtex_shader_program(PROGRAM_SHAPE);
-	dtex_shader_texture(0);
-
-	unsigned int color = 0x000000ff;
-
-	float vb[3 * 6];
-	vb[0] = xmin;
-	vb[1] = ymin;
-	vb[2] = color;
-
-	vb[3] = xmin;
-	vb[4] = ymax;
-	vb[5] = color;
-
-	vb[6] = xmax;
-	vb[7] = ymax;
-	vb[8] = color;
-
-	vb[9] = xmin;
-	vb[10] = ymin;
-	vb[11] = color;
-
-	vb[12] = xmax;
-	vb[13] = ymin;
-	vb[14] = color;
-
-	vb[15] = xmax;
-	vb[16] = ymax;
-	vb[17] = color;
-
-	dtex_shader_draw_triangle(vb, 6);
-
-	dtex_shader_program(PROGRAM_NORMAL);
+	glEnable(GL_SCISSOR_TEST);
+	dtex_gl_clear_color(0, 0, 0, 0);
+	glDisable(GL_SCISSOR_TEST);
 
 	dtex_target_unbind();
 	dtex_target_unbind_texture(target);
-
 	dtex_res_cache_return_target(target);
+
+	dtex_gl_viewport(0, 0, scr_w, scr_h);
 }
+
+//void 
+//dtex_texture_clear_part(struct dtex_texture* tex, float xmin, float ymin, float xmax, float ymax) {
+//	if (!tex) {
+//		return;
+//	}
+//
+//	float scr_s, scr_w, scr_h;
+//	dtex_get_screen(&scr_w, &scr_h, &scr_s);
+//	dtex_gl_viewport(0, 0, tex->width, tex->height);
+//
+//	struct dtex_target* target = dtex_res_cache_fetch_target();
+//	dtex_target_bind_texture(target, tex->id);
+//	dtex_target_bind(target);
+//
+//	dtex_shader_program(PROGRAM_SHAPE);
+//	dtex_shader_texture(0);
+//
+//	// abgr
+//	unsigned int color = 0x00000000;
+//
+//	float vb[3 * 6];
+//	vb[0] = xmin;
+//	vb[1] = ymin;
+//	memcpy(&vb[2], &color, sizeof(color));
+//
+//	vb[3] = xmin;
+//	vb[4] = ymax;
+//	memcpy(&vb[5], &color, sizeof(color));
+//
+//	vb[6] = xmax;
+//	vb[7] = ymax;
+//	memcpy(&vb[8], &color, sizeof(color));
+//
+//	vb[9] = xmin;
+//	vb[10] = ymin;
+//	memcpy(&vb[11], &color, sizeof(color));
+//
+//	vb[12] = xmax;
+//	vb[13] = ymin;
+//	memcpy(&vb[14], &color, sizeof(color));
+//
+//	vb[15] = xmax;
+//	vb[16] = ymax;
+//	memcpy(&vb[17], &color, sizeof(color));
+//
+//	dtex_shader_draw_triangle(vb, 6);
+//
+//	dtex_shader_program(PROGRAM_NORMAL);
+//
+//	dtex_target_unbind();
+//	dtex_target_unbind_texture(target);
+//
+//	dtex_res_cache_return_target(target);
+//
+//	dtex_gl_viewport(0, 0, scr_w, scr_h);
+//}
 
 void 
 dtex_texture_pool_init() {

@@ -25,6 +25,8 @@ void dtex_gl_clear_color(float r, float g, float b, float a);
 
 void dtex_gl_viewport(int x, int y, int w, int h);
 
+void dtex_gl_scissor(int x, int y, int w, int h);
+
 void dtex_gl_finish();
 
 void dtex_gl_bind_vertex_array(int id);

@@ -181,6 +181,11 @@ dtex_gl_viewport(int x, int y, int w, int h) {
 }
 
 void 
+dtex_gl_scissor(int x, int y, int w, int h) {
+	glScissor(x, y, w, h);
+}
+
+void 
 dtex_gl_finish() {
 	glFinish();
 	glFlush();
@@ -219,14 +224,7 @@ dtex_gl_get_curr_target() {
 void 
 dtex_gl_check_error() {
 	GLenum error = glGetError();
-	if (error != GL_NO_ERROR
-//		&& error != GL_INVALID_ENUM 
-//		&& error != GL_INVALID_VALUE
-//		&& error != GL_INVALID_OPERATION
-//		&& error != GL_OUT_OF_MEMORY
-//		&& error != GL_STACK_OVERFLOW 
-//		&& error != GL_STACK_UNDERFLOW
-	) {
+	if (error != GL_NO_ERROR) {
 		exit(1);
 	}
 }
