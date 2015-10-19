@@ -379,17 +379,11 @@ dtex_shader_texture(int id) {
 }
 
 void 
-dtex_shader_target(int id) {
-	if (RS->target == id) {
-		return;
-	}
-
-	_rs_commit();
-	RS->target = (GLuint)id;
-	glBindFramebuffer(GL_FRAMEBUFFER, RS->target); 
+dtex_shader_set_target(int id) {
+	RS->target = id;
 }
 
-int 
+int
 dtex_shader_get_target() {
 	return RS->target;
 }

@@ -3,9 +3,9 @@
 #include "dtex_log.h"
 #include "dtex_shader.h"
 
-#include <opengl.h>
-
 #include "ejoy2d.h"
+
+#include <opengl.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -63,15 +63,16 @@ dtex_target_bind_texture(struct dtex_target* target, int texid) {
 	if (target->texture_id == texid) {
 		return;
 	}
+	assert(dtex_shader_get_target() == target->target_id);
 
-	dtex_target_bind(target);
+//	int ori = dtex_target_bind(target);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texid, 0);
 	int status = _check_framebuffer_status();
 	assert(status);
 	target->texture_id = texid;
 
-	dtex_target_unbind();
+//	dtex_target_unbind(ori);
 }
 
 void 
@@ -79,12 +80,16 @@ dtex_target_unbind_texture(struct dtex_target* target) {
 	target->texture_id = 0;
 }
 
-void 
+int 
 dtex_target_bind(struct dtex_target* target) {
+	int ori = dtex_shader_get_target();
+	dtex_shader_set_target(target->target_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, target->target_id);
+	return ori;
 }
 
 void 
-dtex_target_unbind() {
-	glBindFramebuffer(GL_FRAMEBUFFER, dtex_shader_get_target());
+dtex_target_unbind(int ori_target) {
+	dtex_shader_set_target(ori_target);
+	glBindFramebuffer(GL_FRAMEBUFFER, ori_target);
 }
