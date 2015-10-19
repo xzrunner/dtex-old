@@ -34,10 +34,26 @@ void dtex_relocate_c2_key(struct dtex_c2*, struct dtex_package* pkg, int tex_idx
                           struct dtex_array* pictures, struct dtex_texture_with_rect* src, struct dtex_texture_with_rect* dst);
 
 /************************************************************************/
-/* trans_vb for draw, dst_vb is texcoords                               */
+/* rect map to draw vb[16]                                              */
 /************************************************************************/
-void dtex_relocate_quad(uint16_t part_src[8], struct dtex_inv_size* src_sz, struct dtex_rect* src_rect, 
-                        struct dtex_inv_size* dst_sz, struct dtex_rect* dst_rect, int rotate, float trans_vb[16], float dst_vb[8]);
+void dtex_relocate_draw_vb(uint16_t part_src[8], 
+                           struct dtex_inv_size* src_sz, 
+						   struct dtex_rect* src_rect, 
+                           struct dtex_inv_size* dst_sz, 
+						   struct dtex_rect* dst_rect, 
+						   int rotate, 
+						   float trans_vb[16]);
+
+/************************************************************************/
+/* rect map to c2 draw val[8]                                           */
+/************************************************************************/
+void dtex_relocate_c2_val(uint16_t part_src[8], 
+                          struct dtex_inv_size* src_sz, 
+						  struct dtex_rect* src_rect, 
+                          struct dtex_inv_size* dst_sz, 
+						  struct dtex_rect* dst_rect, 
+						  int rotate, 
+						  float val[8]);
 
 /************************************************************************/
 /* get quad texcoords region                                            */

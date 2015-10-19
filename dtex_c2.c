@@ -23,6 +23,7 @@
 #define PRELOAD_SIZE 4096*2
 
 #define PADDING 1
+//#define EXTRUDE 1
 
 struct hash_key {
 	unsigned int texid;
@@ -366,7 +367,8 @@ _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 	dst_sz.inv_h = n->dst_tex->inv_height;
 
 	int rotate_times = rotate ? 1 : 0;
-	dtex_relocate_quad(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb, n->dst_vb);
+	dtex_relocate_draw_vb(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb);
+	dtex_relocate_c2_val(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->dst_vb);
 }
 
 static inline bool

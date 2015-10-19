@@ -110,8 +110,14 @@ void dtex_relocate_c2_key(struct dtex_c2* c2, struct dtex_package* pkg, int tex_
 	}
 }
 
-void dtex_relocate_quad(uint16_t part_src[8], struct dtex_inv_size* src_sz, struct dtex_rect* src_rect, 
-	                    struct dtex_inv_size* dst_sz, struct dtex_rect* dst_rect, int rotate, float trans_vb[16], float dst_vb[8]) {
+void 
+dtex_relocate_draw_vb(uint16_t part_src[8], 
+                      struct dtex_inv_size* src_sz, 
+				      struct dtex_rect* src_rect, 
+                      struct dtex_inv_size* dst_sz, 
+				      struct dtex_rect* dst_rect, 
+					  int rotate, 
+					  float trans_vb[16]) {
 	float src_xmin = src_rect->xmin * src_sz->inv_w,
 	      src_xmax = src_rect->xmax * src_sz->inv_w,
 	      src_ymin = src_rect->ymin * src_sz->inv_h,
@@ -134,11 +140,6 @@ void dtex_relocate_quad(uint16_t part_src[8], struct dtex_inv_size* src_sz, stru
 		trans_vb[10]= src_xmax; trans_vb[11]= src_ymax;
 		trans_vb[12]= vd_xmax; 	trans_vb[13]= vd_ymin;
 		trans_vb[14]= src_xmax; trans_vb[15]= src_ymin;
-
-		dst_vb[0] = dst_xmin; dst_vb[1] = dst_ymax;
-		dst_vb[4] = dst_xmax; dst_vb[5] = dst_ymin;
-		dst_vb[2] = dst_xmin; dst_vb[3] = dst_ymin;
-		dst_vb[6] = dst_xmax; dst_vb[7] = dst_ymax;
     } else {
 		float cx = 0, cy = 0;
 		for (int i = 0; i < 4; ++i) {
@@ -151,38 +152,30 @@ void dtex_relocate_quad(uint16_t part_src[8], struct dtex_inv_size* src_sz, stru
 	    if (part_src[0] < cx) {
 			trans_vb[2] = src_xmin; trans_vb[10]= src_xmax;
 			trans_vb[0] = vd_xmin; trans_vb[8] = vd_xmax;
-			dst_vb[0] = dst_xmin; dst_vb[4] = dst_xmax;    	
 	    } else {
 			trans_vb[2] = src_xmax; trans_vb[10]= src_xmin;
 			trans_vb[0] = vd_xmax; trans_vb[8] = vd_xmin;
-			dst_vb[0] = dst_xmax; dst_vb[4] = dst_xmin;
 	    }
 	    if (part_src[2] < cx) {
 			trans_vb[6] = src_xmin; trans_vb[14]= src_xmax;
 			trans_vb[4] = vd_xmin; trans_vb[12] = vd_xmax;
-			dst_vb[2] = dst_xmin; dst_vb[6] = dst_xmax;
 	    } else {
 			trans_vb[6] = src_xmax; trans_vb[14]= src_xmin;
 			trans_vb[4] = vd_xmax; trans_vb[12] = vd_xmin;
-			dst_vb[2] = dst_xmax; dst_vb[6] = dst_xmin;
 	    }
 	    if (part_src[1] < cy) {
 			trans_vb[3] = src_ymin; trans_vb[11]= src_ymax;
 			trans_vb[1] = vd_ymin; trans_vb[9] = vd_ymax;
-			dst_vb[1] = dst_ymin; dst_vb[5] = dst_ymax;
 	    } else {
 			trans_vb[3] = src_ymax; trans_vb[11]= src_ymin;
 			trans_vb[1] = vd_ymax; trans_vb[9] = vd_ymin;
-			dst_vb[1] = dst_ymax; dst_vb[5] = dst_ymin;
 	    }
 	    if (part_src[3] < cy) {
 			trans_vb[7] = src_ymin; trans_vb[15]= src_ymax;
 			trans_vb[5] = vd_ymin; trans_vb[13] = vd_ymax;
-			dst_vb[3] = dst_ymin; dst_vb[7] = dst_ymax;
 	    } else {
 			trans_vb[7] = src_ymax; trans_vb[15]= src_ymin;
 			trans_vb[5] = vd_ymax; trans_vb[13] = vd_ymin;
-			dst_vb[3] = dst_ymax; dst_vb[7] = dst_ymin;
 	    }
     }
 
@@ -193,12 +186,6 @@ void dtex_relocate_quad(uint16_t part_src[8], struct dtex_inv_size* src_sz, stru
 		trans_vb[6] = trans_vb[10]; trans_vb[7] = trans_vb[11];
 		trans_vb[10]= trans_vb[14]; trans_vb[11]= trans_vb[15];
 		trans_vb[14]= x;            trans_vb[15]= y;	
-
-		x = dst_vb[6]; y = dst_vb[7];
-		dst_vb[6] = dst_vb[4]; dst_vb[7] = dst_vb[5];
-		dst_vb[4] = dst_vb[2]; dst_vb[5] = dst_vb[3];
-		dst_vb[2] = dst_vb[0]; dst_vb[3] = dst_vb[1];
-		dst_vb[0] = x;         dst_vb[1] = y;
 	} else if (rotate == -1) {
 		float x, y;
 		x = trans_vb[2]; y = trans_vb[3];
@@ -206,16 +193,74 @@ void dtex_relocate_quad(uint16_t part_src[8], struct dtex_inv_size* src_sz, stru
 		trans_vb[14] = trans_vb[10]; trans_vb[15] = trans_vb[11];
 		trans_vb[10]= trans_vb[6]; trans_vb[11]= trans_vb[7];
 		trans_vb[6]= x;            trans_vb[7]= y;	
-
-		x = dst_vb[6]; y = dst_vb[7];
-		dst_vb[6] = dst_vb[0]; dst_vb[7] = dst_vb[1];
-		dst_vb[0] = dst_vb[2]; dst_vb[1] = dst_vb[3];
-		dst_vb[2] = dst_vb[4]; dst_vb[3] = dst_vb[5];
-		dst_vb[4] = x;         dst_vb[5] = y;
-	}
-
-    // todo padding    
+	}	
 }
+
+void 
+dtex_relocate_c2_val(uint16_t part_src[8], 
+                     struct dtex_inv_size* src_sz, 
+				     struct dtex_rect* src_rect, 
+                     struct dtex_inv_size* dst_sz, 
+				     struct dtex_rect* dst_rect, 
+				     int rotate, 
+					 float val[8]) {
+	float dst_xmin = dst_rect->xmin * dst_sz->inv_w,
+	      dst_xmax = dst_rect->xmax * dst_sz->inv_w,
+	      dst_ymin = dst_rect->ymin * dst_sz->inv_h,
+	      dst_ymax = dst_rect->ymax * dst_sz->inv_h;
+    if (part_src == NULL || part_src[0] < 0) {
+		val[0] = dst_xmin; val[1] = dst_ymax;
+		val[4] = dst_xmax; val[5] = dst_ymin;
+		val[2] = dst_xmin; val[3] = dst_ymin;
+		val[6] = dst_xmax; val[7] = dst_ymax;
+    } else {
+		float cx = 0, cy = 0;
+		for (int i = 0; i < 4; ++i) {
+			cx += part_src[i*2];
+			cy += part_src[i*2+1];
+		}
+		cx *= 0.25f;
+		cy *= 0.25f;
+
+	    if (part_src[0] < cx) {
+			val[0] = dst_xmin; val[4] = dst_xmax;    	
+	    } else {
+			val[0] = dst_xmax; val[4] = dst_xmin;
+	    }
+	    if (part_src[2] < cx) {
+			val[2] = dst_xmin; val[6] = dst_xmax;
+	    } else {
+			val[2] = dst_xmax; val[6] = dst_xmin;
+	    }
+	    if (part_src[1] < cy) {
+			val[1] = dst_ymin; val[5] = dst_ymax;
+	    } else {
+			val[1] = dst_ymax; val[5] = dst_ymin;
+	    }
+	    if (part_src[3] < cy) {
+			val[3] = dst_ymin; val[7] = dst_ymax;
+	    } else {
+			val[3] = dst_ymax; val[7] = dst_ymin;
+	    }
+    }
+
+	if (rotate == 1) {
+		float x, y;
+		x = val[6]; y = val[7];
+		val[6] = val[4]; val[7] = val[5];
+		val[4] = val[2]; val[5] = val[3];
+		val[2] = val[0]; val[3] = val[1];
+		val[0] = x;         val[1] = y;
+	} else if (rotate == -1) {
+		float x, y;
+		x = val[6]; y = val[7];
+		val[6] = val[0]; val[7] = val[1];
+		val[0] = val[2]; val[1] = val[3];
+		val[2] = val[4]; val[3] = val[5];
+		val[4] = x;         val[5] = y;
+	}
+}
+
 
 void 
 dtex_get_texcoords_region(uint16_t* texcoords, struct dtex_rect* region) {
