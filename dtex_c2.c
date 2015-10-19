@@ -108,6 +108,7 @@ dtex_c2_create(int texture_size, bool quad) {
 	}
 	memset(c2, 0, sz);
 
+	c2->quad = quad;
 	if (quad) {
 		c2->t.QUAD.texture = dtex_res_cache_fetch_mid_texture(texture_size);
 		int half_sz = texture_size >> 1;
@@ -152,12 +153,7 @@ dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 	c2->loadable = 0;
 
 	if (c2->quad) {
-		struct dtex_rect rect;
-		rect.xmin = 0;
-		rect.xmax = 0.5f;
-		rect.ymin = 0;
-		rect.ymax = 1;
-		dtex_texture_clear_part(c2->t.QUAD.texture, &rect);
+		dtex_texture_clear_part(c2->t.QUAD.texture, 0, 0, 1, 1);
 		dtex_tp_clear(c2->t.QUAD.tpackers[2]);
 		dtex_tp_clear(c2->t.QUAD.tpackers[3]);
 	} else {
@@ -518,8 +514,15 @@ dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struc
 	dtex_hash_insert(c2->hash, &node->hk, node, true);
 }
 
+static int called_debug = 0;
+
 void 
 dtex_c2_debug_draw(struct dtex_c2* c2) {
+	if (!called_debug) {
+		dtex_c2_debug(c2);
+		called_debug = 1;
+	}
+
 #ifdef USED_IN_EDITOR
 	dtex_debug_draw(c2->textures[0]->id);
 #else
@@ -547,10 +550,5 @@ dtex_c2_debug_draw(struct dtex_c2* c2) {
 
 void 
 dtex_c2_debug(struct dtex_c2* c2) {
-	struct dtex_rect rect;
-	rect.xmin = 0;
-	rect.xmax = 0.5f;
-	rect.ymin = 0;
-	rect.ymax = 1;
-	dtex_texture_clear_part(c2->t.QUAD.texture, &rect);
+	dtex_texture_clear_part(c2->t.QUAD.texture, 0, 0, 1, 1);
 }

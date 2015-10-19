@@ -10,10 +10,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define ATTRIB_VERTEX 0
-#define ATTRIB_TEXTCOORD 1
-#define ATTRIB_COLOR 2
-#define ATTRIB_ADDITIVE 3
+#define ATTRIB_VERTEX		0
+#define ATTRIB_TEXTCOORD	1
+#define ATTRIB_COLOR		2
+#define ATTRIB_ADDITIVE		3
 
 #define MAX_COMMBINE 1024
 
@@ -230,12 +230,27 @@ dtex_shader_load() {
 		"}  \n"
 		;	
 
+	static const char * shape_vs =
+		FLOAT_PRECISION
+		"\n"
+		"attribute vec4 position;  \n"
+		"attribute vec4 color;     \n"
+		"\n"
+		"varying vec4 v_color;  \n"
+		"void main()  \n"
+		"{  \n"
+		"  gl_Position = position;  \n"
+		"  v_color = color / 255.0;  \n"
+		"}  \n"
+		;
+
 	static const char * shape_fs =
 		FLOAT_PRECISION
 		"\n"
+		"varying vec4 v_color;  \n"
 		"void main()  \n"
 		"{  \n"
-		"  gl_FragColor = gl_Color;  \n"
+		"  gl_FragColor = v_color;  \n"
 		"}  \n"
 		;
 
@@ -243,7 +258,7 @@ dtex_shader_load() {
 
 	_program_init(&PROG[PROGRAM_NORMAL], sprite_vs, sprite_fs);
 	_program_init(&PROG[PROGRAM_ETC1], sprite_vs, etc1_fs);
-	_program_init(&PROG[PROGRAM_SHAPE], sprite_vs, shape_fs);
+	_program_init(&PROG[PROGRAM_SHAPE], shape_vs, shape_fs);
 
 	dtex_shader_program(PROGRAM_NORMAL);
 
@@ -290,6 +305,8 @@ _rs_commit() {
 	glBindBuffer(GL_ARRAY_BUFFER, VERTEX_BUFFER);
 	glBufferData(GL_ARRAY_BUFFER, 24 * RS->object * sizeof(float), RS->vb, GL_DYNAMIC_DRAW);
 
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER);
+
 	glEnableVertexAttribArray(ATTRIB_VERTEX);
 	glVertexAttribPointer(ATTRIB_VERTEX, 2, GL_FLOAT, GL_FALSE, 24, BUFFER_OFFSET(0));
 	glEnableVertexAttribArray(ATTRIB_TEXTCOORD);
@@ -299,6 +316,14 @@ _rs_commit() {
 	glEnableVertexAttribArray(ATTRIB_ADDITIVE);
 	glVertexAttribPointer(ATTRIB_ADDITIVE, 4, GL_UNSIGNED_BYTE, GL_FALSE, 24, BUFFER_OFFSET(20));  
 	glDrawElements(GL_TRIANGLES, 6 * RS->object, GL_UNSIGNED_SHORT, 0);
+
+	glDisableVertexAttribArray(ATTRIB_VERTEX);
+	glDisableVertexAttribArray(ATTRIB_TEXTCOORD);
+	glDisableVertexAttribArray(ATTRIB_COLOR);
+	glDisableVertexAttribArray(ATTRIB_ADDITIVE);
+
+ 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+ 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	RS->object = 0;
 
@@ -312,10 +337,9 @@ dtex_shader_program(int n) {
 	}
 
 	_rs_commit();
-	RS->activeprog = n;
 
 	glUseProgram(PROG[n].prog);
-
+	RS->activeprog = n;
 	if (n == PROGRAM_NULL) {
 		return;
 	}
@@ -407,27 +431,20 @@ dtex_shader_draw(const float vb[16]) {
 }
 
 void 
-dtex_shader_draw_triangle(const float* coords, size_t tri_count) {
-	size_t count = tri_count * 3;
+dtex_shader_draw_triangle(const float* vb, int count) {
+	glBindBuffer(GL_ARRAY_BUFFER, VERTEX_BUFFER);
+	glBufferData(GL_ARRAY_BUFFER, count * 3 * sizeof(float), vb, GL_DYNAMIC_DRAW);
 
-	float color[count];
-	for (int i = 0; i < count; ++i) {
-		color[i * 4] = 1;
-		color[i * 4 + 1] = 0;
-		color[i * 4 + 2] = 0;
-		color[i * 4 + 3] = 1;
-	}
+	glEnableVertexAttribArray(ATTRIB_VERTEX);
+	glVertexAttribPointer(ATTRIB_VERTEX, 2, GL_FLOAT, GL_FALSE, 12, 0);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(2, GL_FLOAT, 0, (const GLvoid*)coords);
-
-	glEnableClientState(GL_COLOR_ARRAY);
-	glColorPointer(4, GL_FLOAT, 0, (const GLvoid*)color);
+	glEnableVertexAttribArray(ATTRIB_COLOR);
+	glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_FALSE, 12, BUFFER_OFFSET(8));
 
 	glDrawArrays(GL_TRIANGLES, 0, count);
 
-	glDisableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableVertexAttribArray(ATTRIB_VERTEX);
+	glDisableVertexAttribArray(ATTRIB_COLOR);
 }
 
 void 

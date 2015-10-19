@@ -147,7 +147,7 @@ dtexf_create(const char* cfg) {
  		C1 = dtex_c1_create(CFG.c1_tex_size);		
  	}
  	if (CFG.open_c2) {
- 		C2 = dtex_c2_create(CFG.c2_tex_size, false);		
+ 		C2 = dtex_c2_create(CFG.c2_tex_size, true);		
  	}
 }
 
@@ -271,11 +271,6 @@ dtexf_c2_lookup_texcoords(struct dtex_texture* ori_tex, float* ori_vb, int* dst_
 	} else {
 		return NULL;
 	}
-}
-
-void 
-dtexf_c2_debug() {
-	dtex_c2_debug(C2);
 }
 
 //void 

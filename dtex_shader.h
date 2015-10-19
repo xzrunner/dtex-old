@@ -22,7 +22,7 @@ void dtex_shader_target(int id);
 int dtex_shader_get_target();
 
 void dtex_shader_draw(const float vb[16]);
-void dtex_shader_draw_triangle(const float* coords, size_t tri_count);
+void dtex_shader_draw_triangle(const float* vb, int count);
 
 void dtex_shader_flush();
 

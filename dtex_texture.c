@@ -8,6 +8,8 @@
 #include "dtex_resource.h"
 #include "dtex_shader.h"
 
+#include <opengl.h>
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -71,7 +73,7 @@ dtex_texture_create_mid(int edge) {
 		dtex_fault("dtex_texture_create_mid malloc fail.");
 		return NULL;
 	}
-	memset(empty_data, 0x00, edge*edge*4);
+	memset(empty_data, 0xaa, edge*edge*4);
 
 	int gl_id, uid_3rd;
 	dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, &gl_id, &uid_3rd, true);
@@ -137,7 +139,7 @@ dtex_texture_clear(struct dtex_texture* tex) {
 }
 
 void 
-dtex_texture_clear_part(struct dtex_texture* tex, struct dtex_rect* rect) {
+dtex_texture_clear_part(struct dtex_texture* tex, float xmin, float ymin, float xmax, float ymax) {
 	if (!tex) {
 		return;
 	}
@@ -149,25 +151,40 @@ dtex_texture_clear_part(struct dtex_texture* tex, struct dtex_rect* rect) {
 	dtex_shader_program(PROGRAM_SHAPE);
 	dtex_shader_texture(0);
 
-	float coords[2 * 3 * 2];
-	coords[0] = rect->xmin;
-	coords[1] = rect->ymin;
-	coords[2] = rect->xmax;
-	coords[3] = rect->ymax;
-	coords[4] = rect->xmin;
-	coords[5] = rect->ymax;
-	coords[6] = rect->xmin;
-	coords[7] = rect->ymin;
-	coords[8] = rect->xmax;
-	coords[9] = rect->ymin;
-	coords[10] = rect->xmax;
-	coords[11] = rect->ymax;
-	dtex_shader_draw_triangle(coords, 2);
+	unsigned int color = 0x000000ff;
+
+	float vb[3 * 6];
+	vb[0] = xmin;
+	vb[1] = ymin;
+	vb[2] = color;
+
+	vb[3] = xmin;
+	vb[4] = ymax;
+	vb[5] = color;
+
+	vb[6] = xmax;
+	vb[7] = ymax;
+	vb[8] = color;
+
+	vb[9] = xmin;
+	vb[10] = ymin;
+	vb[11] = color;
+
+	vb[12] = xmax;
+	vb[13] = ymin;
+	vb[14] = color;
+
+	vb[15] = xmax;
+	vb[16] = ymax;
+	vb[17] = color;
+
+	dtex_shader_draw_triangle(vb, 6);
 
 	dtex_shader_program(PROGRAM_NORMAL);
 
 	dtex_target_unbind();
 	dtex_target_unbind_texture(target);
+
 	dtex_res_cache_return_target(target);
 }
 
