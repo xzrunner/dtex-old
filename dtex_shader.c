@@ -305,7 +305,7 @@ _rs_commit() {
 	glBindBuffer(GL_ARRAY_BUFFER, VERTEX_BUFFER);
 	glBufferData(GL_ARRAY_BUFFER, 24 * RS->object * sizeof(float), RS->vb, GL_DYNAMIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER);
+//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER);
 
 	glEnableVertexAttribArray(ATTRIB_VERTEX);
 	glVertexAttribPointer(ATTRIB_VERTEX, 2, GL_FLOAT, GL_FALSE, 24, BUFFER_OFFSET(0));
@@ -323,7 +323,7 @@ _rs_commit() {
 	glDisableVertexAttribArray(ATTRIB_ADDITIVE);
 
  	glBindBuffer(GL_ARRAY_BUFFER, 0);
- 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+// 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	RS->object = 0;
 

@@ -82,9 +82,9 @@ dtex_c2_on_draw_sprite(struct ej_sprite* spr) {
 	++stg->tot_draw_count;
 	++stg->spr_draw_count[spr->id];
 
-// 	if (stg->tot_draw_count > MAX_PKG_DRAW_COUNT) {
-// 		_load_c2(pkg);
-// 	}
+	if (stg->tot_draw_count > MAX_PKG_DRAW_COUNT) {
+		_load_c2(pkg);
+	}
 }
 
 void 

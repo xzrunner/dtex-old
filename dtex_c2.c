@@ -58,12 +58,13 @@ struct c2_prenode {
 struct dtex_c2 {
 	int loadable;
 
-	bool quad;
+	bool one_tex;
 	union {
 		struct {
 			struct dtex_texture* texture;
-			struct dtex_tp* tpackers[4];
-		} QUAD;
+			struct dtex_tp* tp[4];			// 1 0  static
+											// 2 3  changed
+		} ONE;
 
 		struct {
  			struct dtex_texture* textures[MAX_TEX_SIZE];
@@ -100,7 +101,7 @@ _equal_func(void* key0, void* key1) {
 }
 
 struct dtex_c2* 
-dtex_c2_create(int texture_size, bool quad) {
+dtex_c2_create(int texture_size, bool one_tex) {
 	size_t sz = sizeof(struct dtex_c2) + sizeof(struct c2_prenode) * PRELOAD_SIZE;
 	struct dtex_c2* c2 = (struct dtex_c2*)malloc(sz);
 	if (!c2) {
@@ -108,12 +109,12 @@ dtex_c2_create(int texture_size, bool quad) {
 	}
 	memset(c2, 0, sz);
 
-	c2->quad = quad;
-	if (quad) {
-		c2->t.QUAD.texture = dtex_res_cache_fetch_mid_texture(texture_size);
+	c2->one_tex = one_tex;
+	if (one_tex) {
+		c2->t.ONE.texture = dtex_res_cache_fetch_mid_texture(texture_size);
 		int half_sz = texture_size >> 1;
 		for (int i = 0; i < 4; ++i) {
-			c2->t.QUAD.tpackers[i] = dtex_tp_create(half_sz, half_sz, PRELOAD_SIZE);
+			c2->t.ONE.tp[i] = dtex_tp_create(half_sz, half_sz, PRELOAD_SIZE);
 		}
 	} else {
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
@@ -130,10 +131,10 @@ dtex_c2_create(int texture_size, bool quad) {
 
 void 
 dtex_c2_release(struct dtex_c2* c2) {
-	if (c2->quad) {
-		dtex_res_cache_return_mid_texture(c2->t.QUAD.texture);
+	if (c2->one_tex) {
+		dtex_res_cache_return_mid_texture(c2->t.ONE.texture);
 		for (int i = 0; i < 4; ++i) {
-			dtex_tp_release(c2->t.QUAD.tpackers[i]);
+			dtex_tp_release(c2->t.ONE.tp[i]);
 		}
 	} else {
 		for (int i = 0; i < c2->t.MULTI.tex_size; ++i) {
@@ -152,10 +153,10 @@ dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 
 	c2->loadable = 0;
 
-	if (c2->quad) {
-		dtex_texture_clear_part(c2->t.QUAD.texture, 0, 0, 1, 1);
-		dtex_tp_clear(c2->t.QUAD.tpackers[2]);
-		dtex_tp_clear(c2->t.QUAD.tpackers[3]);
+	if (c2->one_tex) {
+		dtex_texture_clear_part(c2->t.ONE.texture, 0, 0, 1, 0.5f);
+		dtex_tp_clear(c2->t.ONE.tp[2]);
+		dtex_tp_clear(c2->t.ONE.tp[3]);
 	} else {
 		for (int i = 0; i < c2->t.MULTI.tex_size; ++i) {
 			struct dtex_texture* tex = c2->t.MULTI.textures[i];
@@ -365,8 +366,31 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	struct dtex_tp_pos* pos = NULL;
 	struct dtex_texture* tex = NULL;
 	bool rotate = false;
-	if (c2->quad) {
-
+	if (c2->one_tex) {
+		tex = c2->t.ONE.texture;
+		assert(tex->type == DTEX_TT_MID);
+		// try left-bottom
+		pos = dtex_tp_add(c2->t.ONE.tp[2], w + PADDING * 2, h + PADDING * 2, true);
+		rotate = false;
+		// try right-bottom
+		float half_edge = c2->t.ONE.texture->width * 0.5f;
+		if (pos) {
+			;
+		} else {
+			pos = dtex_tp_add(c2->t.ONE.tp[3], w + PADDING * 2, h + PADDING * 2, true);
+			rotate = false;
+			if (pos) {
+				pos->r.xmin += half_edge;
+				pos->r.xmax += half_edge;
+			} else {
+				// todo
+				// 1. use new texture
+				// 2. scale
+				// 3. clear
+				dtex_c2_clear(c2, loader);
+				return false;
+			}
+		}
 	} else {
 		for (int i = 0; i < c2->t.MULTI.tex_size && pos == NULL; ++i) {
 			tex = c2->t.MULTI.textures[i];
@@ -514,20 +538,13 @@ dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struc
 	dtex_hash_insert(c2->hash, &node->hk, node, true);
 }
 
-static int called_debug = 0;
-
 void 
 dtex_c2_debug_draw(struct dtex_c2* c2) {
-	if (!called_debug) {
-		dtex_c2_debug(c2);
-		called_debug = 1;
-	}
-
 #ifdef USED_IN_EDITOR
 	dtex_debug_draw(c2->textures[0]->id);
 #else
-	if (c2->quad) {
-		dtex_debug_draw_ej(c2->t.QUAD.texture->uid_3rd, 1);
+	if (c2->one_tex) {
+		dtex_debug_draw_ej(c2->t.ONE.texture->uid_3rd, 1);
 	} else {
 		if (c2->t.MULTI.tex_size > 0) {
 			dtex_debug_draw_ej(c2->t.MULTI.textures[0]->uid_3rd, 1);
@@ -546,9 +563,4 @@ dtex_c2_debug_draw(struct dtex_c2* c2) {
 	// 	dtex_debug_draw_with_pos(i + 1, 
 	// 		-1 + x * edge, 1 - y * edge - edge, -1 + x * edge + edge, 1 - y * edge);
 	// }
-}
-
-void 
-dtex_c2_debug(struct dtex_c2* c2) {
-	dtex_texture_clear_part(c2->t.QUAD.texture, 0, 0, 1, 1);
 }
