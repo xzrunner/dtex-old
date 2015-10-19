@@ -61,6 +61,11 @@ _load_c2(struct dtex_package* pkg) {
 	} else {
 //		succ = dtexf_async_load_texture_with_c2(pkg, spr_ids, spr_count);
 
+
+		if (strcmp(pkg->name, "fx2") == 0) {
+			int zz = 0;
+		}
+
 		// already exists
 		// suppose 100% scale
 		dtexf_c2_load_begin();

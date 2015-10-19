@@ -7,6 +7,8 @@
 #include "dtex_etc1.h"
 #include "dtex_math.h"
 
+#include "dtex_debug.h"
+
 #include <opengl.h>
 #include <stdlib.h>
 
@@ -156,12 +158,11 @@ dtex_gl_create_texture(int type, int width, int height, const void* data, int ch
 
 void 
 dtex_gl_release_texture(unsigned int id, int channel) {
+	dtex_shader_texture(0);
+	dtex_stat_delete_texture(id);
+
 	glActiveTexture(GL_TEXTURE0 + channel);
 	glDeleteTextures(1, &id);
-
-	dtex_shader_texture(0);
-
-	dtex_stat_delete_texture(id);
 }
 
 void 

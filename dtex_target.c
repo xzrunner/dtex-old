@@ -3,6 +3,8 @@
 #include "dtex_log.h"
 #include "dtex_shader.h"
 
+#include "dtex_debug.h"
+
 #include <opengl.h>
 
 #include "ejoy2d.h"
@@ -21,6 +23,11 @@ dtex_target_create() {
     dtex_info("dtex_target: new target");
 	struct dtex_target* target = (struct dtex_target*)malloc(sizeof(struct dtex_target));
 	glGenFramebuffers(1, &target->target_id);
+
+	if (target->target_id == 0) {
+		int zz = 0;
+	}
+
 	target->texture_id = 0;
 	return target;
 }
@@ -64,14 +71,18 @@ dtex_target_bind_texture(struct dtex_target* target, int texid) {
 		return;
 	}
 
-	dtex_target_bind(target);
+	if (dtex_shader_get_target() != target->target_id) {
+		int zz = 0;
+	}
+
+//	int ori = dtex_target_bind(target);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texid, 0);
 	int status = _check_framebuffer_status();
 	assert(status);
 	target->texture_id = texid;
 
-	dtex_target_unbind();
+//	dtex_target_unbind(ori);
 }
 
 void 
@@ -79,12 +90,26 @@ dtex_target_unbind_texture(struct dtex_target* target) {
 	target->texture_id = 0;
 }
 
-void 
+int 
 dtex_target_bind(struct dtex_target* target) {
+	int ori = dtex_shader_get_target();
+	if (ori != 0) {
+		int zz = 0;
+	}
+	dtex_shader_set_target(target->target_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, target->target_id);
+	dtex_debug(" dtex_target_bind %d", target->target_id);
+	debug_tar();
+	return ori;
 }
 
 void 
-dtex_target_unbind() {
-	glBindFramebuffer(GL_FRAMEBUFFER, dtex_shader_get_target());
+dtex_target_unbind(int ori_target) {
+	dtex_shader_set_target(ori_target);
+	glBindFramebuffer(GL_FRAMEBUFFER, ori_target);
+	dtex_debug(" dtex_target_unbind %d", ori_target);
+}
+
+int dtex_target_get_id(struct dtex_target* tar) {
+	return tar->target_id;
 }

@@ -397,9 +397,8 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 	} else {
 		tex_loaded = true;
 	}
-	dtex_render_before();
 	_relocate_node(tex, node);
-	dtex_render_after();
+	dtex_draw_finish();
 	if (!tex_loaded) {
 		dtex_package_remove_texture_ref(node->pkg, tex);
 		dtex_texture_release(tex);
@@ -507,6 +506,8 @@ _alloc_texture(struct dtex_c3* c3, struct c3_prenode** pre_list, int pre_sz) {
 
 void 
 dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
+	dtex_debug(" dtex_c3_load_end 0");
+
 	if (c3->prenode_size == 0) {
 		return;
 	}
@@ -519,11 +520,12 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 
 	/*float scale = */_pack_nodes(c3, unique_set, unique_sz, alloc_scale);
 
-	dtex_render_before();
 	_relocate_nodes(c3, loader, async);
-	dtex_render_after();
+	dtex_draw_finish();
 
 	c3->prenode_size = 0;
+
+	dtex_debug(" dtex_c3_load_end 1");
 }
 
 //struct dtex_tp_pos* 

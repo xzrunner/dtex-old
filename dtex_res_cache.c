@@ -3,6 +3,8 @@
 #include "dtex_target.h"
 #include "dtex_stack.h"
 
+#include "dtex_log.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -113,16 +115,30 @@ dtex_res_cache_return_mid_texture(struct dtex_texture* tex) {
 
 struct dtex_target* 
 dtex_res_cache_fetch_target() {
+	dtex_debug(" dtex_res_cache_fetch_target 0");
 	if (!dtex_stack_empty(C.target_list)) {
+		dtex_debug(" dtex_res_cache_fetch_target 1");
+
 		struct dtex_target* target = (struct dtex_target*)dtex_stack_top(C.target_list);
 		dtex_stack_pop(C.target_list);
+
+		if (dtex_target_get_id(target) == 0) {
+			int zz = 0;
+		}
+
 		return target;
 	} else {
+		dtex_debug(" dtex_res_cache_fetch_target 2");
+
 		return dtex_target_create();
 	}
 }
 
 void 
 dtex_res_cache_return_target(struct dtex_target* target) {
+	if (dtex_target_get_id(target) == 0) {
+		int zz = 0;
+	}
+
 	dtex_stack_push(C.target_list, target);
 }
