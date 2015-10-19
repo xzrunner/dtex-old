@@ -1,6 +1,5 @@
 #include "dtex_c2.h"
 #include "dtex_tp.h"
-#include "dtex_draw.h"
 #include "dtex_loader.h"
 #include "dtex_rrp.h"
 #include "dtex_package.h"
@@ -11,6 +10,8 @@
 #include "dtex_hash.h"
 #include "dtex_log.h"
 #include "dtex_c2_strategy.h"
+#include "dtex_debug.h"
+#include "dtex_render.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -499,7 +500,7 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 	_get_unique_prenodes(c2, unique_set, &unique_sz);
 
 	// insert
-	dtex_draw_before();
+	dtex_render_before();
 	qsort((void*)unique_set, unique_sz, sizeof(struct c2_prenode*), _compare_max_edge);	
 	for (int i = 0; i < unique_sz; ++i) {
 		bool succ = _insert_node(c2, loader, unique_set[i]);
@@ -507,7 +508,7 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 			break;
 		}
 	}
-	dtex_draw_after();
+	dtex_render_after();
 
 	c2->prenode_size = 0;
 }

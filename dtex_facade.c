@@ -6,7 +6,6 @@
 #include "dtex_c1_new.h"
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
-#include "dtex_draw.h"
 #include "dtex_pvr.h"
 #include "dtex_etc1.h"
 #include "dtex_tp.h"

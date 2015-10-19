@@ -5,8 +5,8 @@
 #include "dtex_stream_import.h"
 #include "dtex_typedef.h"
 #include "dtex_statistics.h"
-#include "dtex_draw.h"
 #include "dtex_texture.h"
+#include "dtex_render.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -103,9 +103,9 @@ _scale_texture(struct dtex_texture* tex, float scale, bool create_by_ej) {
 	dst.type = DTEX_TT_MID;
 	dst.t.MID.tp = NULL;
 
-	dtex_draw_before();
+	dtex_render_before();
 	dtex_draw_to_texture(tex, &dst, vb);
-	dtex_draw_after();
+	dtex_render_after();
 
 	dtex_gl_release_texture(tex->id, 0);
 

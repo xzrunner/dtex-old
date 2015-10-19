@@ -1,6 +1,6 @@
 #include "dtex_c3.h"
 #include "dtex_tp.h"
-#include "dtex_draw.h"
+#include "dtex_shader.h"
 #include "dtex_rrp.h"
 #include "dtex_rrr.h"
 #include "dtex_b4r.h"
@@ -17,6 +17,8 @@
 #include "dtex_hash.h"
 #include "dtex_log.h"
 #include "dtex_array.h"
+#include "dtex_debug.h"
+#include "dtex_render.h"
 
 #include "ejoy2d.h"
 
@@ -395,9 +397,9 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 	} else {
 		tex_loaded = true;
 	}
-	dtex_draw_before();
+	dtex_render_before();
 	_relocate_node(tex, node);
-	dtex_draw_after();
+	dtex_render_after();
 	if (!tex_loaded) {
 		dtex_package_remove_texture_ref(node->pkg, tex);
 		dtex_texture_release(tex);
@@ -428,7 +430,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 
 		// change package should flush shader, as texture maybe removed
 		if (last_pkg != NULL && pkg != last_pkg) {
-			dtex_flush_shader();
+			dtex_shader_flush();
 		}
 
 		// load old tex
@@ -517,9 +519,9 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 
 	/*float scale = */_pack_nodes(c3, unique_set, unique_sz, alloc_scale);
 
-	dtex_draw_before();
+	dtex_render_before();
 	_relocate_nodes(c3, loader, async);
-	dtex_draw_after();
+	dtex_render_after();
 
 	c3->prenode_size = 0;
 }

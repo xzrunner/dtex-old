@@ -3,10 +3,10 @@
 #include "dtex_screen.h"
 #include "dtex_shader.h"
 #include "dtex_ej_sprite.h"
-#include "dtex_draw.h"
 #include "dtex_gl.h"
 #include "dtex_texture.h"
 #include "dtex_res_cache.h"
+#include "dtex_debug.h"
 
 #include <stdlib.h>
 #include <string.h>
