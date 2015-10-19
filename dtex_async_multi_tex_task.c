@@ -105,7 +105,7 @@ dtex_async_load_multi_textures(struct dtex_package* pkg, struct dtex_array* text
 			pkg->textures[idx] = dtex_texture_create_raw(pkg->LOD);
 			pkg->textures[idx]->t.RAW.scale = 1;
 		} else {
-			dtex_info(" already exist, special in editor.");
+			dtex_info(" already exist, small scale.");
 			assert(0);
 		}
 		params->tex = pkg->textures[idx];
