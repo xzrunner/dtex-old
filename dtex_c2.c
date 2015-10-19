@@ -500,7 +500,6 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 	_get_unique_prenodes(c2, unique_set, &unique_sz);
 
 	// insert
-	dtex_render_before();
 	qsort((void*)unique_set, unique_sz, sizeof(struct c2_prenode*), _compare_max_edge);	
 	for (int i = 0; i < unique_sz; ++i) {
 		bool succ = _insert_node(c2, loader, unique_set[i]);
@@ -508,7 +507,7 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 			break;
 		}
 	}
-	dtex_render_after();
+	dtex_draw_finish();
 
 	c2->prenode_size = 0;
 }

@@ -8,18 +8,56 @@
 #include "dtex_typedef.h"
 
 #include <assert.h>
+#include <string.h>
+
+struct render_state {
+	struct dtex_texture* dst;
+	struct dtex_target* target;
+//	float scr_w, scr_h;
+	int ori_target;
+};
+
+static struct render_state RS;
 
 void 
-dtex_render_before() {
+dtex_render_init() {
+	memset(&RS, 0, sizeof(RS));
+}
+
+static inline void 
+_before_all_draw() {
 #ifndef USED_IN_EDITOR
 	dtex_gl_bind_vertex_array(0);
 	dtex_shader_texture(0);
 	dtex_shader_program(PROGRAM_NULL);
 #endif // USED_IN_EDITOR
+
+	assert(RS.target == NULL);
+	RS.target = dtex_res_cache_fetch_target();
+
+	RS.ori_target = dtex_target_bind(RS.target);
 }
 
-void 
-dtex_render_after() {
+static inline void 
+_after_all_draw() {
+	assert((RS.dst && RS.target) || (!RS.dst && !RS.target));
+	if (!RS.dst) {
+		return;
+	}
+
+	dtex_shader_flush();
+
+	dtex_target_unbind_texture(RS.target);
+	dtex_target_unbind(RS.ori_target);  
+	dtex_res_cache_return_target(RS.target);
+
+	RS.dst = NULL;
+	RS.target = NULL;
+
+	float scr_w, scr_h, scr_s;
+	dtex_get_screen(&scr_w, &scr_h, &scr_s);
+	dtex_gl_viewport(0, 0, scr_w, scr_h);
+
 #ifndef USED_IN_EDITOR
 	ej_shader_texture(0, 0);
 	ej_shader_program(PROGRAM_DEFAULT, NULL);
@@ -44,14 +82,12 @@ _before_draw(struct dtex_texture* tex) {
 }
 
 static inline void 
-_before_target_draw(struct dtex_texture* src, struct dtex_texture* dst, 
-struct dtex_target** target, float* scr_w, float* scr_h) {
-	*target = dtex_res_cache_fetch_target();
-	dtex_target_bind_texture(*target, dst->id);
-	dtex_target_bind(*target);
+_before_target_draw(struct dtex_texture* src, struct dtex_texture* dst) {
+	assert(RS.dst == NULL);
+	RS.dst = dst;
 
-	float s;
-	dtex_get_screen(scr_w, scr_h, &s);
+	dtex_target_bind_texture(RS.target, dst->id);
+
 	dtex_gl_viewport(0, 0, dst->width, dst->height);
 
 	_before_draw(src);
@@ -68,26 +104,19 @@ _draw(const float vb[16], struct dtex_texture* src) {
 	}
 }
 
-static inline void
-_after_target_draw(struct dtex_target* target, float scr_w, float scr_h) {
-	dtex_shader_flush();
-
-	dtex_gl_viewport(0, 0, scr_w, scr_h);
-
-	dtex_target_unbind();  
-	dtex_target_unbind_texture(target);
-
-	dtex_res_cache_return_target(target);
-}
-
-
 void 
 dtex_draw_to_texture(struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]) {
-	struct dtex_target* target = NULL;
-	float scr_w, scr_h;
-	_before_target_draw(src, dst, &target, &scr_w, &scr_h);
+	if (RS.dst == NULL) {
+		_before_all_draw();
+		_before_target_draw(src, dst);
+	} else if (RS.dst != dst) {
+		_before_target_draw(src, dst);
+	}
 
 	_draw(vb, src);
+}
 
-	_after_target_draw(target, scr_w, scr_h);
+void 
+dtex_draw_finish() {
+	_after_all_draw();
 }
