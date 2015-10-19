@@ -55,7 +55,22 @@ _load_c2(struct dtex_package* pkg) {
 		return;
 	}
 
-	bool succ = dtexf_async_load_texture_with_c2_from_c3(pkg, spr_ids, spr_count);
+	bool succ = false;
+	if (pkg->use_c3) {
+		succ = dtexf_async_load_texture_with_c2_from_c3(pkg, spr_ids, spr_count);
+	} else {
+//		succ = dtexf_async_load_texture_with_c2(pkg, spr_ids, spr_count);
+
+		// already exists
+		// suppose 100% scale
+		dtexf_c2_load_begin();
+		for (int i = 0; i < spr_count; ++i) {
+			int spr_id = spr_ids[i];
+			dtexf_c2_load(pkg, spr_id);
+		}
+		dtexf_c2_load_end();
+		succ = true;
+	}
 	if (!succ) {
 		return;
 	}

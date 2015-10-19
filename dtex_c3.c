@@ -424,6 +424,8 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 		struct c3_node* node = nodes[i];
 		struct dtex_package* pkg = node->pkg;
 
+		pkg->use_c3 = true;
+
 		// change package should flush shader, as texture maybe removed
 		if (last_pkg != NULL && pkg != last_pkg) {
 			dtex_flush_shader();
