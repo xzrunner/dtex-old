@@ -32,7 +32,7 @@ dtex_res_cache_create() {
 static inline void
 _release_texture_list(struct dtex_stack* tex_list) {
 	while (!dtex_stack_empty(tex_list)) {
-		struct dtex_texture* texture = (struct dtex_texture*)dtex_stack_top(tex_list);
+		struct dtex_texture* texture = *(struct dtex_texture**)dtex_stack_top(tex_list);
 		dtex_stack_pop(tex_list);
 		dtex_texture_release(texture);
 	}
@@ -42,7 +42,7 @@ _release_texture_list(struct dtex_stack* tex_list) {
 static inline void
 _release_target_list(struct dtex_stack* tar_list) {
 	while (!dtex_stack_empty(tar_list)) {
-		struct dtex_target* target = (struct dtex_target*)dtex_stack_top(tar_list);
+		struct dtex_target* target = *(struct dtex_target**)dtex_stack_top(tar_list);
 		dtex_stack_pop(tar_list);
 		dtex_target_release(target);
 	}
@@ -61,7 +61,7 @@ dtex_res_cache_release() {
 static struct dtex_texture*
 _texture_list_fetch(struct dtex_stack* tex_list) {
 	if (!dtex_stack_empty(tex_list)) {
-		struct dtex_texture* texture = (struct dtex_texture*)dtex_stack_top(tex_list);
+		struct dtex_texture* texture = *(struct dtex_texture**)dtex_stack_top(tex_list);
 		dtex_stack_pop(tex_list);
 		return texture;
 	} else {
@@ -89,7 +89,7 @@ dtex_res_cache_fetch_mid_texture(int edge) {
 
 static inline void
 _list_return(struct dtex_stack* tex_list, struct dtex_texture* tex) {
-	dtex_stack_push(tex_list, tex);
+	dtex_stack_push(tex_list, &tex);
 }
 
 bool
@@ -114,7 +114,7 @@ dtex_res_cache_return_mid_texture(struct dtex_texture* tex) {
 struct dtex_target* 
 dtex_res_cache_fetch_target() {
 	if (!dtex_stack_empty(C.target_list)) {
-		struct dtex_target* target = (struct dtex_target*)dtex_stack_top(C.target_list);
+		struct dtex_target* target = *(struct dtex_target**)dtex_stack_top(C.target_list);
 		dtex_stack_pop(C.target_list);
 		return target;
 	} else {
@@ -124,5 +124,5 @@ dtex_res_cache_fetch_target() {
 
 void 
 dtex_res_cache_return_target(struct dtex_target* target) {
-	dtex_stack_push(C.target_list, target);
+	dtex_stack_push(C.target_list, &target);
 }
