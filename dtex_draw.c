@@ -222,7 +222,7 @@ void
 dtex_draw_after() {
 #ifndef USED_IN_EDITOR
 	ej_shader_texture(0, 0);
-	ej_shader_program(PROGRAM_PICTURE, NULL);
+	ej_shader_program(PROGRAM_DEFAULT, NULL);
 #endif // USED_IN_EDITOR
 }
 
