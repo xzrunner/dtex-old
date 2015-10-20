@@ -13,10 +13,10 @@ struct dtex_package;
 struct dtex_loader;
 struct dtex_rect;
 
-struct dtex_c3* dtex_c3_create(int texture_size);
+struct dtex_c3* dtex_c3_create(int texture_size, bool one_tex_mode);
 void dtex_c3_release(struct dtex_c3*);
 
-void dtex_c3_load(struct dtex_c3*, struct dtex_package*, float scale);
+void dtex_c3_load(struct dtex_c3*, struct dtex_package*, float scale, bool force);
 void dtex_c3_load_end(struct dtex_c3*, struct dtex_loader*, bool async);
 
 //// todo cache and sort

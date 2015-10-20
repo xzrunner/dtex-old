@@ -143,7 +143,7 @@ dtexf_create(const char* cfg) {
 	LOADER = dtexloader_create();
 
 	if (CFG.open_c3) {
-		C3 = dtex_c3_create(CFG.c3_tex_size);	
+		C3 = dtex_c3_create(CFG.c3_tex_size, true);	
 	}
  	if (CFG.open_c1) {
  		C1 = dtex_c1_create(CFG.c1_tex_size);		
@@ -230,7 +230,7 @@ dtexf_load_texture(struct dtex_package* pkg, int idx, bool create_by_ej) {
 void
 dtexf_c3_load(struct dtex_package* pkg, float scale) {
 	if (C3) {
-		dtex_c3_load(C3, pkg, scale);
+		dtex_c3_load(C3, pkg, scale, false);
 	}
 }
 
@@ -395,8 +395,8 @@ void
 dtexf_debug_draw() {
   	if (C1) {
   		dtex_c1_debug_draw(C1);
-  	} else if (C2) {
-		dtex_c2_debug_draw(C2);
+//   	} else if (C2) {
+// 		dtex_c2_debug_draw(C2);
 	} else if (C3) {
 		dtex_c3_debug_draw(C3);
 	}
