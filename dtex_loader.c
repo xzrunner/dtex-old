@@ -165,7 +165,7 @@ struct unpack_pkg_params {
 	struct dtex_package* pkg;
 	int file_format;
 	float scale;
-	bool load_c2;
+	int load_c2;
 };
 
 struct unpack_tex_params {

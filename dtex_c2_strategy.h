@@ -17,6 +17,8 @@ void dtex_c2_on_draw_sprite(struct ej_sprite* spr);
 
 void dtex_c2_strategy_clear(struct dtex_package*);
 
+bool dtex_c2_insert_can_clear(struct dtex_c2_strategy*);
+
 #endif // dynamic_texture_c2_strategy_h
 
 #ifdef __cplusplus

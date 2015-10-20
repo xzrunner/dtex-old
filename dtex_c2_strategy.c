@@ -109,6 +109,11 @@ dtex_c2_strategy_clear(struct dtex_package* pkg) {
 		return;
 	}
 
-	size_t sz = sizeof(struct dtex_c2_strategy) + sizeof(int) * pkg->ej_pkg->n;
-	memset(stg, 0, sz);
+	stg->tot_draw_count = 0;
+	memset(stg->spr_draw_count, 0, sizeof(int) * pkg->ej_pkg->n);
+}
+
+bool 
+dtex_c2_insert_can_clear(struct dtex_c2_strategy* stg) {
+	return stg->clear;
 }

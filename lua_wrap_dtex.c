@@ -40,7 +40,7 @@ lload_package(lua_State* L) {
 	const char* path = luaL_checkstring(L, 2);
 	const char* stype = luaL_checkstring(L, 3);
 	int lod = luaL_optinteger(L, 4, 0);
-	bool load_c2 = lua_isboolean(L, 5) ? lua_toboolean(L, 5) : false;
+	int load_c2 = luaL_optinteger(L, 5, 0);
 
 	int itype = FILE_INVALID;
 	if (strcmp(stype, "epe") == 0) {

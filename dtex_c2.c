@@ -49,38 +49,41 @@ struct c2_node {
 };
 
 struct c2_prenode {
-	struct ej_sprite_pack* ej_pkg;
+	struct dtex_package* pkg;
 	struct ej_pack_quad* ej_quad;
 	struct dtex_texture* ori_tex;
 
 	struct dtex_rect rect;
 };
 
-struct hash_with_node {
+struct tp_index {
 	struct c2_node nodes[NODE_SIZE];
 	int node_size;
 
 	struct dtex_hash* hash;
+
+	struct dtex_tp* tp;
 };
 
 // todo hash prenodes
 struct dtex_c2 {
 	int loadable;
 
-	bool one_tex;
+	bool one_tex_mode;
 	union {
 		struct {
 			struct dtex_texture* texture;
-			struct dtex_tp* tp[4];			// 1 0  static
-											// 2 3  changed
-			struct hash_with_node hash0, hash1;
-			bool is_hash1_old;
+			// static
+			struct tp_index s_index;
+			// dynamic
+			struct tp_index d_index[2];
+			bool d_index1_old;
 		} ONE;
 
 		struct {
  			struct dtex_texture* textures[MAX_TEX_SIZE];
  			int tex_size;
-			struct hash_with_node hash;
+			struct tp_index index;
 		} MULTI;
 	} t;
 
@@ -108,7 +111,7 @@ _equal_func(void* key0, void* key1) {
 }
 
 struct dtex_c2* 
-dtex_c2_create(int texture_size, bool one_tex) {
+dtex_c2_create(int texture_size, bool one_tex_mode) {
 	size_t sz = sizeof(struct dtex_c2) + sizeof(struct c2_prenode) * PRELOAD_SIZE;
 	struct dtex_c2* c2 = (struct dtex_c2*)malloc(sz);
 	if (!c2) {
@@ -116,20 +119,24 @@ dtex_c2_create(int texture_size, bool one_tex) {
 	}
 	memset(c2, 0, sz);
 
-	c2->one_tex = one_tex;
-	if (one_tex) {
+	c2->one_tex_mode = one_tex_mode;
+	if (one_tex_mode) {
 		c2->t.ONE.texture = dtex_res_cache_fetch_mid_texture(texture_size);
 		int half_sz = texture_size >> 1;
-		for (int i = 0; i < 4; ++i) {
-			c2->t.ONE.tp[i] = dtex_tp_create(half_sz, half_sz, PRELOAD_SIZE);
-		}
-		c2->t.ONE.hash0.hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
-		c2->t.ONE.hash1.hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
+
+		c2->t.ONE.s_index.hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
+		c2->t.ONE.s_index.tp = dtex_tp_create(texture_size, half_sz, PRELOAD_SIZE / 2);
+
+		c2->t.ONE.d_index[0].hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
+		c2->t.ONE.d_index[0].tp = dtex_tp_create(half_sz, half_sz, PRELOAD_SIZE / 4);
+		c2->t.ONE.d_index[1].hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
+		c2->t.ONE.d_index[1].tp = dtex_tp_create(half_sz, half_sz, PRELOAD_SIZE / 4);
 	} else {
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
 		tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, PRELOAD_SIZE);
 		c2->t.MULTI.textures[c2->t.MULTI.tex_size++] = tex;
-		c2->t.MULTI.hash.hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
+		c2->t.MULTI.index.hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
+		c2->t.MULTI.index.tp = NULL;
 	}
 
 	c2->prenode_size = 0;
@@ -139,27 +146,35 @@ dtex_c2_create(int texture_size, bool one_tex) {
 
 void 
 dtex_c2_release(struct dtex_c2* c2) {
-	if (c2->one_tex) {
+	if (c2->one_tex_mode) {
 		dtex_res_cache_return_mid_texture(c2->t.ONE.texture);
-		for (int i = 0; i < 4; ++i) {
-			dtex_tp_release(c2->t.ONE.tp[i]);
-		}
-		dtex_hash_release(c2->t.ONE.hash0.hash);
-		dtex_hash_release(c2->t.ONE.hash1.hash);
+
+		dtex_hash_release(c2->t.ONE.s_index.hash);
+		dtex_tp_release(c2->t.ONE.s_index.tp);
+
+		dtex_hash_release(c2->t.ONE.d_index[0].hash);
+		dtex_tp_release(c2->t.ONE.d_index[0].tp);
+		dtex_hash_release(c2->t.ONE.d_index[1].hash);
+		dtex_tp_release(c2->t.ONE.d_index[1].tp);
 	} else {
 		for (int i = 0; i < c2->t.MULTI.tex_size; ++i) {
 			dtex_res_cache_return_mid_texture(c2->t.MULTI.textures[i]);
 		}
-		dtex_hash_release(c2->t.MULTI.hash.hash);
+		dtex_hash_release(c2->t.MULTI.index.hash);
 	}
 
 	free(c2);
 }
 
 static inline void
-_clear_hash_with_node(struct hash_with_node* hash) {
-	hash->node_size = 0;
-	dtex_hash_clear(hash->hash);
+_clear_tp_index(struct tp_index* index) {
+	index->node_size = 0;
+
+	dtex_hash_clear(index->hash);
+
+	if (index->tp) {
+		dtex_tp_clear(index->tp);
+	}
 }
 
 static inline void
@@ -168,17 +183,15 @@ dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 
 	c2->loadable = 0;
 
-	if (c2->one_tex) {
-		if (c2->t.ONE.is_hash1_old) {
+	if (c2->one_tex_mode) {
+		if (c2->t.ONE.d_index1_old) {
 			dtex_texture_clear_part(c2->t.ONE.texture, 0.5f, 0, 1, 0.5f);
-			dtex_tp_clear(c2->t.ONE.tp[3]);
-			_clear_hash_with_node(&c2->t.ONE.hash1);
+			_clear_tp_index(&c2->t.ONE.d_index[1]);
 		} else {
 			dtex_texture_clear_part(c2->t.ONE.texture, 0, 0, 0.5f, 0.5f);
-			dtex_tp_clear(c2->t.ONE.tp[2]);
-			_clear_hash_with_node(&c2->t.ONE.hash0);
+			_clear_tp_index(&c2->t.ONE.d_index[0]);
 		}
-		c2->t.ONE.is_hash1_old = !c2->t.ONE.is_hash1_old;
+		c2->t.ONE.d_index1_old = !c2->t.ONE.d_index1_old;
 	} else {
 		for (int i = 0; i < c2->t.MULTI.tex_size; ++i) {
 			struct dtex_texture* tex = c2->t.MULTI.textures[i];
@@ -186,7 +199,7 @@ dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 			dtex_texture_clear(tex);
 			dtex_tp_clear(tex->t.MID.tp);
 		}
-		_clear_hash_with_node(&c2->t.MULTI.hash);
+		_clear_tp_index(&c2->t.MULTI.index);
 	}
 
 	c2->prenode_size = 0;
@@ -223,7 +236,7 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		}
 		struct ej_pack_quad* ej_q = &ej_pic->rect[i];
 		struct c2_prenode* pn = &params->c2->prenodes[params->c2->prenode_size++];
-		pn->ej_pkg = params->pkg->ej_pkg;
+		pn->pkg = params->pkg;
 		pn->ej_quad = ej_q;
 		if (ej_q->texid < QUAD_TEXID_IN_PKG_MAX) {
 			pn->ori_tex = params->pkg->textures[ej_q->texid];
@@ -346,13 +359,16 @@ _query_node(struct dtex_c2* c2, unsigned int texid, struct dtex_rect* rect) {
 	hk.rect = *rect;
 
 	struct c2_node* ret = NULL;
-	if (c2->one_tex) {
-		ret = (struct c2_node*)dtex_hash_query(c2->t.ONE.hash0.hash, &hk);
+	if (c2->one_tex_mode) {
+		ret = (struct c2_node*)dtex_hash_query(c2->t.ONE.s_index.hash, &hk);
 		if (!ret) {
-			ret = (struct c2_node*)dtex_hash_query(c2->t.ONE.hash1.hash, &hk);
+			ret = (struct c2_node*)dtex_hash_query(c2->t.ONE.d_index[0].hash, &hk);
+			if (!ret) {
+				ret = (struct c2_node*)dtex_hash_query(c2->t.ONE.d_index[1].hash, &hk);
+			}
 		}
 	} else {
-		ret = (struct c2_node*)dtex_hash_query(c2->t.MULTI.hash.hash, &hk);
+		ret = (struct c2_node*)dtex_hash_query(c2->t.MULTI.index.hash, &hk);
 	}
 	return ret;
 }
@@ -372,15 +388,102 @@ _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 	dtex_relocate_c2_val(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->dst_vb);
 }
 
+struct insert_params {
+	struct dtex_c2* c2;
+	struct dtex_loader* loader;
+	int w;
+	int h;
+	bool can_clear;
+
+	bool rotate;
+	struct dtex_tp_pos* pos;
+	struct dtex_texture* tex;
+	struct tp_index* index;
+};
+
+static inline bool
+_mode_one_insert_node(struct insert_params* p) {
+	p->tex = p->c2->t.ONE.texture;
+	assert(p->tex->type == DTEX_TT_MID);
+	float half_edge = p->c2->t.ONE.texture->width * 0.5f;
+	if (p->can_clear) {
+		// try left-bottom
+		p->pos = dtex_tp_add(p->c2->t.ONE.d_index[0].tp, p->w + PADDING * 2, p->h + PADDING * 2, true);
+		p->rotate = false;
+		if (p->pos) {
+			p->index = &p->c2->t.ONE.d_index[0];
+		} else {
+			// try right-bottom
+			p->pos = dtex_tp_add(p->c2->t.ONE.d_index[1].tp, p->w + PADDING * 2, p->h + PADDING * 2, true);
+			p->rotate = false;
+			if (p->pos) {
+				p->index = &p->c2->t.ONE.d_index[1];
+				p->pos->r.xmin += half_edge;
+				p->pos->r.xmax += half_edge;
+			} else {
+				// todo
+				// 1. use new texture
+				// 2. scale
+				// 3. clear
+				dtex_c2_clear(p->c2, p->loader);
+				return false;
+			}
+		}
+	} else {
+		p->pos = dtex_tp_add(p->c2->t.ONE.s_index.tp, p->w + PADDING * 2, p->h + PADDING * 2, true);
+		p->rotate = false;
+		if (p->pos) {
+			p->index = &p->c2->t.ONE.s_index;
+			p->pos->r.ymin += half_edge;
+			p->pos->r.ymax += half_edge;
+		} else {
+			return false;
+		}
+	}
+	return true;
+}
+
+static inline bool
+_mode_multi_insert_node(struct insert_params* p) {
+	for (int i = 0; i < p->c2->t.MULTI.tex_size && p->pos == NULL; ++i) {
+		p->tex = p->c2->t.MULTI.textures[i];
+		assert(p->tex->type == DTEX_TT_MID);
+		// todo padding and rotate
+		//	if (w >= h) {
+		p->pos = dtex_tp_add(p->tex->t.MID.tp, p->w + PADDING * 2, p->h + PADDING * 2, true);
+		p->rotate = false;
+		//	} else {
+		//		pos = dtex_tp_add(tex->tp, h, w, true);
+		//		rotate = true;
+		//	}
+	}
+
+	if (p->pos) {
+		p->index = &p->c2->t.MULTI.index;
+	} else {
+		// todo
+		// 1. use new texture
+		// 2. scale
+		// 3. clear
+		dtex_c2_clear(p->c2, p->loader);
+		return false;
+	}
+	return true;
+}
+
 static inline bool
 _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* pn) {
 	if (_query_node(c2, pn->ori_tex->id, &pn->rect)) {
 		return true;
 	}
 
-	// insert to tp
-	int w = pn->rect.xmax - pn->rect.xmin,
-		h = pn->rect.ymax - pn->rect.ymin;
+	struct insert_params ip;
+	ip.c2 = c2;
+	ip.loader = loader;
+	ip.w = pn->rect.xmax - pn->rect.xmin,
+	ip.h = pn->rect.ymax - pn->rect.ymin;
+	ip.can_clear = dtex_c2_insert_can_clear(pn->pkg->c2_stg);
+
 	// rrp
 	struct rrp_picture* rrp_pic = NULL;
 	if (pn->rect.xmin < 0) {
@@ -393,80 +496,38 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 // 		w = rrp_pic->w;
 // 		h = rrp_pic->h;
 	}
-	struct dtex_tp_pos* pos = NULL;
-	struct dtex_texture* tex = NULL;
-	struct hash_with_node* hash = NULL;
-	bool rotate = false;
-	if (c2->one_tex) {
-		tex = c2->t.ONE.texture;
-		assert(tex->type == DTEX_TT_MID);
-		// try left-bottom
-		pos = dtex_tp_add(c2->t.ONE.tp[2], w + PADDING * 2, h + PADDING * 2, true);
-		rotate = false;
-		// try left-bottom
-		float half_edge = c2->t.ONE.texture->width * 0.5f;
-		if (pos) {
-			hash = &c2->t.ONE.hash0;
-		} else {
-			// try right-bottom
-			pos = dtex_tp_add(c2->t.ONE.tp[3], w + PADDING * 2, h + PADDING * 2, true);
-			rotate = false;
-			if (pos) {
-				hash = &c2->t.ONE.hash1;
-				pos->r.xmin += half_edge;
-				pos->r.xmax += half_edge;
-			} else {
-				// todo
-				// 1. use new texture
-				// 2. scale
-				// 3. clear
-				dtex_c2_clear(c2, loader);
-				return false;
-			}
-		}
-	} else {
-		for (int i = 0; i < c2->t.MULTI.tex_size && pos == NULL; ++i) {
-			tex = c2->t.MULTI.textures[i];
-			assert(tex->type == DTEX_TT_MID);
-			// todo padding and rotate
-			//	if (w >= h) {
-			pos = dtex_tp_add(tex->t.MID.tp, w + PADDING * 2, h + PADDING * 2, true);
-			rotate = false;
-			//	} else {
-			//		pos = dtex_tp_add(tex->tp, h, w, true);
-			//		rotate = true;
-			//	}
-		}
 
-		if (pos) {
-			hash = &c2->t.MULTI.hash;
-		} else {
-			// todo
-			// 1. use new texture
-			// 2. scale
-			// 3. clear
-			dtex_c2_clear(c2, loader);
-			return false;
-		}
+	ip.rotate = false;
+	ip.pos = NULL;
+	ip.tex = NULL;
+	ip.index = NULL;
+	bool inserted;
+	if (c2->one_tex_mode) {
+		inserted = _mode_one_insert_node(&ip);
+	} else {
+		inserted = _mode_multi_insert_node(&ip);
+	}
+	if (!inserted) {
+		return false;
 	}
     
-    rotate = (pos->is_rotated && !rotate) ||
-             (!pos->is_rotated && rotate);
+    ip.rotate = (ip.pos->is_rotated && !ip.rotate) ||
+		        (!ip.pos->is_rotated && ip.rotate);
 
 	// save info
 
 	struct c2_node* node = NULL;
-	if (hash->node_size == NODE_SIZE) {
+	if (ip.index->node_size == NODE_SIZE) {
 		dtex_warning(" c2 nodes empty.");
 		return false;
 	}
-	node = &hash->nodes[hash->node_size++];
+	node = &ip.index->nodes[ip.index->node_size++];
 
-	assert(tex);
+	assert(ip.tex);
 	node->ori_tex = pn->ori_tex;
 	node->ori_rect = pn->rect;
-	node->dst_tex = tex;
-	node->dst_pos = pos;
+	node->dst_tex = ip.tex;
+	node->dst_pos = ip.pos;
 	node->dst_pos->r.xmin += PADDING;
 	node->dst_pos->r.ymin += PADDING;
 	node->dst_pos->r.xmax -= PADDING;
@@ -474,16 +535,16 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 
 	node->hk.texid = pn->ori_tex->id;
 	node->hk.rect = pn->rect;
-	dtex_hash_insert(hash->hash, &node->hk, node, true);
+	dtex_hash_insert(ip.index->hash, &node->hk, node, true);
 
-	_set_rect_vb(pn, node, rotate);
+	_set_rect_vb(pn, node, ip.rotate);
 
-	pos->ud = node;
+	ip.pos->ud = node;
 
 	if (rrp_pic) {
 //		dtex_draw_rrp_to_tex(node->ori_tex, rrp_pic, tex, pos, rotate);
 	} else {
-		dtex_draw_to_texture(node->ori_tex, tex, node->trans_vb);
+		dtex_draw_to_texture(node->ori_tex, ip.tex, node->trans_vb);
 	}
 
 	return true;
@@ -562,15 +623,19 @@ dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struc
 
 	struct c2_node* node = NULL;
 	struct dtex_hash* hash = NULL;
-	if (c2->one_tex) {
-		hash = c2->t.ONE.hash0.hash;
+	if (c2->one_tex_mode) {
+		hash = c2->t.ONE.s_index.hash;
 		node = (struct c2_node*)dtex_hash_remove(hash, &old_hk);
 		if (!node) {
-			hash = c2->t.ONE.hash1.hash;
+			hash = c2->t.ONE.d_index[0].hash;
 			node = (struct c2_node*)dtex_hash_remove(hash, &old_hk);
+			if (!node) {
+				hash = c2->t.ONE.d_index[1].hash;
+				node = (struct c2_node*)dtex_hash_remove(hash, &old_hk);
+			}
 		}
 	} else {
-		hash = c2->t.MULTI.hash.hash;
+		hash = c2->t.MULTI.index.hash;
 		node = (struct c2_node*)dtex_hash_remove(hash, &old_hk);
 	}
 
@@ -591,7 +656,7 @@ dtex_c2_debug_draw(struct dtex_c2* c2) {
 #ifdef USED_IN_EDITOR
 	dtex_debug_draw(c2->textures[0]->id);
 #else
-	if (c2->one_tex) {
+	if (c2->one_tex_mode) {
 		dtex_debug_draw_ej(c2->t.ONE.texture->uid_3rd, 1);
 	} else {
 		if (c2->t.MULTI.tex_size > 0) {
