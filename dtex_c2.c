@@ -20,7 +20,7 @@
 
 #define MAX_TEX_SIZE 4
 
-#define NODE_SIZE 4096*2
+#define NODE_SIZE 4096
 #define PRELOAD_SIZE 4096*2
 
 #define PADDING 1
@@ -135,6 +135,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode) {
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
 		tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, PRELOAD_SIZE);
 		c2->t.MULTI.textures[c2->t.MULTI.tex_size++] = tex;
+
 		c2->t.MULTI.index.hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
 		c2->t.MULTI.index.tp = NULL;
 	}
