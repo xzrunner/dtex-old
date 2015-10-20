@@ -192,8 +192,13 @@ dtexf_sprite_draw(struct dtex_package* pkg, struct ej_sprite* spr, struct ej_srt
 /************************************************************************/
 
 struct dtex_package* 
-dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lod, int load_c2) {
-	return dtex_load_pkg(LOADER, name, path, type, scale, lod, load_c2);
+dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lod, int load_c3, int load_c2) {
+	return dtex_load_pkg(LOADER, name, path, type, scale, lod, load_c3, load_c2);
+}
+
+void 
+dtexf_unload_pkg(struct dtex_package* pkg) {
+	return dtex_unload_pkg(LOADER, pkg);
 }
 
 void 
@@ -395,8 +400,8 @@ void
 dtexf_debug_draw() {
   	if (C1) {
   		dtex_c1_debug_draw(C1);
-//   	} else if (C2) {
-// 		dtex_c2_debug_draw(C2);
+  	} else if (C2) {
+		dtex_c2_debug_draw(C2);
 	} else if (C3) {
 		dtex_c3_debug_draw(C3);
 	}

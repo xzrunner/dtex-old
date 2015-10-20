@@ -30,7 +30,9 @@ void dtexf_sprite_draw(struct dtex_package*, struct ej_sprite*, struct ej_srt*);
 /************************************************************************/
 /* common load                                                          */
 /************************************************************************/
-struct dtex_package* dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lod, int load_c2);
+struct dtex_package* dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lod, int load_c3, int load_c2);
+void dtexf_unload_pkg(struct dtex_package* pkg);
+
 void dtexf_preload_texture(struct dtex_package* pkg, int idx, float scale);
 void dtexf_load_texture(struct dtex_package*, int idx, bool create_by_ej);
 

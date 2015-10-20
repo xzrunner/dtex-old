@@ -56,7 +56,7 @@ _load_c2(struct dtex_package* pkg) {
 	}
 
 	bool succ = false;
-	if (pkg->use_c3) {
+	if (pkg->c3_stg) {
 		succ = dtexf_async_load_texture_with_c2_from_c3(pkg, spr_ids, spr_count);
 	} else {
 //		succ = dtexf_async_load_texture_with_c2(pkg, spr_ids, spr_count);

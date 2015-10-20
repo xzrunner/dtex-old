@@ -165,6 +165,7 @@ struct unpack_pkg_params {
 	struct dtex_package* pkg;
 	int file_format;
 	float scale;
+	int load_c3;
 	int load_c2;
 };
 
@@ -201,7 +202,7 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 	struct dtex_package* pkg = params->pkg;
 	switch (params->file_format) {
 	case FILE_EPE:
-		dtex_load_epe(is, pkg, params->scale, params->load_c2);
+		dtex_load_epe(is, pkg, params->scale, params->load_c3, params->load_c2);
 		break;
 	case FILE_RRP:
 		pkg->rrp_pkg = dtex_load_rrp(is);
@@ -254,7 +255,7 @@ static inline struct dtex_package*
 _find_package(struct dtex_loader* loader, const char* name) {
 	for (int i = 0; i < loader->pkg_size; ++i) {
 		struct dtex_package* pkg = &loader->packages[i];
-		if (strcmp(name, pkg->name) == 0) {
+		if (pkg->name && strcmp(name, pkg->name) == 0) {
 			return pkg;
 		}
 	}
@@ -265,9 +266,18 @@ static inline struct dtex_package*
 _new_package(struct dtex_loader* loader, const char* name, const char* filepath) {
 	if (loader->pkg_size >= PACKAGE_SIZE) {
 		dtex_fault("_new_package: loader->pack_size >= PACKAGE_SIZE\n");
-	}	
+	}
 
-	struct dtex_package* pkg = &loader->packages[loader->pkg_size++];
+	struct dtex_package* pkg = NULL;
+	for (int i = 0; i < loader->pkg_size; ++i) {
+		if (!loader->packages[i].name) {
+			pkg = &loader->packages[i];
+			break;
+		}
+	}
+	if (!pkg) {
+		pkg = &loader->packages[loader->pkg_size++];
+	}
 	memset(pkg, 0, sizeof(*pkg));
 
 	pkg->name = (char*)malloc(strlen(name) + 1);
@@ -282,7 +292,7 @@ _new_package(struct dtex_loader* loader, const char* name, const char* filepath)
 }
 
 struct dtex_package* 
-dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* filepath, int format, float scale, int lod, int load_c2) {
+dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* filepath, int format, float scale, int lod, int load_c3, int load_c2) {
 	assert(format != FILE_EPT);
 	char path_full[strlen(filepath) + 10];
 	dtex_get_resource_filepath(filepath, format, path_full);
@@ -303,12 +313,26 @@ dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* filepath
 	params.pkg = pkg;
 	params.file_format = format;
 	params.scale = scale;
+	params.load_c3 = load_c3;
 	params.load_c2 = load_c2;
 	_unpack_file(loader, file, &_unpack_memory_to_pkg, &params);
 
 	dtex_file_close(file);
 
 	return pkg;
+}
+
+void 
+dtex_unload_pkg(struct dtex_loader* loader, struct dtex_package* pkg) {
+	int idx = -1;
+	for (int i = 0; i < loader->pkg_size; ++i) {
+		if (&loader->packages[i] == pkg) {
+			idx = i;
+			break;
+		}
+	}
+	assert(idx != -1);
+	dtex_package_release(&loader->packages[idx]);
 }
 
 void 
@@ -370,7 +394,8 @@ dtex_package_traverse(struct dtex_loader* loader, void (*pkg_func)(struct dtex_p
 struct dtex_package* 
 dtex_query_pkg(struct dtex_loader* loader, const char* name) {
 	for (int i = 0; i < loader->pkg_size; ++i) {
-		if (strcmp(name, loader->packages[i].name) == 0) {
+		struct dtex_package* pkg = &loader->packages[i];
+		if (pkg->name && strcmp(name, pkg->name) == 0) {
 			return &loader->packages[i];
 		}
 	}

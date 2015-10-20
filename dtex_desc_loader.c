@@ -4,6 +4,7 @@
 #include "dtex_package.h"
 #include "dtex_ej_utility.h"
 #include "dtex_c2_strategy.h"
+#include "dtex_c3_strategy.h"
 
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
@@ -87,7 +88,7 @@ _load_sprites_extend_info(struct dtex_package* pkg) {
 }
 
 void
-dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float scale, int load_c2) {
+dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float scale, int load_c3, int load_c2) {
 	uint16_t export_n = dtex_import_uint16(is);
 	uint16_t maxid = dtex_import_uint16(is);
 	uint16_t tex = dtex_import_uint16(is);
@@ -115,6 +116,9 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 	}
 	pkg->ej_pkg = ej_pkg;
 
+	if (load_c3 != 0) {
+		pkg->c3_stg = dtex_c3_strategy_create(load_c3 == 2);
+	}
 	if (load_c2 != 0) {
 		pkg->c2_stg = dtex_c2_strategy_create(ej_pkg->n, load_c2 == 1);
 	}

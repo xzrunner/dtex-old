@@ -48,11 +48,10 @@ struct dtex_package {
 	struct dtex_rrr* rrr_pkg;		// regular rect raw (only for pvr)
 	struct dtex_b4r* b4r_pkg;		// block4 raw (only for pvr)
 
-	bool use_c3;
-
-	int c2_loading;
 	int c3_loading;	
+	int c2_loading;
 
+	struct dtex_c3_strategy* c3_stg;
 	struct dtex_c2_strategy* c2_stg;
 };
 

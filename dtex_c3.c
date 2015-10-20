@@ -19,6 +19,7 @@
 #include "dtex_array.h"
 #include "dtex_debug.h"
 #include "dtex_render.h"
+#include "dtex_c3_strategy.h"
 
 #include "ejoy2d.h"
 
@@ -268,7 +269,8 @@ static inline bool
 _pack_preload_node(float scale, 
                    struct c3_prenode* pre_node, 
 				   struct dtex_texture* texture,
-				   struct tp_index* index) {
+				   struct tp_index* index,
+				   float y_offset) {
 	assert(texture->type == DTEX_TT_MID);
 
 	struct dtex_texture* tex = pre_node->pkg->textures[pre_node->tex_idx];
@@ -285,6 +287,9 @@ _pack_preload_node(float scale,
 		dtex_warning("c3 insert fail.");
 		return false;
 	}
+
+	pos->r.ymin += y_offset;
+	pos->r.ymax += y_offset;
 
 	struct c3_node* node = NULL;
 	if (index->node_size == NODE_SIZE) {
@@ -312,7 +317,14 @@ _pack_preload_list_with_scale(struct dtex_c3* c3, struct c3_prenode** pre_list, 
 	if (c3->one_tex_mode) {
 		for (int i = 0; i < pre_sz; ++i) {
 			struct c3_prenode* node = pre_list[i];
-			bool succ = _pack_preload_node(scale, node, c3->t.ONE.texture, &c3->t.ONE.s_index);
+			bool succ = false;
+			bool is_static = dtex_c3_is_static(node->pkg->c3_stg);
+			if (is_static) {
+				float y_offset = c3->t.ONE.texture->height * 0.5f;
+				succ = _pack_preload_node(scale, node, c3->t.ONE.texture, &c3->t.ONE.s_index, y_offset);
+			} else {
+				succ = _pack_preload_node(scale, node, c3->t.ONE.texture, &c3->t.ONE.d_index, 0);
+			}
 			if (!succ) {
 				return false;
 			}
@@ -342,7 +354,7 @@ _pack_preload_list_with_scale(struct dtex_c3* c3, struct c3_prenode** pre_list, 
 			bool success = false;
 			for (int j = 0; j < c3->t.MULTI.tex_size; ++j) {
 				struct dtex_texture* tex = c3->t.MULTI.textures[(first_try_idx+ j) % c3->t.MULTI.tex_size];
-				success = _pack_preload_node(scale, node, tex, &c3->t.MULTI.index);
+				success = _pack_preload_node(scale, node, tex, &c3->t.MULTI.index, 0);
 				if (success) {
 					first_try_idx = j;
 					break;
@@ -492,8 +504,8 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 				nodes[node_sz++] = node;
 			}
 		}
-		for (int i = 0; i < c3->t.ONE.s_index.node_size; ++i) {
-			struct c3_node* node = &c3->t.ONE.s_index.nodes[i];
+		for (int i = 0; i < c3->t.ONE.d_index.node_size; ++i) {
+			struct c3_node* node = &c3->t.ONE.d_index.nodes[i];
 			if (!node->finish) {
 				nodes[node_sz++] = node;
 			}
@@ -513,8 +525,6 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 	for (int i = 0; i < node_sz; ++i) {
 		struct c3_node* node = nodes[i];
 		struct dtex_package* pkg = node->pkg;
-
-		pkg->use_c3 = true;
 
 		// change package should flush shader, as texture maybe removed
 		if (last_pkg != NULL && pkg != last_pkg) {

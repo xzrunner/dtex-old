@@ -15,7 +15,7 @@ _load_epe_func(struct dtex_import_stream* is, void* ud) {
 	struct params* params = (struct params*)ud;	
 
 	struct dtex_package* pkg = dtex_package_create();
-	dtex_load_epe(is, pkg, 1, 0);
+	dtex_load_epe(is, pkg, 1, 0, 0);
 	
 	free(params);
 }

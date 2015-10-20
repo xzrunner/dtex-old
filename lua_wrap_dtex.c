@@ -40,7 +40,8 @@ lload_package(lua_State* L) {
 	const char* path = luaL_checkstring(L, 2);
 	const char* stype = luaL_checkstring(L, 3);
 	int lod = luaL_optinteger(L, 4, 0);
-	int load_c2 = luaL_optinteger(L, 5, 0);
+	int load_c3 = luaL_optinteger(L, 5, 0);
+	int load_c2 = luaL_optinteger(L, 6, 0);
 
 	int itype = FILE_INVALID;
 	if (strcmp(stype, "epe") == 0) {
@@ -49,10 +50,17 @@ lload_package(lua_State* L) {
 		luaL_error(L, "unknown file type %s", stype);
 	}
 
-	struct dtex_package* pkg = dtexf_load_pkg(name, path, itype, 1, lod, load_c2);
+	struct dtex_package* pkg = dtexf_load_pkg(name, path, itype, 1, lod, load_c3, load_c2);
 	lua_pushlightuserdata(L, pkg);
 
 	return 1;
+}
+
+static int
+lunload_package(lua_State* L) {
+	struct dtex_package* pkg = lua_touserdata(L, 1);
+	dtexf_unload_pkg(pkg);
+	return 0;
 }
 
 static int
@@ -122,8 +130,11 @@ luaopen_dtex_c(lua_State* L) {
 
 		// normal
 		{ "load_package", lload_package },
+		{ "unload_package", lunload_package },
+
 		{ "preload_texture", lpreload_texture },
 		{ "load_texture", lload_texture },
+
 		{ "query", lquery },
 
 		// C3
