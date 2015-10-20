@@ -40,7 +40,7 @@ dtex_c1_release(struct dtex_c1* c1) {
 
 void 
 dtex_c1_update(struct dtex_c1* c1, struct dtex_c2* c2, struct dtex_package* pkg, struct ej_sprite* spr) {
-	int ori = dtex_target_bind(c1->target);
+	dtex_target_bind(c1->target);
 
 //	float w, h, s;
 //	dtex_get_screen(&w, &h, &s);
@@ -54,7 +54,7 @@ dtex_c1_update(struct dtex_c1* c1, struct dtex_c2* c2, struct dtex_package* pkg,
 	dtex_shader_flush();
 //	glViewport(0, 0, w, h);
 
-	dtex_target_unbind(ori);
+	dtex_target_unbind();
 }
 
 void 

@@ -374,18 +374,9 @@ _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 
 static inline bool
 _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* pn) {
-	dtex_debug(" ++++++++++++++ _insert_node 0");
-
-	debug_tar();
-
 	if (_query_node(c2, pn->ori_tex->id, &pn->rect)) {
-		dtex_debug(" ++++++++++++++ _insert_node 1");
-
-		debug_tar();
 		return true;
 	}
-
-	debug_tar();
 
 	// insert to tp
 	int w = pn->rect.xmax - pn->rect.xmin,
@@ -430,9 +421,6 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 				// 2. scale
 				// 3. clear
 				dtex_c2_clear(c2, loader);
-				debug_tar();
-				dtex_debug(" ++++++++++++++ _insert_node 2");
-
 				return false;
 			}
 		}
@@ -458,16 +446,10 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 			// 2. scale
 			// 3. clear
 			dtex_c2_clear(c2, loader);
-			debug_tar();
-
-			dtex_debug(" ++++++++++++++ _insert_node 3");
-
 			return false;
 		}
 	}
     
-	debug_tar();
-
     rotate = (pos->is_rotated && !rotate) ||
              (!pos->is_rotated && rotate);
 
@@ -476,10 +458,6 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	struct c2_node* node = NULL;
 	if (hash->node_size == NODE_SIZE) {
 		dtex_warning(" c2 nodes empty.");
-		debug_tar();
-
-		dtex_debug(" ++++++++++++++ _insert_node 4");
-
 		return false;
 	}
 	node = &hash->nodes[hash->node_size++];
@@ -502,19 +480,11 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 
 	pos->ud = node;
 
-	debug_tar();
-
 	if (rrp_pic) {
 //		dtex_draw_rrp_to_tex(node->ori_tex, rrp_pic, tex, pos, rotate);
 	} else {
-		debug_tar();
 		dtex_draw_to_texture(node->ori_tex, tex, node->trans_vb);
-		debug_tar();
 	}
-
-	debug_tar();
-
-	dtex_debug(" ++++++++++++++ _insert_node 5");
 
 	return true;
 }
@@ -530,17 +500,15 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 	_get_unique_prenodes(c2, unique_set, &unique_sz);
 
 	// insert
+	dtex_render_before();
 	qsort((void*)unique_set, unique_sz, sizeof(struct c2_prenode*), _compare_max_edge);	
 	for (int i = 0; i < unique_sz; ++i) {
-		debug_tar();
 		bool succ = _insert_node(c2, loader, unique_set[i]);
-		debug_tar();
 		if (!succ) {
 			break;
 		}
 	}
-	debug_tar();
-	dtex_draw_finish();
+	dtex_render_after();
 
 	c2->prenode_size = 0;
 }

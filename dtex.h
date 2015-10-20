@@ -1,6 +1,5 @@
 #include "dtex_facade.h"
 #include "dtex_typedef.h"
-#include "dtex_log.h"
 
 #include "dtex_package.h"
 

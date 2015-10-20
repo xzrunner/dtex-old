@@ -30,7 +30,6 @@
 #include "dtex_async_c3_task.h"
 #include "dtex_async_c2_task.h"
 #include "dtex_async_c2_from_c3_task.h"
-#include "dtex_render.h"
 
 #include <cJSON.h>
 
@@ -135,8 +134,6 @@ dtexf_create(const char* cfg) {
 	dtex_async_load_c3_init();
 	dtex_async_load_c2_init();
 	dtex_async_load_c2_from_c3_init();
-
-	dtex_render_init();
 
 	dtex_texture_pool_init();
 

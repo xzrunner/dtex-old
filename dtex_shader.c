@@ -298,15 +298,8 @@ _rs_commit() {
 		return;
 
 #ifndef USED_IN_EDITOR
-	int id = dtex_gl_get_curr_texrute();
-	if (!dtex_gl_is_texture(id)) {
-		int zz = 0;
-	}
 	assert(dtex_gl_is_texture(dtex_gl_get_curr_texrute()));
 #endif // USED_IN_EDITOR
-	if (dtex_gl_get_curr_target() == 0) {
-		int zz = 0;
-	}
 	assert(dtex_gl_get_curr_target() != 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VERTEX_BUFFER);
@@ -386,11 +379,17 @@ dtex_shader_texture(int id) {
 }
 
 void 
-dtex_shader_set_target(int id) {
-	RS->target = id;
+dtex_shader_target(int id) {
+	if (RS->target == id) {
+		return;
+	}
+
+	_rs_commit();
+	RS->target = (GLuint)id;
+	glBindFramebuffer(GL_FRAMEBUFFER, RS->target); 
 }
 
-int
+int 
 dtex_shader_get_target() {
 	return RS->target;
 }

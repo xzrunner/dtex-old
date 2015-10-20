@@ -2,8 +2,6 @@
 #include "dtex_gl.h"
 #include "dtex_shader.h"
 
-#include "dtex_target.h"
-
 #include <assert.h>
 
 void 
@@ -79,40 +77,6 @@ dtex_debug_draw_ej(int uid_3rd, int pos) {
 	ej_shader_program(PROGRAM_PICTURE, NULL);
 	ej_shader_texture(uid_3rd, 0);
 	ej_shader_draw(vb, 0xffffffff, 0, 0xff0000ff, 0x00ff00ff, 0x0000ffff);
-}
-
-static bool D_TAR = false;
-void debug_tar_start()
-{
-	D_TAR = true;
-}
-
-void debug_tar_end()
-{
-	D_TAR = false;
-}
-
-void debug_tar()
-{
-	if (D_TAR) {
-		if (dtex_gl_get_curr_target() == 0) {
-			int zz = 0;
-		}
-	}
-}
-
-void debug_ej()
-{
-	if (dtex_gl_get_curr_target() != 0) {
-		int zz = 0;
-	}
-}
-
-void debug_last(struct dtex_target* tar)
-{
-	if (tar && dtex_target_get_id(tar) == 0) {
-		int zz = 0;
-	}
 }
 
 #endif // USED_IN_EDITOR
