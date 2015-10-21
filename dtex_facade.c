@@ -149,7 +149,7 @@ dtexf_create(const char* cfg) {
  		C1 = dtex_c1_create(CFG.c1_tex_size);		
  	}
  	if (CFG.open_c2) {
- 		C2 = dtex_c2_create(CFG.c2_tex_size, true);		
+ 		C2 = dtex_c2_create(CFG.c2_tex_size, true, 1);		
  	}
 }
 
