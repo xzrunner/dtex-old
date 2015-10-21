@@ -198,7 +198,7 @@ dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lo
 
 void 
 dtexf_unload_pkg(struct dtex_package* pkg) {
-	return dtex_unload_pkg(LOADER, pkg);
+	dtex_unload_pkg(LOADER, pkg);
 }
 
 void 
@@ -400,8 +400,8 @@ void
 dtexf_debug_draw() {
   	if (C1) {
   		dtex_c1_debug_draw(C1);
-  	} else if (C2) {
-		dtex_c2_debug_draw(C2);
+//   	} else if (C2) {
+// 		dtex_c2_debug_draw(C2);
 	} else if (C3) {
 		dtex_c3_debug_draw(C3);
 	}

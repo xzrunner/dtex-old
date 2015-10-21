@@ -100,6 +100,8 @@ _cb_func(void* ud) {
 	}
 	dtex_package_remove_all_textures_ref(pkg);
 
+	dtex_debug("+++++++ dtex_async_load_c2_from_c3 end, %s", pkg->name);
+
 	DTEX_ASYNC_QUEUE_PUSH(PARAMS_QUEUE, params);
 }
 
@@ -113,6 +115,9 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 	if (pkg->c2_loading) {
 		return false;
 	}
+
+	dtex_debug("+++++++ dtex_async_load_c2_from_c3 begin, %s", pkg->name);
+
 	pkg->c2_loading = 1;
 
 	struct load_params* params = NULL;

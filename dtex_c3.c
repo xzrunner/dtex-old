@@ -284,7 +284,7 @@ _pack_preload_node(float scale,
 		pos = dtex_tp_add(index->tp, h, w, true);
 	}
 	if (!pos) {
-		dtex_warning("c3 insert fail.");
+		dtex_warning("+++++ c3 insert fail.");
 		return false;
 	}
 
@@ -293,7 +293,7 @@ _pack_preload_node(float scale,
 
 	struct c3_node* node = NULL;
 	if (index->node_size == NODE_SIZE) {
-		dtex_warning(" c3 nodes empty.");
+		dtex_warning("+++++ c3 nodes empty.");
 		return false;
 	}
 	node = &index->nodes[index->node_size++];
