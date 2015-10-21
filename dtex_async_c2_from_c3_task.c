@@ -8,6 +8,9 @@
 #include "dtex_utility.h"
 #include "dtex_async_multi_tex_task.h"
 #include "dtex_async_queue.h"
+#include "dtex_texture_cache.h"
+
+#include "dtex_log.h"
 
 #include <pthread.h>
 
@@ -96,7 +99,10 @@ _cb_func(void* ud) {
 
 	for (int i = 0; i < sz; ++i) {
 		int idx = *(int*)dtex_array_fetch(params->tex_ids, i);
-		dtex_texture_release(pkg->textures[idx]);
+		bool cached = dtex_texture_cache_add(pkg->textures[idx], pkg, idx);
+		if (!cached) {
+			dtex_texture_release(pkg->textures[idx]);
+		}
 	}
 	dtex_package_remove_all_textures_ref(pkg);
 
@@ -140,13 +146,35 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 	dtex_get_texture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count, params->tex_ids);
 	dtex_swap_quad_src_info(pkg, params->pic_ids);
 
+	int tex_ids[128];
+	int tex_ids_sz = 0;
+	int size = dtex_array_size(params->tex_ids);
+	for (int i = 0; i < size; ++i) {
+		int idx = *(int*)dtex_array_fetch(params->tex_ids, i);
+		struct dtex_texture* tex = dtex_texture_query(pkg, idx);
+		if (tex) {
+			pkg->textures[idx] = tex;
+		} else {
+			tex_ids[tex_ids_sz++] = idx;
+		}
+	}
+	dtex_array_clear(params->tex_ids);
+	for (int i = 0; i < tex_ids_sz; ++i) {
+		dtex_array_add(params->tex_ids, &tex_ids[i]);
+	}
+
 	params->loader = loader;
 	params->c2 = c2;
 	params->c3 = c3;
 	params->pkg = pkg;
 	
 	dtex_package_change_lod(pkg, 0);
-	dtex_async_load_multi_textures(pkg, params->tex_ids, _cb_func, params, "c2 from c3");
+
+	if (tex_ids_sz == 0) {
+		_cb_func(params);
+	} else {
+		dtex_async_load_multi_textures(pkg, params->tex_ids, _cb_func, params, "c2 from c3");
+	}
 
 	return true;
 }

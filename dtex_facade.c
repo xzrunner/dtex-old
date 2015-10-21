@@ -400,8 +400,8 @@ void
 dtexf_debug_draw() {
   	if (C1) {
   		dtex_c1_debug_draw(C1);
-//   	} else if (C2) {
-// 		dtex_c2_debug_draw(C2);
+  	} else if (C2) {
+		dtex_c2_debug_draw(C2);
 	} else if (C3) {
 		dtex_c3_debug_draw(C3);
 	}
