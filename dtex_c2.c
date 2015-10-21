@@ -122,6 +122,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count) {
 	c2->one_tex_mode = one_tex_mode;
 	if (one_tex_mode) {
 		c2->t.ONE.texture = dtex_res_cache_fetch_mid_texture(texture_size);
+		c2->t.ONE.clear_idx = static_count;
 		int half_sz = texture_size >> 1;
 		for (int i = 0; i < 4; ++i) {
 			struct tp_index* index = &c2->t.ONE.index[i];
@@ -621,6 +622,9 @@ dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struc
 		for (int i = 0; i < 4; ++i) {
 			hash = c2->t.ONE.index[i].hash;
 			node = (struct c2_node*)dtex_hash_remove(hash, &old_hk);
+			if (node) {
+				break;
+			}
 		}
 	} else {
 		hash = c2->t.MULTI.index.hash;
