@@ -10,6 +10,8 @@ extern "C"
 #include <stdbool.h>
 
 struct dtex_import_stream;
+struct dtex_package;
+struct dtex_texture;
 
 int dtex_load_all_textures_desc(struct dtex_import_stream* is, struct dtex_package* pkg, float scale);
 

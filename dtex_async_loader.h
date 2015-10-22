@@ -8,6 +8,8 @@ extern "C"
 
 #include <stdbool.h>
 
+struct dtex_import_stream;
+
 void dtex_async_loader_init();
 void dtex_async_loader_release();
 

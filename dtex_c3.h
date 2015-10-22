@@ -12,6 +12,7 @@ struct dtex_c3;
 struct dtex_package;
 struct dtex_loader;
 struct dtex_rect;
+struct dtex_texture;
 
 struct dtex_c3* dtex_c3_create(int texture_size, bool one_tex_mode);
 void dtex_c3_release(struct dtex_c3*);

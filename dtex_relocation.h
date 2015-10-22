@@ -10,6 +10,11 @@ extern "C"
 
 #include <stdint.h>
 
+struct dtex_package;
+struct dtex_array;
+struct dtex_texture_with_rect;
+struct dtex_c2;
+
 struct dtex_texture_with_rect {
 	struct dtex_texture* tex;
 	struct dtex_rect rect;

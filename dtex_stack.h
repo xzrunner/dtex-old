@@ -7,7 +7,8 @@ extern "C"
 #define dynamic_texture_stack_h
 
 #include <stdbool.h>
-
+#include <stddef.h>
+	
 struct dtex_stack;
 
 struct dtex_stack* dtex_stack_create(int cap, size_t data_sz);

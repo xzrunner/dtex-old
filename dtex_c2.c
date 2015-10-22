@@ -173,7 +173,7 @@ _clear_tp_index(struct tp_index* index) {
 	}
 }
 
-static inline void
+void
 dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 	dtex_warning(" c2 clear");
 

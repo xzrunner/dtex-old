@@ -10,6 +10,7 @@ extern "C"
 
 struct dtex_loader;
 struct dtex_import_stream;
+struct dtex_package;
 
 struct dtex_loader* dtexloader_create();
 void dtexloader_release(struct dtex_loader*);

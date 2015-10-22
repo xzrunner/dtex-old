@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 struct ej_sprite* 
 dtex_ej_sprite_create(struct dtex_package* pkg, int spr_id) {

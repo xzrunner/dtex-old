@@ -12,6 +12,8 @@ struct dtex_rrp;
 struct dtex_pts;
 struct dtex_rrr;
 struct dtex_b4r;
+struct dtex_c3_strategy;
+struct dtex_c2_strategy;
 
 #define DTEX_PACK_TEX_SZ 128
 

@@ -8,6 +8,9 @@ extern "C"
 
 #include <stdbool.h>
 
+struct dtex_texture;
+struct dtex_package;
+
 void dtex_texture_cache_init(int cap);
 
 bool dtex_texture_cache_insert(struct dtex_texture*, struct dtex_package*, int idx);

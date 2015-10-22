@@ -126,32 +126,28 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 	_load_sprites_extend_info(pkg);
 }
 
-struct dtex_rrp* 
-dtex_load_rrp(struct dtex_import_stream* is) {
+// struct dtex_rrp* 
+// dtex_load_rrp(struct dtex_import_stream* is) {
 // 	uint32_t cap = buf[0] | buf[1]<<8 | buf[2]<<16 | buf[3]<<24;
 // 	struct dtex_rrp* rrp = dtex_rrp_create(buf + 4, sz - 4, cap);
 // 	if (rrp == NULL) {
 // 		dtex_fault("Error create rrp.\n");
 // 	}
 // 	return rrp;
+// }
 
-	return NULL;
-}
-
-struct dtex_pts* 
-dtex_load_pts(uint8_t* buf, size_t sz) {
+// struct dtex_pts* 
+// dtex_load_pts(uint8_t* buf, size_t sz) {
 // 	uint32_t cap = buf[0] | buf[1]<<8 | buf[2]<<16 | buf[3]<<24;
 // 	struct dtex_pts* pts = dtex_pts_create(buf + 4, sz - 4, cap);
 // 	if (pts == NULL) {
 // 		dtex_fault("Error create pts.\n");
 // 	}
 // 	return pts;
+// }
 
-	return NULL;
-}
-
-struct dtex_rrr* 
-dtex_load_rrr(struct dtex_import_stream* is) {
+// struct dtex_rrr* 
+// dtex_load_rrr(struct dtex_import_stream* is) {
 // 	uint32_t cap = buf[0] | buf[1]<<8 | buf[2]<<16 | buf[3]<<24;
 // 	struct dtex_rrr* rrr = dtex_rrr_create(buf + 4, sz - 4, cap);
 // 	if (rrr == NULL) {
@@ -159,12 +155,10 @@ dtex_load_rrr(struct dtex_import_stream* is) {
 // 	}
 // 	// dtex_rrr_preload_to_pkg(rrr, pkg);
 // 	return rrr;
+// }
 
-	return NULL;
-}
-
-struct dtex_b4r* 
-dtex_load_b4r(struct dtex_import_stream* is) {
+// struct dtex_b4r* 
+// dtex_load_b4r(struct dtex_import_stream* is) {
 // 	uint32_t cap = buf[0] | buf[1]<<8 | buf[2]<<16 | buf[3]<<24;
 // 	struct dtex_b4r* b4r = dtex_b4r_create(buf + 4, sz - 4, cap);
 // 	if (b4r == NULL) {
@@ -172,6 +166,4 @@ dtex_load_b4r(struct dtex_import_stream* is) {
 // 	}
 // 	// dtex_b4r_preload_to_pkg(b4r, pkg);
 // 	return b4r;
-
-	return NULL;
-}
+// }

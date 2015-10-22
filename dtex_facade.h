@@ -10,7 +10,7 @@ extern "C"
 
 #include <stdbool.h>
 
-// todo
+struct dtex_package;
 struct dtex_texture;
 struct dtex_tp_pos;
 

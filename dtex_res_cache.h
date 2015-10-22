@@ -8,6 +8,9 @@ extern "C"
 
 #include <stdbool.h>
 
+struct dtex_texture;
+struct dtex_target;
+
 void dtex_res_cache_create();
 void dtex_res_cache_release();
 

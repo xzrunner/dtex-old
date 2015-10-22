@@ -7,7 +7,8 @@ extern "C"
 #define dynamic_texture_stream_import_h
 
 #include <stdint.h>
-
+#include <stddef.h>
+	
 struct dtex_import_stream {
 	const char* stream;
 	size_t size;

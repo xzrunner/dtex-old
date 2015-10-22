@@ -8,6 +8,10 @@ extern "C"
 
 #include <stdbool.h>
 
+struct dtex_loader;
+struct dtex_c3;
+struct dtex_package;
+
 void dtex_async_load_c3_init();
 
 bool dtex_async_load_c3(struct dtex_loader*,

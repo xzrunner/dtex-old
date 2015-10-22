@@ -6,6 +6,7 @@
 #include "dtex_texture.h"
 
 #include <assert.h>
+#include <string.h>
 
 void 
 dtex_swap_quad_src_info(struct dtex_package* pkg, struct dtex_array* picture_ids) {	

@@ -10,11 +10,11 @@
 #include "dtex_ej_utility.h"
 #include "dtex_resource.h"
 
-#ifdef _LZ_ALLOC
+#ifndef USED_IN_EDITOR
 #include <LzAlloc.h>
 #else
 #include <Alloc.h>
-#endif // _LZ_ALLOC
+#endif // USED_IN_EDITOR
 #include <LzmaDec.h>
 
 #include <stdlib.h>
@@ -211,16 +211,16 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 		dtex_load_epe(is, pkg, params->scale, params->load_c3, params->load_c2);
 		break;
 	case FILE_RRP:
-		pkg->rrp_pkg = dtex_load_rrp(is);
+		// pkg->rrp_pkg = dtex_load_rrp(is);
 		break;
 	case FILE_PTS:
-		pkg->pts_pkg = dtex_load_pts(is);
+		// pkg->pts_pkg = dtex_load_pts(is);
 		break;
 	case FILE_RRR:
-		pkg->rrr_pkg = dtex_load_rrr(is);
+		// pkg->rrr_pkg = dtex_load_rrr(is);
 		break;
 	case FILE_B4R:
-		pkg->b4r_pkg = dtex_load_b4r(is);
+		// pkg->b4r_pkg = dtex_load_b4r(is);
 		break;
 	default:
 		dtex_fault("_unpack_memory_to_pkg unknown file type %d", params->file_format);

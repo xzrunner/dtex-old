@@ -6,6 +6,8 @@ extern "C"
 #ifndef dynamic_texture_file_h
 #define dynamic_texture_file_h
 
+#include <stddef.h>
+	
 struct dtex_file;
 
 struct dtex_file* dtex_file_open(const char* path, const char* format);

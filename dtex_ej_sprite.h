@@ -8,6 +8,9 @@ extern "C"
 
 #include "ejoy2d.h"
 
+struct dtex_package;
+struct dtex_c2;
+
 struct ej_sprite* dtex_ej_sprite_create(struct dtex_package*, int spr_id);
 
 void dtex_ej_sprite_draw(struct dtex_package*, struct dtex_c2*, struct ej_sprite*, struct ej_srt*);

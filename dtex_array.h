@@ -6,6 +6,8 @@ extern "C"
 #ifndef dynamic_texture_array_h
 #define dynamic_texture_array_h
 
+#include <stddef.h>
+
 struct dtex_array;
 
 struct dtex_array* dtex_array_create(int cap, size_t data_sz);
