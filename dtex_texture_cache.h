@@ -10,8 +10,8 @@ extern "C"
 
 void dtex_texture_cache_init(int cap);
 
-bool dtex_texture_cache_add(struct dtex_texture*, struct dtex_package*, int idx);
-struct dtex_texture* dtex_texture_query(struct dtex_package*, int idx);
+bool dtex_texture_cache_insert(struct dtex_texture*, struct dtex_package*, int idx);
+struct dtex_texture* dtex_texture_cache_query(struct dtex_package*, int idx);
 
 #endif // dynamic_texture_texture_loader_h
 

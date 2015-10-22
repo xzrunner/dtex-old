@@ -97,9 +97,19 @@ _cb_func(void* ud) {
 
 	dtex_swap_quad_src_info(pkg, params->pic_ids);
 
+	for (int i = 0; i < pkg->texture_count; ++i) {
+		struct dtex_texture* tex = pkg->textures[i];
+		if (tex && tex->cache_locked) {
+			tex->cache_locked = false;
+		}
+	}
+
 	for (int i = 0; i < sz; ++i) {
 		int idx = *(int*)dtex_array_fetch(params->tex_ids, i);
-		bool cached = dtex_texture_cache_add(pkg->textures[idx], pkg, idx);
+		if (!pkg->textures[idx]) {
+			continue;
+		}
+		bool cached = dtex_texture_cache_insert(pkg->textures[idx], pkg, idx);
 		if (!cached) {
 			dtex_texture_release(pkg->textures[idx]);
 		}
@@ -151,15 +161,16 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 	int size = dtex_array_size(params->tex_ids);
 	for (int i = 0; i < size; ++i) {
 		int idx = *(int*)dtex_array_fetch(params->tex_ids, i);
-		struct dtex_texture* tex = dtex_texture_query(pkg, idx);
+		struct dtex_texture* tex = dtex_texture_cache_query(pkg, idx);
 		if (tex) {
+			tex->cache_locked = true;
 			pkg->textures[idx] = tex;
 		} else {
 			tex_ids[tex_ids_sz++] = idx;
 		}
 	}
 
-	dtex_debug("++++++++++++++++++++++ ori %d, curr %d", size, tex_ids_sz);
+	dtex_debug("++++++++++++++++++++++ ori %d, curr %d, %s", size, tex_ids_sz, pkg->name);
 
 	params->loader = loader;
 	params->c2 = c2;

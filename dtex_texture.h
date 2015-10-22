@@ -6,6 +6,8 @@ extern "C"
 #ifndef dynamic_texture_texture_h
 #define dynamic_texture_texture_h
 
+#include <stdbool.h>
+
 enum DTEX_TF_TYPE {
 	DTEX_TT_INVALID = 0,
 	DTEX_TT_RAW,
@@ -22,6 +24,8 @@ struct dtex_texture {
 							// >= QUAD_TEXID_IN_PKG_MAX
 
 	int uid_3rd;			// id in other engine
+
+	bool cache_locked;
 
 	int type;
 	union {

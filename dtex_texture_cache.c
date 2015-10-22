@@ -48,8 +48,12 @@ dtex_texture_cache_init(int cap) {
 }
 
 bool 
-dtex_texture_cache_add(struct dtex_texture* tex, struct dtex_package* pkg, int idx) {
-	struct dtex_texture* exists = dtex_texture_query(pkg, idx);
+dtex_texture_cache_insert(struct dtex_texture* tex, struct dtex_package* pkg, int idx) {
+	if (!tex) {
+		int zz = 0;
+	}
+
+	struct dtex_texture* exists = dtex_texture_cache_query(pkg, idx);
 	if (exists) {
 		return true;
 	}
@@ -58,22 +62,47 @@ dtex_texture_cache_add(struct dtex_texture* tex, struct dtex_package* pkg, int i
 	if (area > C.cap) {
 		return false;
 	}
-	
+
 	// pop
-	while (!C.freenode || (C.curr_cap + area > C.cap)) {
-		assert(C.head);
+	struct texture_with_key* pop = C.head;
+	while ((!C.freenode || (C.curr_cap + area > C.cap)) && pop) {
+		assert(pop);
 
-		C.curr_cap -= C.head->tex->width * C.head->tex->height;
-		dtex_texture_release(C.head->tex);
-		C.head->pkg->textures[C.head->idx] = NULL;
+		if (pop->tex->cache_locked) {
+			pop = pop->next;
+			continue;
+		}
 
-		struct texture_with_key* new_head = C.head->next;
-		C.head->next = C.freenode;
-		C.freenode->prev = C.head;
-		C.freenode = C.head;
+		C.curr_cap -= pop->tex->width * pop->tex->height;
+		dtex_texture_release(pop->tex);
 
-		C.head = new_head;
-		C.head->prev = NULL;
+		pop->pkg->textures[pop->idx] = NULL;
+
+		if (C.head == pop) {
+			C.head = pop->next;
+		}
+		if (C.tail == pop) {
+			C.tail = pop->prev;
+		}
+		if (pop->prev) { 
+			pop->prev->next = pop->next;
+		}
+		if (pop->next) {
+			pop->next->prev = pop->prev;
+		}
+
+		struct texture_with_key* next = pop->next;
+
+		pop->prev = NULL;
+		pop->next = C.freenode;
+		C.freenode->prev = pop;
+		C.freenode = pop;
+
+		pop = next;
+	}
+
+	if ((!C.freenode || (C.curr_cap + area > C.cap))) {
+		return false;
 	}
 
 	// push
@@ -102,7 +131,7 @@ dtex_texture_cache_add(struct dtex_texture* tex, struct dtex_package* pkg, int i
 }
 
 struct dtex_texture* 
-dtex_texture_query(struct dtex_package* pkg, int idx) {
+dtex_texture_cache_query(struct dtex_package* pkg, int idx) {
 	if (!C.tail) {
 		return NULL;
 	}

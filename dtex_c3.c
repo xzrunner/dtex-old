@@ -522,6 +522,8 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 	struct dtex_package* last_pkg = NULL;
 	for (int i = 0; i < node_sz; ++i) {
 		struct c3_node* node = nodes[i];
+		node->finish = true;
+
 		struct dtex_package* pkg = node->pkg;
 
 		// change package should flush shader, as texture maybe removed
@@ -540,6 +542,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 		} else {
 			ori_tex = pkg->textures[node->src_tex_idx];
 			assert(ori_tex && ori_tex->type == DTEX_TT_RAW);
+
 			int pkg_idx = dtex_package_texture_idx(pkg, ori_tex);
 			assert(pkg_idx != -1);
 			if (!async) {
@@ -554,7 +557,6 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 				char path_full[strlen(pkg->filepath) + 10];
 				dtex_get_texture_filepath(pkg->filepath, pkg_idx, pkg->LOD, path_full);
  				dtex_async_load_file(path_full, _relocate_nodes_cb, node, "c3");
-				node->finish = true;
  			}
 		}
 
