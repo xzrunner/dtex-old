@@ -63,10 +63,6 @@ dtex_texture_cache_add(struct dtex_texture* tex, struct dtex_package* pkg, int i
 	while (!C.freenode || (C.curr_cap + area > C.cap)) {
 		assert(C.head);
 
-		if (!C.head->next) {
-			int zz = 0;
-		}
-
 		C.curr_cap -= C.head->tex->width * C.head->tex->height;
 		dtex_texture_release(C.head->tex);
 		C.head->pkg->textures[C.head->idx] = NULL;

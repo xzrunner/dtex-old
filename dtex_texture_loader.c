@@ -7,6 +7,8 @@
 #include "dtex_statistics.h"
 #include "dtex_texture.h"
 #include "dtex_render.h"
+#include "dtex_package.h"
+#include "dtex_log.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -49,6 +51,36 @@
 // #endif
 // 	tex->id = _pvr_texture_create(buf+5, sz-5, internal_format, tex->width, tex->height);
 // }
+
+int 
+dtex_load_all_textures_desc(struct dtex_import_stream* is, struct dtex_package* pkg, float scale) {
+	int sz = dtex_import_uint32(is);
+	pkg->texture_count = sz;
+	for (int i = 0; i < sz; ++i) {
+		int edge = dtex_import_uint32(is);
+
+		struct dtex_texture* tex = dtex_texture_create_raw(pkg->LOD);
+		if (!tex) {
+			dtex_fault("_unpack_memory_to_preload_all_textures dtex_texture_create_raw err.");
+		}
+
+		tex->t.RAW.format = TEXTURE8;	// todo
+
+		tex->width = floor(edge * tex->t.RAW.lod_scale + 0.5f);
+		tex->height = floor(edge * tex->t.RAW.lod_scale + 0.5f);
+		tex->inv_width = 1.0f / tex->width;
+		tex->inv_height = 1.0f / tex->height;
+
+		tex->t.RAW.scale = scale;
+
+		tex->id = 0;
+		tex->t.RAW.id_alpha = 0;
+
+		assert(!pkg->textures[i]);
+		pkg->textures[i] = tex;
+	}
+	return sz;
+}
 
 void 
 dtex_load_texture_only_desc(struct dtex_import_stream* is, struct dtex_texture* tex, float scale) {

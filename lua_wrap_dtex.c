@@ -64,6 +64,18 @@ lunload_package(lua_State* L) {
 }
 
 static int
+lpreload_all_textures(lua_State* L) {
+	const char* path = luaL_checkstring(L, 1);
+	struct dtex_package* pkg = lua_touserdata(L, 2);
+	float scale = luaL_optnumber(L, 3, 1);
+
+	int sz = dtexf_preload_all_textures(path, pkg, scale);
+	lua_pushinteger(L, sz);
+
+	return 1;
+}
+
+static int
 lpreload_texture(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
 	int idx = lua_tointeger(L, 2);
@@ -132,6 +144,7 @@ luaopen_dtex_c(lua_State* L) {
 		{ "load_package", lload_package },
 		{ "unload_package", lunload_package },
 
+		{ "preload_all_textures", lpreload_all_textures },
 		{ "preload_texture", lpreload_texture },
 		{ "load_texture", lload_texture },
 

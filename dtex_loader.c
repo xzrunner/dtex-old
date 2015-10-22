@@ -175,6 +175,12 @@ struct unpack_tex_params {
 	bool create_by_ej;
 };
 
+struct unpack_alltex_params {
+	struct dtex_package* pkg;
+	float scale;
+	int size;
+};
+
 struct unpack_pretex_params {
 	struct dtex_package* pkg;
 	float scale;
@@ -225,10 +231,24 @@ static inline void
 _unpack_memory_to_texture(struct dtex_import_stream* is, void* ud) {
 	struct unpack_tex_params* params = (struct unpack_tex_params*)ud;
 	struct dtex_package* pkg = params->pkg;
+
 	assert(params->load_tex_idx < pkg->texture_count);
 	struct dtex_texture* tex = pkg->textures[params->load_tex_idx];
 	assert(tex);
 	dtex_load_texture_all(is, tex, params->create_by_ej);
+}
+
+static inline void
+_unpack_memory_to_preload_all_textures(struct dtex_import_stream* is, void* ud) {
+	struct unpack_alltex_params* params = (struct unpack_alltex_params*)ud;
+	params->size = dtex_load_all_textures_desc(is, params->pkg, params->scale);
+
+	for (int i = 0; i < params->size; ++i) {
+		struct relocate_quad_texid_params relocate_params;
+		relocate_params.from = i;
+		relocate_params.to = params->pkg->textures[i]->uid;
+		dtex_ej_pkg_traverse(params->pkg->ej_pkg, _relocate_quad_texid, &relocate_params);
+	}
 }
 
 static inline void
@@ -335,6 +355,24 @@ dtex_unload_pkg(struct dtex_loader* loader, struct dtex_package* pkg) {
 	dtex_package_release(&loader->packages[idx]);
 }
 
+int 
+dtex_preload_all_textures(const char* filepath, struct dtex_loader* loader, struct dtex_package* pkg, float scale) {
+	struct dtex_file* file = dtex_file_open(filepath, "rb");
+	if (!file) {
+		dtex_fault("dtex_preload_all_textures: can't open file %s\n", filepath);
+	}
+
+	struct unpack_alltex_params params;
+	params.pkg = pkg;
+	params.scale = scale;
+	params.size = 0;
+	_unpack_file(loader, file, &_unpack_memory_to_preload_all_textures, &params);
+
+	dtex_file_close(file);
+
+	return params.size;
+}
+
 void 
 dtex_preload_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx, float scale) {
 	char path_full[strlen(pkg->filepath) + 10];
@@ -360,7 +398,7 @@ dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx,
 
 	struct dtex_file* file = dtex_file_open(path_full, "rb");
 	if (!file) {
-		dtex_fault("dtex_preload_texture: can't open file %s\n", path_full);
+		dtex_fault("dtex_load_texture: can't open file %s\n", path_full);
 	}
 
 	struct unpack_tex_params params;
