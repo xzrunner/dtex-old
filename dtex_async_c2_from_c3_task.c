@@ -158,10 +158,8 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 			tex_ids[tex_ids_sz++] = idx;
 		}
 	}
-	dtex_array_clear(params->tex_ids);
-	for (int i = 0; i < tex_ids_sz; ++i) {
-		dtex_array_add(params->tex_ids, &tex_ids[i]);
-	}
+
+	dtex_debug("++++++++++++++++++++++ ori %d, curr %d", size, tex_ids_sz);
 
 	params->loader = loader;
 	params->c2 = c2;
@@ -173,7 +171,7 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 	if (tex_ids_sz == 0) {
 		_cb_func(params);
 	} else {
-		dtex_async_load_multi_textures(pkg, params->tex_ids, _cb_func, params, "c2 from c3");
+		dtex_async_load_multi_textures(pkg, tex_ids, tex_ids_sz, _cb_func, params, "c2 from c3");
 	}
 
 	return true;

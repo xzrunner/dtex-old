@@ -70,7 +70,14 @@ bool dtex_async_load_c3(struct dtex_loader* loader,
 
 	params->pkg = pkg;
 
-	dtex_async_load_multi_textures(pkg, params->tex_ids, _cb_func, params, "c3");
+	int tex_ids[128];
+	int tex_ids_sz = 0;
+	int sz = dtex_array_size(params->tex_ids);
+	for (int i = 0; i < sz; ++i) {
+		tex_ids[tex_ids_sz++] = *(int*)dtex_array_fetch(params->tex_ids, i);
+	}
+
+	dtex_async_load_multi_textures(pkg, tex_ids, tex_ids_sz, _cb_func, params, "c3");
 
 	return true;
 }

@@ -11,7 +11,8 @@ extern "C"
 void dtex_async_load_multi_textures_init();
 
 void dtex_async_load_multi_textures(struct dtex_package* pkg, 
-                                    struct dtex_array* texture_idx, 
+									int* texture_idx_list,
+									int texture_idx_sz,
 									void (*cb)(void* ud), 
 									void* ud, 
 									const char* desc);

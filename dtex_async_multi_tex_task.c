@@ -75,7 +75,7 @@ _load_multi_textures_func(struct dtex_import_stream* is, void* ud) {
 }
 
 void 
-dtex_async_load_multi_textures(struct dtex_package* pkg, struct dtex_array* texture_idx, 
+dtex_async_load_multi_textures(struct dtex_package* pkg, int* texture_idx_list, int texture_idx_sz,
 							   void (*cb)(void* ud), void* ud, const char* desc) {
 	struct share_params* share_params = NULL;
 	DTEX_ASYNC_QUEUE_POP(PARAMS_SHEAR_QUEUE, share_params);
@@ -83,15 +83,14 @@ dtex_async_load_multi_textures(struct dtex_package* pkg, struct dtex_array* text
 		share_params = (struct share_params*)malloc(sizeof(*share_params));
 	}
 
-	int sz = dtex_array_size(texture_idx);
-	share_params->tot_count = sz;
+	share_params->tot_count = texture_idx_sz;
 	share_params->loaded_count = 0;
 
 	share_params->cb = cb;
 	share_params->ud = ud;
 
-	for (int i = 0; i < sz; ++i) {
-		int idx = *(int*)dtex_array_fetch(texture_idx, i);
+	for (int i = 0; i < texture_idx_sz; ++i) {
+		int idx = texture_idx_list[i];
 		assert(idx < pkg->texture_count);
 
 		struct params* params = NULL;

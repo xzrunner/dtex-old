@@ -49,11 +49,16 @@ dtex_texture_cache_init(int cap) {
 
 bool 
 dtex_texture_cache_add(struct dtex_texture* tex, struct dtex_package* pkg, int idx) {
+	struct dtex_texture* exists = dtex_texture_query(pkg, idx);
+	if (exists) {
+		return true;
+	}
+
 	int area = tex->width * tex->height;
 	if (area > C.cap) {
 		return false;
 	}
-
+	
 	// pop
 	while (!C.freenode || (C.curr_cap + area > C.cap)) {
 		assert(C.head);
