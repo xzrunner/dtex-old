@@ -11,6 +11,8 @@
 #include "dtex_rrr.h"
 #include "dtex_b4r.h"
 
+#include "ejoy2d.h"
+
 #include <stdlib.h>
 #include <string.h>
 

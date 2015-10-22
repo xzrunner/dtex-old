@@ -179,10 +179,12 @@ dtex_gl_release_texture(unsigned int id, int channel) {
 	glDeleteTextures(1, &id);
 }
 
+#ifndef USED_IN_EDITOR
 void 
 dtex_release_ej_texture(int uid_3rd) {
 	ej_render_release(EJ_R, EJ_TEXTURE, uid_3rd);
 }
+#endif // USED_IN_EDITOR
 
 void 
 dtex_gl_clear_color(float r, float g, float b, float a) {

@@ -765,11 +765,11 @@ dtex_c3_debug_draw(struct dtex_c3* c3) {
 //  	}
 
 	if (c3->one_tex_mode) {
-		dtex_debug_draw(c3->t.ONE.texture->id, 1);
+		dtex_debug_draw(c3->t.ONE.texture->id);
 	} else {
-		dtex_debug_draw(c3->t.MULTI.textures[0]->id, 1);
+		dtex_debug_draw(c3->t.MULTI.textures[0]->id);
 		if (c3->t.MULTI.tex_size > 1) {
-			dtex_debug_draw(c3->t.MULTI.textures[1]->id, 1);
+			dtex_debug_draw(c3->t.MULTI.textures[1]->id);
 		}
 	}
 #else

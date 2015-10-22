@@ -36,8 +36,10 @@ _load_c2(struct dtex_package* pkg) {
 	struct dtex_c2_strategy* stg = pkg->c2_stg;
 	assert(stg);
 
+	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
+
 	int spr_count = 0;
- 	for (int i = 0; i < pkg->ej_pkg->n; ++i) {
+ 	for (int i = 0; i < ej_pkg->n; ++i) {
  		if (stg->spr_draw_count[i] > 0) {
 			++spr_count;
  		}
@@ -45,7 +47,7 @@ _load_c2(struct dtex_package* pkg) {
 
 	int* spr_ids = malloc(sizeof(int) * spr_count);
 	int idx = 0;
-	for (int i = 0; i < pkg->ej_pkg->n; ++i) {
+	for (int i = 0; i < ej_pkg->n; ++i) {
 		if (stg->spr_draw_count[i] > 0) {
 			spr_ids[idx++] = i;
 		}
@@ -76,7 +78,7 @@ _load_c2(struct dtex_package* pkg) {
 	}
 
 	stg->tot_draw_count = 0;
-	for (int i = 0; i < pkg->ej_pkg->n; ++i) {
+	for (int i = 0; i < ej_pkg->n; ++i) {
 		if (stg->spr_draw_count[i] > 0) {
 			stg->spr_draw_count[i] = -1;
 		}
@@ -110,7 +112,8 @@ dtex_c2_strategy_clear(struct dtex_package* pkg) {
 	}
 
 	stg->tot_draw_count = 0;
-	memset(stg->spr_draw_count, 0, sizeof(int) * pkg->ej_pkg->n);
+	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
+	memset(stg->spr_draw_count, 0, sizeof(int) * ej_pkg->n);
 }
 
 bool 

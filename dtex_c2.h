@@ -6,8 +6,6 @@ extern "C"
 #ifndef dynamic_texture_cache2_h
 #define dynamic_texture_cache2_h
 
-#include "ejoy2d.h"
-
 #include <stdbool.h>
 
 struct dtex_c2;

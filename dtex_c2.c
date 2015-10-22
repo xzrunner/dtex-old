@@ -13,6 +13,8 @@
 #include "dtex_debug.h"
 #include "dtex_render.h"
 
+#include "ejoy2d.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -646,7 +648,7 @@ dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struc
 void 
 dtex_c2_debug_draw(struct dtex_c2* c2) {
 #ifdef USED_IN_EDITOR
-	dtex_debug_draw(c2->textures[0]->id);
+	dtex_debug_draw(c2->t.ONE.texture->id);
 #else
 	if (c2->one_tex_mode) {
 		dtex_debug_draw_ej(c2->t.ONE.texture->uid_3rd, 1);

@@ -3,8 +3,8 @@ extern "C"
 {
 #endif
 
-#ifndef ejoy2d_h
-#define ejoy2d_h
+#ifndef dynamic_texture_ejoy2d_h
+#define dynamic_texture_ejoy2d_h
 
 #include <matrix.h>
 #include <spritepack.h>
@@ -62,7 +62,7 @@ extern "C"
 
 #endif // USED_IN_EDITOR
 
-#endif // ejoy2d_h
+#endif // dynamic_texture_ejoy2d_h
 
 #ifdef __cplusplus
 }
