@@ -31,6 +31,7 @@
 #include "dtex_async_c2_task.h"
 #include "dtex_async_c2_from_c3_task.h"
 #include "dtex_render.h"
+#include "dtex_texture_cache.h"
 
 #include <cJSON.h>
 
@@ -128,6 +129,8 @@ dtexf_create(const char* cfg) {
 	dtex_lod_init(CFG.LOD);
 
 	dtex_res_cache_create();
+
+	dtex_texture_cache_init(2048 * 2048);
 
 	// async load
 	dtex_async_loader_init();
