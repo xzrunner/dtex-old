@@ -465,8 +465,6 @@ _relocate_node(struct dtex_texture* src, struct c3_node* dst) {
 	// 	if (pkg->rrp_pkg) {
 	// 		_relocate_rrp(c3, pkg);
 	// 	}
-
-	dst->finish = true;
 }
 
 static inline void
@@ -556,6 +554,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 				char path_full[strlen(pkg->filepath) + 10];
 				dtex_get_texture_filepath(pkg->filepath, pkg_idx, pkg->LOD, path_full);
  				dtex_async_load_file(path_full, _relocate_nodes_cb, node, "c3");
+				node->finish = true;
  			}
 		}
 
