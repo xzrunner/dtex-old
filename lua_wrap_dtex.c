@@ -4,6 +4,8 @@
 #include "dtex_shader.h"
 #include "dtex_gl.h"
 
+#include "dtex_log.h"
+
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -36,6 +38,7 @@ lrelease(lua_State* L) {
 
 static int
 lload_package(lua_State* L) {
+	dtex_debug("+++++++++++++ lload_package 0");
 	const char* name = luaL_checkstring(L, 1);
 	const char* path = luaL_checkstring(L, 2);
 	const char* stype = luaL_checkstring(L, 3);
@@ -50,7 +53,9 @@ lload_package(lua_State* L) {
 		luaL_error(L, "unknown file type %s", stype);
 	}
 
+	dtex_debug("+++++++++++++ lload_package 1");
 	struct dtex_package* pkg = dtexf_load_pkg(name, path, itype, 1, lod, load_c3, load_c2);
+	dtex_debug("+++++++++++++ lload_package 2");
 	lua_pushlightuserdata(L, pkg);
 
 	return 1;
@@ -77,11 +82,15 @@ lpreload_all_textures(lua_State* L) {
 
 static int
 lpreload_texture(lua_State* L) {
+	dtex_debug("+++++++++++++ lpreload_texture 0");
+
 	struct dtex_package* pkg = lua_touserdata(L, 1);
 	int idx = lua_tointeger(L, 2);
 	float scale = luaL_optnumber(L, 3, 1);
 
+	dtex_debug("+++++++++++++ lpreload_texture 1");
 	dtexf_preload_texture(pkg, idx, scale);
+	dtex_debug("+++++++++++++ lpreload_texture 2");
 
 	return 0;
 }
@@ -120,16 +129,23 @@ lquery(lua_State* L) {
 
 static int
 lc3_load(lua_State* L) {
+	dtex_debug("+++++++++++++ lc3_load 0");
 	struct dtex_package* pkg = lua_touserdata(L, 1);
 	float scale = luaL_optnumber(L, 2, 1);
 	dtexf_c3_load(pkg, scale);
+	dtex_debug("+++++++++++++ lc3_load 1");
 	return 0;
 }
 
 static int
 lc3_load_end(lua_State* L) {
+	dtex_debug("+++++++++++++ lc3_load_end 0");
+
 	bool async = lua_toboolean(L, 1);
 	dtexf_c3_load_end(async);
+
+	dtex_debug("+++++++++++++ lc3_load_end 1");
+
 	return 0;
 }
 

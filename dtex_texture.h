@@ -30,7 +30,7 @@ struct dtex_texture {
 	int type;
 	union {
 		struct {
-			int id_alpha;	// for etc1
+			unsigned int id_alpha;	// for etc1
 			int format;
 			float scale;
 			float lod_scale;

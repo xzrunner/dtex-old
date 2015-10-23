@@ -22,7 +22,7 @@ dtex_gl_init(struct ej_render* R) {
 }
 
 static inline void
-_create_texture_ej(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd) {
+_create_texture_ej(int type, int width, int height, const void* data, int channel, unsigned int* gl_id, int* uid_3rd) {
 	if (type == DTEX_TF_INVALID) {
 		return;
 	}
@@ -113,7 +113,9 @@ _create_texture_dtex(int type, int width, int height, const void* data, int chan
 		is_compressed = false;
 		_format = GL_RGBA;
 		_type = GL_UNSIGNED_BYTE;
+#ifdef USED_IN_EDITOR
 		uncompressed = dtex_etc1_decode(data, width, height);
+#endif // USED_IN_EDITOR
 #endif // __ANDROID__
 		break;
 	default:
@@ -136,7 +138,7 @@ _create_texture_dtex(int type, int width, int height, const void* data, int chan
 }
 
 void
-dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd, bool create_by_ej) {
+dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, unsigned int* gl_id, int* uid_3rd, bool create_by_ej) {
 	if (type == DTEX_TF_INVALID) {
 		return;
 	}

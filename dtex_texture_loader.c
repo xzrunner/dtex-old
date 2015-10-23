@@ -110,7 +110,8 @@ _scale_texture(struct dtex_texture* tex, float scale, bool create_by_ej) {
 	
 	uint8_t* empty_data = (uint8_t*)malloc(new_w*new_h*4);
 	memset(empty_data, 0, new_w*new_h*4);
-	int gl_id, uid_3rd;
+	unsigned int gl_id;
+	int uid_3rd;
 	dtex_gl_create_texture(DTEX_TF_RGBA8, new_w, new_h, empty_data, 0, &gl_id, &uid_3rd, create_by_ej);
 	free(empty_data);
 

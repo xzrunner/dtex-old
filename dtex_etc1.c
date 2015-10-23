@@ -1,3 +1,5 @@
+#ifdef USED_IN_EDITOR
+
 #include "dtex_etc1.h"
 #include "dtex_math.h"
 #include "dtex_gl.h"
@@ -100,3 +102,5 @@ dtex_etc1_read_file(const char* filepath, uint32_t* width, uint32_t* height) {
 
 	return buf;
 }
+
+#endif // USED_IN_EDITOR

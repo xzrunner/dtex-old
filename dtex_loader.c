@@ -102,14 +102,14 @@ _unpack_file(struct dtex_loader* loader, struct dtex_file* file, void (*unpack_f
 		char* buf = NULL;
 		if (loader) {
 			_buf_reserve(loader, sz);
-			buf = loader->buf;
+			buf = (char*)loader->buf;
 		} else {
 			buf = (char*)malloc(sz);
 			if (!buf) {
 				dtex_fault("_unpack_file malloc fail.\n");
 			}
 		}
-		if (dtex_file_read(file, buf, sz) != 1) {
+		if (dtex_file_read(file, (char*)buf, sz) != 1) {
 			if (!loader) { free(buf); }
 			dtex_fault("Invalid uncompress data source\n");
 		}
@@ -130,7 +130,7 @@ _unpack_file(struct dtex_loader* loader, struct dtex_file* file, void (*unpack_f
 		char* buf = NULL;
 		if (loader) {
 			_buf_reserve(loader, need_sz);
-			buf = loader->buf;
+			buf = (char*)loader->buf;
 		} else {
 			buf = (char*)malloc(need_sz);
 			if (!buf) {
@@ -153,7 +153,7 @@ _unpack_file(struct dtex_loader* loader, struct dtex_file* file, void (*unpack_f
 		}
 
 		struct dtex_import_stream is;
-		is.stream = buffer;
+		is.stream = (const char*)buffer;
 		is.size = ori_sz;
 		unpack_func(&is, ud);
 

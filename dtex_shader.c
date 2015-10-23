@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #define ATTRIB_VERTEX		0
 #define ATTRIB_TEXTCOORD	1

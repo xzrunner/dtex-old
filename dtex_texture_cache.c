@@ -49,10 +49,7 @@ dtex_texture_cache_init(int cap) {
 
 bool 
 dtex_texture_cache_insert(struct dtex_texture* tex, struct dtex_package* pkg, int idx) {
-	if (!tex) {
-		int zz = 0;
-	}
-
+	assert(tex);
 	struct dtex_texture* exists = dtex_texture_cache_query(pkg, idx);
 	if (exists) {
 		return true;

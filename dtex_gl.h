@@ -16,7 +16,7 @@ extern "C"
 void dtex_gl_init(struct ej_render* R);
 #endif // USED_IN_EDITOR
 
-void dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, int* gl_id, int* uid_3rd, bool create_by_ej);
+void dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, unsigned int* gl_id, int* uid_3rd, bool create_by_ej);
 void dtex_gl_release_texture(unsigned int id, int channel);
 
 void dtex_release_ej_texture(int uid_3rd);

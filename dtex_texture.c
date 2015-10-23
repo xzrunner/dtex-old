@@ -76,7 +76,8 @@ dtex_texture_create_mid(int edge) {
 	}
 	memset(empty_data, 0x00, edge*edge*4);
 
-	int gl_id, uid_3rd;
+	unsigned int gl_id;
+	int uid_3rd;
 	dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, &gl_id, &uid_3rd, true);
 	free(empty_data);
 	if (dtex_gl_out_of_memory()) {

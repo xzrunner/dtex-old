@@ -2,6 +2,7 @@
 #include "dtex_log.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #define STREAM_IMPORT(is, data)						\
 	memcpy(&(data), (is)->stream, sizeof(data));	\
