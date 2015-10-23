@@ -2,7 +2,7 @@
 #include "dtex_typedef.h"
 
 #include <string.h>
-#include <stdlib.h>
+#include <stdio.h>
 
 static int LOD[3] = {0, 0, 0};
 
@@ -46,16 +46,18 @@ dtex_get_texture_filepath(const char* filepath, int idx, int lod, char* ret) {
 	strcat(ret, ".");
 
 	char idx_str[3];
-	strcat(ret, itoa(idx + 1, idx_str, 10));
+	snprintf(idx_str, 3, "%d", idx + 1);
+	strcat(ret, idx_str);
+
 
 	char lod_str[10];
 	if (lod == 1) {
 		strcat(ret, ".");
-		itoa(LOD[1], lod_str, 10);
+		snprintf(lod_str, 10, "%d", LOD[1]);
 		strcat(ret, lod_str);
 	} else if (lod == 2) {
 		strcat(ret, ".");
-		itoa(LOD[2], lod_str, 10);
+		snprintf(lod_str, 10, "%d", LOD[2]);
 		strcat(ret, lod_str);
 	}
 	strcat(ret, ".ept");

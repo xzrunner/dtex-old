@@ -10,6 +10,20 @@
 #include <opengl.h>
 #include <stdlib.h>
 
+#if !defined (VAO_DISABLE) && !defined (__ANDROID__)
+// If your platform doesn't support VAO, comment it out.
+// Or define VAO_DISABLE first
+#define VAO_ENABLE
+
+
+#if defined (GL_OES_vertex_array_object)
+#define glBindVertexArray glBindVertexArrayOES
+#define glGenVertexArrays glGenVertexArraysOES
+#define glDeleteVertexArrays glDeleteVertexArraysOES
+#endif
+
+#endif
+
 #define COMPRESSED_RGBA_PVRTC_4BPPV1_IMG 4
 #define COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 2
 
@@ -67,8 +81,8 @@ _create_texture_dtex(int type, int width, int height, const void* data, int chan
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	}
 
-	GLint _format;
-	GLenum _type;
+	GLint _format = GL_RGBA;
+	GLenum _type = GL_UNSIGNED_BYTE;
 
 	bool is_compressed;
 	unsigned int size = 0;
@@ -194,7 +208,9 @@ dtex_gl_finish() {
 
 void 
 dtex_gl_bind_vertex_array(int id) {
+#ifdef VAO_ENABLE
 	glBindVertexArray(id);
+#endif
 }
 
 bool 

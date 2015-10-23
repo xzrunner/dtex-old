@@ -80,7 +80,7 @@ _load_sprites_extend_info(struct dtex_package* pkg) {
 			struct ej_pack_quad* src_quad = &src_pic->rect[i];
 			struct quad_ext_info* dst_quad = &dst_pic->quads[i];
 			dst_quad->texid = src_quad->texid;
-			memcpy(&dst_quad->texture_coord[0], &src_quad->texture_coord[0], sizeof(struct quad_ext_info));
+			memcpy(&dst_quad->texture_coord[0], &src_quad->texture_coord[0], sizeof(src_quad->texture_coord));
 		}
 
 		ptr += sizeof(struct quad_ext_info) * src_pic->n;
