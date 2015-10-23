@@ -4,6 +4,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef _MSC_VER
+#define snprintf vsnprintf
+#endif // _MSC_VER
+
 static int LOD[3] = {0, 0, 0};
 
 void 
@@ -39,6 +43,15 @@ dtex_get_resource_filepath(const char* filepath, int format, char* ret) {
 	ret[strlen(ret)] = 0;
 }
 
+static inline void
+_int_to_string(int num, const char* buf, int sz) {
+#ifdef _MSC_VER
+	itoa(num, buf, 10);
+#else
+	snprintf(buf, sz, "%d", num);
+#endif // _MSC_VER
+}
+
 void 
 dtex_get_texture_filepath(const char* filepath, int idx, int lod, char* ret) {
 	strcpy(ret, filepath);
@@ -46,18 +59,17 @@ dtex_get_texture_filepath(const char* filepath, int idx, int lod, char* ret) {
 	strcat(ret, ".");
 
 	char idx_str[3];
-	snprintf(idx_str, 3, "%d", idx + 1);
+	_int_to_string(idx + 1, idx_str, 3);
 	strcat(ret, idx_str);
-
 
 	char lod_str[10];
 	if (lod == 1) {
 		strcat(ret, ".");
-		snprintf(lod_str, 10, "%d", LOD[1]);
+		_int_to_string(LOD[1], lod_str, 10);
 		strcat(ret, lod_str);
 	} else if (lod == 2) {
 		strcat(ret, ".");
-		snprintf(lod_str, 10, "%d", LOD[2]);
+		_int_to_string(LOD[2], lod_str, 10);
 		strcat(ret, lod_str);
 	}
 	strcat(ret, ".ept");
