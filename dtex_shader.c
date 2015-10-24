@@ -165,7 +165,7 @@ dtex_shader_load() {
 	"#endif  \n"
 #else
 #define FLOAT_PRECISION \
-	"precision lowp float;  \n"
+	"#version 100 \nprecision lowp float;  \n"
 #endif
 
 	static const char * sprite_vs =

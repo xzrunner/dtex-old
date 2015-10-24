@@ -14,6 +14,7 @@ struct dtex_rect;
 struct dtex_tp_pos;
 struct dtex_texture;
 struct dtex_texture_with_rect;
+struct dtex_package;
 
 struct dtex_c2* dtex_c2_create(int texture_size, bool one_tex, int static_count);
 void dtex_c2_release(struct dtex_c2*);

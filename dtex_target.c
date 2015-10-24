@@ -44,7 +44,7 @@ _check_framebuffer_status() {
 	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
 		dtex_warning("Framebuffer incomplete: No image is attached to FBO.\n");
 		return 0;
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__MACOSX)
 	case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
 		dtex_warning("Framebuffer incomplete: Attached images have different dimensions.\n");
 		return 0;
