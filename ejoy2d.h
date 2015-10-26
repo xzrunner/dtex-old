@@ -59,6 +59,7 @@ extern "C"
 #define ej_shader_texture			shader_texture
 #define ej_shader_program			shader_program
 #define ej_shader_draw				shader_draw
+#define ej_shader_reset				shader_reset
 
 #endif // USED_IN_EDITOR
 

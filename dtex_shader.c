@@ -11,10 +11,11 @@
 #include <stdint.h>
 #include <string.h>
 
-#define ATTRIB_VERTEX		0
-#define ATTRIB_TEXTCOORD	1
-#define ATTRIB_COLOR		2
-#define ATTRIB_ADDITIVE		3
+// todo: should different from engine
+#define ATTRIB_VERTEX		10
+#define ATTRIB_TEXTCOORD	11
+#define ATTRIB_COLOR		12
+#define ATTRIB_ADDITIVE		13
 
 #define MAX_COMMBINE 1024
 
@@ -306,9 +307,12 @@ _rs_commit() {
 	glBindBuffer(GL_ARRAY_BUFFER, VERTEX_BUFFER);
 	glBufferData(GL_ARRAY_BUFFER, 24 * RS->object * sizeof(float), RS->vb, GL_DYNAMIC_DRAW);
 
-//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER);
+// #ifdef __MACOSX
+// 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER);
+// #endif
 
 	glEnableVertexAttribArray(ATTRIB_VERTEX);
+
 	glVertexAttribPointer(ATTRIB_VERTEX, 2, GL_FLOAT, GL_FALSE, 24, BUFFER_OFFSET(0));
 	glEnableVertexAttribArray(ATTRIB_TEXTCOORD);
 	glVertexAttribPointer(ATTRIB_TEXTCOORD, 2, GL_FLOAT, GL_FALSE, 24, BUFFER_OFFSET(8));
@@ -316,6 +320,7 @@ _rs_commit() {
 	glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_FALSE, 24, BUFFER_OFFSET(16));
 	glEnableVertexAttribArray(ATTRIB_ADDITIVE);
 	glVertexAttribPointer(ATTRIB_ADDITIVE, 4, GL_UNSIGNED_BYTE, GL_FALSE, 24, BUFFER_OFFSET(20));  
+
 	glDrawElements(GL_TRIANGLES, 6 * RS->object, GL_UNSIGNED_SHORT, 0);
 
 	glDisableVertexAttribArray(ATTRIB_VERTEX);
@@ -323,8 +328,12 @@ _rs_commit() {
 	glDisableVertexAttribArray(ATTRIB_COLOR);
 	glDisableVertexAttribArray(ATTRIB_ADDITIVE);
 
- 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-// 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+#ifdef __MACOSX
+ 	glBindBuffer(GL_ARRAY_BUFFER, 2);
+	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 1);
+#else
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+#endif
 
 	RS->object = 0;
 

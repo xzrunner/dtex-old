@@ -27,7 +27,7 @@ dtex_render_init() {
 static inline void 
 _before_all_draw() {
 #ifndef USED_IN_EDITOR
-	dtex_gl_bind_vertex_array(0);
+	// dtex_gl_bind_vertex_array(1);
 	dtex_shader_texture(0);
 	dtex_shader_program(PROGRAM_NULL);
 #endif // USED_IN_EDITOR
@@ -61,6 +61,8 @@ _after_all_draw() {
 #ifndef USED_IN_EDITOR
 	ej_shader_texture(0, 0);
 	ej_shader_program(PROGRAM_DEFAULT, NULL);
+	// dtex_gl_bind_vertex_array(1);
+	// ej_shader_reset();
 #endif // USED_IN_EDITOR
 }
 
