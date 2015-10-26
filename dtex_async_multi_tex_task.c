@@ -77,6 +77,10 @@ _load_multi_textures_func(struct dtex_import_stream* is, void* ud) {
 void 
 dtex_async_load_multi_textures(struct dtex_package* pkg, int* texture_idx_list, int texture_idx_sz,
 							   void (*cb)(void* ud), void* ud, const char* desc) {
+	if (texture_idx_sz == 0) {
+		return;
+	}
+
 	struct share_params* share_params = NULL;
 	DTEX_ASYNC_QUEUE_POP(PARAMS_SHEAR_QUEUE, share_params);
 	if (!share_params) {
