@@ -9,6 +9,7 @@
 #include "dtex_async_multi_tex_task.h"
 #include "dtex_async_queue.h"
 #include "dtex_texture_cache.h"
+#include "dtex_timer_task.h"
 
 #include "dtex_log.h"
 
