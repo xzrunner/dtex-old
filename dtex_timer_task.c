@@ -6,7 +6,6 @@ struct task {
 	int time;
 
 	void (*cb)(void* ud);
-	void (*cb_clear)(void* ud);
 	void* ud;
 };
 
@@ -24,9 +23,6 @@ dtex_timer_task_update() {
 		struct task* t = &TASKS[i];
 		if (--t->time <= 0) {
 			t->cb(t->ud);
-			if (t->cb_clear) {
-				t->cb_clear(t->ud);				
-			}
 			TASKS[i] = TASKS[--TASK_COUNT];
 		} else {
 			++i;
@@ -35,7 +31,7 @@ dtex_timer_task_update() {
 }
 
 void 
-dtex_timer_task_init_add(int time, void (*cb)(void* ud), void (*cb_clear)(void* ud), void* ud) {
+dtex_timer_task_init_add(int time, void (*cb)(void* ud), void* ud) {
 	if (TASK_COUNT >= MAX_TASK_COUNT) {
 		return;
 	}
@@ -43,6 +39,5 @@ dtex_timer_task_init_add(int time, void (*cb)(void* ud), void (*cb_clear)(void* 
 	struct task* t = &TASKS[TASK_COUNT++];
 	t->time = time;
 	t->cb = cb;
-	t->cb_clear = cb_clear;
 	t->ud = ud;
 }

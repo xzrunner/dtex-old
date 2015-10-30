@@ -59,12 +59,6 @@ _cb_func(void* ud) {
 	DTEX_ASYNC_QUEUE_PUSH(PARAMS_QUEUE, params);
 }
 
-static inline void
-_cb_clear_func(void* ud) {
-	struct load_params* params = (struct load_params*)ud;
-	DTEX_ASYNC_QUEUE_PUSH(PARAMS_QUEUE, params);
-}
-
 bool 
 dtex_async_load_c2(struct dtex_loader* loader,
                    struct dtex_c2* c2,
@@ -103,7 +97,7 @@ dtex_async_load_c2(struct dtex_loader* loader,
 	}
 
 	if (tex_ids_sz == 0) {
-		dtex_timer_task_init_add(10, _cb_func, _cb_clear_func, params);
+		dtex_timer_task_init_add(10, _cb_func, params);
 	} else {
 		dtex_async_load_multi_textures(pkg, tex_ids, tex_ids_sz, _cb_func, params, "c2");
 	}
