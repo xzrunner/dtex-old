@@ -29,8 +29,8 @@
 //#define EXTRUDE 1
 
 struct hash_key {
-	unsigned int texid;
-	struct dtex_rect rect;
+	int pkg_id;
+	int spr_id;
 };
 
 struct c2_node {
@@ -54,6 +54,7 @@ struct c2_prenode {
 	struct dtex_package* pkg;
 	struct ej_pack_quad* ej_quad;
 	struct dtex_texture* ori_tex;
+	int spr_id;
 
 	struct dtex_rect rect;
 };
@@ -96,20 +97,15 @@ struct dtex_c2 {
 static inline unsigned int 
 _hash_func(int hash_sz, void* key) {
 	struct hash_key* hk = (struct hash_key*)key;
-	int cx = (int)(0.5f * (hk->rect.xmin + hk->rect.xmax)),
-		cy = (int)(0.5f * (hk->rect.ymin + hk->rect.ymax));
-	return (cx ^ (cy * 97) ^ (hk->texid * 101)) % hash_sz;
+	return ((hk->pkg_id * 51439) ^ hk->spr_id) % hash_sz;
 }
 
 static inline bool 
 _equal_func(void* key0, void* key1) {
 	struct hash_key* hk0 = (struct hash_key*)key0;
 	struct hash_key* hk1 = (struct hash_key*)key1;
-	return hk0->rect.xmin == hk1->rect.xmin 
-		&& hk0->rect.ymin == hk1->rect.ymin 
-		&& hk0->rect.xmax == hk1->rect.xmax 
-		&& hk0->rect.ymax == hk1->rect.ymax
-		&& hk0->texid == hk1->texid;
+	return hk0->pkg_id == hk1->pkg_id
+		&& hk0->spr_id == hk1->spr_id;
 }
 
 struct dtex_c2* 
@@ -220,6 +216,18 @@ struct preload_picture_params {
 	struct dtex_package* pkg;
 };
 
+static inline void 
+_get_texcoords_region(uint16_t* texcoords, struct dtex_rect* region) {
+	region->xmin = region->ymin = INT16_MAX;
+	region->xmax = region->ymax = 0;
+	for (int i = 0; i < 4; ++i) {
+		if (texcoords[i*2]   < region->xmin) region->xmin = texcoords[i*2];
+		if (texcoords[i*2]   > region->xmax) region->xmax = texcoords[i*2];
+		if (texcoords[i*2+1] < region->ymin) region->ymin = texcoords[i*2+1];
+		if (texcoords[i*2+1] > region->ymax) region->ymax = texcoords[i*2+1];
+	}
+}
+
 static inline void
 _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	struct preload_picture_params* params = (struct preload_picture_params*)ud;
@@ -246,7 +254,8 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		} else {
 			pn->ori_tex = dtex_texture_fetch(ej_q->texid);
 		}
-		dtex_get_texcoords_region(ej_q->texture_coord, &pn->rect);
+		pn->spr_id = pic_id;
+		_get_texcoords_region(ej_q->texture_coord, &pn->rect);
 	}
 }
 
@@ -288,8 +297,11 @@ _compare_bound(const void *arg1, const void *arg2) {
 	if(node1->rect.ymax < node2->rect.ymax) return -1;
 	if(node1->rect.ymax > node2->rect.ymax) return 1;
 
-	if(node1->ori_tex->id < node2->ori_tex->id) return -1;
-	if(node1->ori_tex->id > node2->ori_tex->id) return 1;
+	if(node1->pkg->id < node2->pkg->id) return -1;
+	if(node1->pkg->id > node2->pkg->id) return 1;
+
+	if(node1->spr_id < node2->spr_id) return -1;
+	if(node1->spr_id > node2->spr_id) return 1;
 
 	return 0;
 }
@@ -356,11 +368,10 @@ _compare_max_edge(const void *arg1, const void *arg2) {
 }
 
 static inline struct c2_node*
-_query_node(struct dtex_c2* c2, unsigned int texid, struct dtex_rect* rect) {
+_query_node(struct dtex_c2* c2, int pkg_id, int spr_id) {
 	struct hash_key hk;
-	hk.texid = texid;
-	hk.rect = *rect;
-
+	hk.pkg_id = pkg_id;
+	hk.spr_id = spr_id;
 	if (c2->one_tex_mode) {
 		for (int i = 0; i < 4; ++i) {
 			struct c2_node* ret = (struct c2_node*)dtex_hash_query(c2->t.ONE.index[i].hash, &hk);
@@ -374,6 +385,157 @@ _query_node(struct dtex_c2* c2, unsigned int texid, struct dtex_rect* rect) {
 	return NULL;
 }
 
+static inline void 
+_relocate_draw_vb(uint16_t part_src[8], 
+                  struct dtex_inv_size* src_sz, 
+				  struct dtex_rect* src_rect, 
+				  struct dtex_inv_size* dst_sz, 
+				  struct dtex_rect* dst_rect, 
+				  int rotate, 
+				  float trans_vb[16]) {
+	float src_xmin = src_rect->xmin * src_sz->inv_w,
+	      src_xmax = src_rect->xmax * src_sz->inv_w,
+	      src_ymin = src_rect->ymin * src_sz->inv_h,
+	      src_ymax = src_rect->ymax * src_sz->inv_h;
+	float dst_xmin = dst_rect->xmin * dst_sz->inv_w,
+	      dst_xmax = dst_rect->xmax * dst_sz->inv_w,
+	      dst_ymin = dst_rect->ymin * dst_sz->inv_h,
+	      dst_ymax = dst_rect->ymax * dst_sz->inv_h;
+	float vd_xmin = dst_xmin * 2 - 1,
+          vd_xmax = dst_xmax * 2 - 1,
+          vd_ymin = dst_ymin * 2 - 1,
+          vd_ymax = dst_ymax * 2 - 1;
+
+    if (part_src == NULL || part_src[0] < 0) {
+		trans_vb[0] = vd_xmin; 	trans_vb[1] = vd_ymin;
+		trans_vb[2] = src_xmin; trans_vb[3] = src_ymin;
+		trans_vb[4] = vd_xmin; 	trans_vb[5] = vd_ymax;
+		trans_vb[6] = src_xmin; trans_vb[7] = src_ymax;
+		trans_vb[8] = vd_xmax; 	trans_vb[9] = vd_ymax;
+		trans_vb[10]= src_xmax; trans_vb[11]= src_ymax;
+		trans_vb[12]= vd_xmax; 	trans_vb[13]= vd_ymin;
+		trans_vb[14]= src_xmax; trans_vb[15]= src_ymin;
+    } else {
+		float cx = 0, cy = 0;
+		for (int i = 0; i < 4; ++i) {
+			cx += part_src[i*2];
+			cy += part_src[i*2+1];
+		}
+		cx *= 0.25f;
+		cy *= 0.25f;
+
+	    if (part_src[0] < cx) {
+			trans_vb[2] = src_xmin; trans_vb[10]= src_xmax;
+			trans_vb[0] = vd_xmin; trans_vb[8] = vd_xmax;
+	    } else {
+			trans_vb[2] = src_xmax; trans_vb[10]= src_xmin;
+			trans_vb[0] = vd_xmax; trans_vb[8] = vd_xmin;
+	    }
+	    if (part_src[2] < cx) {
+			trans_vb[6] = src_xmin; trans_vb[14]= src_xmax;
+			trans_vb[4] = vd_xmin; trans_vb[12] = vd_xmax;
+	    } else {
+			trans_vb[6] = src_xmax; trans_vb[14]= src_xmin;
+			trans_vb[4] = vd_xmax; trans_vb[12] = vd_xmin;
+	    }
+	    if (part_src[1] < cy) {
+			trans_vb[3] = src_ymin; trans_vb[11]= src_ymax;
+			trans_vb[1] = vd_ymin; trans_vb[9] = vd_ymax;
+	    } else {
+			trans_vb[3] = src_ymax; trans_vb[11]= src_ymin;
+			trans_vb[1] = vd_ymax; trans_vb[9] = vd_ymin;
+	    }
+	    if (part_src[3] < cy) {
+			trans_vb[7] = src_ymin; trans_vb[15]= src_ymax;
+			trans_vb[5] = vd_ymin; trans_vb[13] = vd_ymax;
+	    } else {
+			trans_vb[7] = src_ymax; trans_vb[15]= src_ymin;
+			trans_vb[5] = vd_ymax; trans_vb[13] = vd_ymin;
+	    }
+    }
+
+	if (rotate == 1) {
+		float x, y;
+		x = trans_vb[2]; y = trans_vb[3];
+		trans_vb[2] = trans_vb[6];  trans_vb[3] = trans_vb[7];
+		trans_vb[6] = trans_vb[10]; trans_vb[7] = trans_vb[11];
+		trans_vb[10]= trans_vb[14]; trans_vb[11]= trans_vb[15];
+		trans_vb[14]= x;            trans_vb[15]= y;	
+	} else if (rotate == -1) {
+		float x, y;
+		x = trans_vb[2]; y = trans_vb[3];
+		trans_vb[2] = trans_vb[14];  trans_vb[3] = trans_vb[15];
+		trans_vb[14] = trans_vb[10]; trans_vb[15] = trans_vb[11];
+		trans_vb[10]= trans_vb[6]; trans_vb[11]= trans_vb[7];
+		trans_vb[6]= x;            trans_vb[7]= y;	
+	}	
+}
+
+static inline void 
+_relocate_draw_texcoords(uint16_t part_src[8], 
+                         struct dtex_inv_size* src_sz, 
+						 struct dtex_rect* src_rect, 
+						 struct dtex_inv_size* dst_sz, 
+						 struct dtex_rect* dst_rect, 
+						 int rotate, 
+						 float val[8]) {
+	float dst_xmin = dst_rect->xmin * dst_sz->inv_w,
+	      dst_xmax = dst_rect->xmax * dst_sz->inv_w,
+	      dst_ymin = dst_rect->ymin * dst_sz->inv_h,
+	      dst_ymax = dst_rect->ymax * dst_sz->inv_h;
+    if (part_src == NULL || part_src[0] < 0) {
+		val[0] = dst_xmin; val[1] = dst_ymax;
+		val[4] = dst_xmax; val[5] = dst_ymin;
+		val[2] = dst_xmin; val[3] = dst_ymin;
+		val[6] = dst_xmax; val[7] = dst_ymax;
+    } else {
+		float cx = 0, cy = 0;
+		for (int i = 0; i < 4; ++i) {
+			cx += part_src[i*2];
+			cy += part_src[i*2+1];
+		}
+		cx *= 0.25f;
+		cy *= 0.25f;
+
+	    if (part_src[0] < cx) {
+			val[0] = dst_xmin; val[4] = dst_xmax;    	
+	    } else {
+			val[0] = dst_xmax; val[4] = dst_xmin;
+	    }
+	    if (part_src[2] < cx) {
+			val[2] = dst_xmin; val[6] = dst_xmax;
+	    } else {
+			val[2] = dst_xmax; val[6] = dst_xmin;
+	    }
+	    if (part_src[1] < cy) {
+			val[1] = dst_ymin; val[5] = dst_ymax;
+	    } else {
+			val[1] = dst_ymax; val[5] = dst_ymin;
+	    }
+	    if (part_src[3] < cy) {
+			val[3] = dst_ymin; val[7] = dst_ymax;
+	    } else {
+			val[3] = dst_ymax; val[7] = dst_ymin;
+	    }
+    }
+
+	if (rotate == 1) {
+		float x, y;
+		x = val[6]; y = val[7];
+		val[6] = val[4]; val[7] = val[5];
+		val[4] = val[2]; val[5] = val[3];
+		val[2] = val[0]; val[3] = val[1];
+		val[0] = x;         val[1] = y;
+	} else if (rotate == -1) {
+		float x, y;
+		x = val[6]; y = val[7];
+		val[6] = val[0]; val[7] = val[1];
+		val[0] = val[2]; val[1] = val[3];
+		val[2] = val[4]; val[3] = val[5];
+		val[4] = x;         val[5] = y;
+	}
+}
+
 static inline void
 _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 	struct dtex_inv_size src_sz;
@@ -385,8 +547,8 @@ _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 	dst_sz.inv_h = n->dst_tex->inv_height;
 
 	int rotate_times = rotate ? 1 : 0;
-	dtex_relocate_draw_vb(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb);
-	dtex_relocate_c2_val(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->dst_vb);
+	_relocate_draw_vb(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb);
+	_relocate_draw_texcoords(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->dst_vb);
 }
 
 struct insert_params {
@@ -470,7 +632,7 @@ _mode_multi_insert_node(struct insert_params* p) {
 
 static inline bool
 _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* pn) {
-	if (_query_node(c2, pn->ori_tex->id, &pn->rect)) {
+	if (_query_node(c2, pn->pkg->id, pn->spr_id)) {
 		return true;
 	}
 
@@ -530,8 +692,8 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	node->dst_pos->r.xmax -= PADDING;
 	node->dst_pos->r.ymax -= PADDING;
 
-	node->hk.texid = pn->ori_tex->id;
-	node->hk.rect = pn->rect;
+	node->hk.pkg_id = pn->pkg->id;
+	node->hk.spr_id = pn->spr_id;
 	dtex_hash_insert(ip.index->hash, &node->hk, node, true);
 
 	_set_rect_vb(pn, node, ip.rotate);
@@ -570,27 +732,9 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 	c2->prenode_size = 0;
 }
 
-static inline void
-_get_pic_ori_rect(int ori_w, int ori_h, float* ori_vb, struct dtex_rect* rect) {
-	float xmin = 1, ymin = 1, xmax = 0, ymax = 0;
-	for (int i = 0; i < 4; ++i) {
-		if (ori_vb[i*2] < xmin) xmin = ori_vb[i*2];
-		if (ori_vb[i*2] > xmax) xmax = ori_vb[i*2];
-		if (ori_vb[i*2+1] < ymin) ymin = ori_vb[i*2+1];
-		if (ori_vb[i*2+1] > ymax) ymax = ori_vb[i*2+1];
-	}
-	rect->xmin = ori_w * xmin;
-	rect->ymin = ori_h * ymin;
-	rect->xmax = ori_w * xmax;
-	rect->ymax = ori_h * ymax;
-}
-
 float* 
-dtex_c2_lookup_texcoords(struct dtex_c2* c2, struct dtex_texture* tex, float vb[8], int* out_texid) {
-	struct dtex_rect rect;
-	_get_pic_ori_rect(tex->width, tex->height, vb, &rect);
-
-	struct c2_node* node = _query_node(c2, tex->id, &rect);
+dtex_c2_lookup_texcoords(struct dtex_c2* c2, int pkg_id, int spr_id, float vb[8], int* out_texid) {
+	struct c2_node* node = _query_node(c2, pkg_id, spr_id);
 	if (!node) {
 		return NULL;
 	}
@@ -600,9 +744,9 @@ dtex_c2_lookup_texcoords(struct dtex_c2* c2, struct dtex_texture* tex, float vb[
 }
 
 void 
-dtexc2_lookup_node(struct dtex_c2* c2, int texid, struct dtex_rect* rect,
+dtexc2_lookup_node(struct dtex_c2* c2, int pkg_id, int spr_id,
 	               struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos) {
-	struct c2_node* node = _query_node(c2, texid, rect);
+	struct c2_node* node = _query_node(c2, pkg_id, spr_id);
 	if (node) {
 		*out_tex = node->dst_tex;
 		*out_pos = node->dst_pos;
@@ -610,39 +754,6 @@ dtexc2_lookup_node(struct dtex_c2* c2, int texid, struct dtex_rect* rect,
 		*out_tex = NULL;
 		*out_pos = NULL;
 	}
-}
-
-void 
-dtex_c2_change_key(struct dtex_c2* c2, struct dtex_texture_with_rect* src, struct dtex_texture_with_rect* dst) {    
-	struct hash_key old_hk;
-	old_hk.texid = src->tex->id;
-	old_hk.rect = src->rect;
-
-	struct c2_node* node = NULL;
-	struct dtex_hash* hash = NULL;
-	if (c2->one_tex_mode) {
-		for (int i = 0; i < 4; ++i) {
-			hash = c2->t.ONE.index[i].hash;
-			node = (struct c2_node*)dtex_hash_remove(hash, &old_hk);
-			if (node) {
-				break;
-			}
-		}
-	} else {
-		hash = c2->t.MULTI.index.hash;
-		node = (struct c2_node*)dtex_hash_remove(hash, &old_hk);
-	}
-
-	if (!node) {
-		return;
-	}
-
-	node->ori_tex = dst->tex;
-	node->ori_rect = dst->rect;
-	
-	node->hk.texid = dst->tex->id;
-	node->hk.rect = dst->rect;
-	dtex_hash_insert(hash, &node->hk, node, true);
 }
 
 void 

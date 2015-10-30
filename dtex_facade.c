@@ -131,7 +131,7 @@ dtexf_create(const char* cfg) {
 
 	dtex_res_cache_create();
 
-	dtex_texture_cache_init(2048 * 2048 * 1);
+	dtex_texture_cache_init(2048 * 2048 * 2);
 
 	dtex_timer_task_init();
 
@@ -155,7 +155,7 @@ dtexf_create(const char* cfg) {
  		C1 = dtex_c1_create(CFG.c1_tex_size);		
  	}
  	if (CFG.open_c2) {
- 		C2 = dtex_c2_create(CFG.c2_tex_size, true, 1);		
+ 		C2 = dtex_c2_create(CFG.c2_tex_size, true, 0);		
  	}
 }
 
@@ -283,9 +283,9 @@ dtexf_c2_load_end() {
 }
 
 float* 
-dtexf_c2_lookup_texcoords(struct dtex_texture* ori_tex, float* ori_vb, int* dst_tex) {
+dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, float* ori_vb, int* dst_tex) {
 	if (C2) {
-		return dtex_c2_lookup_texcoords(C2, ori_tex, ori_vb, dst_tex);
+		return dtex_c2_lookup_texcoords(C2, pkg_id, spr_id, ori_vb, dst_tex);
 	} else {
 		return NULL;
 	}
@@ -412,8 +412,8 @@ void
 dtexf_debug_draw() {
   	if (C1) {
   		dtex_c1_debug_draw(C1);
-//   	} else if (C2) {
-// 		dtex_c2_debug_draw(C2);
+  	} else if (C2) {
+		dtex_c2_debug_draw(C2);
 	} else if (C3) {
 		dtex_c3_debug_draw(C3);
 	}

@@ -7,12 +7,13 @@
 #include <string.h>
 #include <stdlib.h>
 
-struct dtex_package* 
-dtex_package_create() {
-	struct dtex_package* pkg = (struct dtex_package*)malloc(sizeof(*pkg));
-	memset(pkg, 0, sizeof(*pkg));
-	return pkg;
-}
+//struct dtex_package* 
+//dtex_package_create() {
+//	struct dtex_package* pkg = (struct dtex_package*)malloc(sizeof(*pkg));
+//	memset(pkg, 0, sizeof(*pkg));
+//// todo id
+//	return pkg;
+//}
 
 void 
 dtex_package_release(struct dtex_package* pkg) {

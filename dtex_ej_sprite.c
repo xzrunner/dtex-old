@@ -45,7 +45,7 @@ dtex_ej_sprite_create(struct dtex_package* pkg, int spr_id) {
 
 static inline void
 _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture* picture, 
-		   const struct ej_srt* srt, const struct ej_sprite_trans* arg) {
+		   int spr_id, const struct ej_srt* srt, const struct ej_sprite_trans* arg) {
    struct matrix tmp;
    if (arg->mat == NULL) {
 	   ej_matrix_identity(&tmp);
@@ -93,7 +93,7 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
 
 	   if (c2) {
 		   int new_texid = 0;
-		   float* tex_vb = dtex_c2_lookup_texcoords(c2, tex, c2_key, &new_texid);
+		   float* tex_vb = dtex_c2_lookup_texcoords(c2, pkg->id, spr_id, c2_key, &new_texid);
 		   if (tex_vb != NULL) {
 			   memcpy(vb+2, tex_vb, 2*sizeof(float));
 			   memcpy(vb+6, tex_vb+2, 2*sizeof(float));
@@ -158,7 +158,7 @@ _draw(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_sprite* spr, struc
 	switch (spr->type) {
 	case TYPE_PICTURE:
 		dtex_shader_program(PROGRAM_NORMAL);
-		_draw_quad(pkg, c2, spr->s.pic, srt, t);
+		_draw_quad(pkg, c2, spr->s.pic, spr->id, srt, t);
 		break;
 	case TYPE_ANIMATION:
 		_draw_anim(pkg, c2, spr, srt, t);

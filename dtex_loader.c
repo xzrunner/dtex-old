@@ -288,14 +288,17 @@ _new_package(struct dtex_loader* loader, const char* name, const char* filepath)
 		dtex_fault("_new_package: loader->pack_size >= PACKAGE_SIZE\n");
 	}
 
+	int id = -1;
 	struct dtex_package* pkg = NULL;
 	for (int i = 0; i < loader->pkg_size; ++i) {
 		if (!loader->packages[i].name) {
+			id = i;
 			pkg = &loader->packages[i];
 			break;
 		}
 	}
 	if (!pkg) {
+		id = loader->pkg_size;
 		pkg = &loader->packages[loader->pkg_size++];
 	}
 	memset(pkg, 0, sizeof(*pkg));
@@ -307,6 +310,9 @@ _new_package(struct dtex_loader* loader, const char* name, const char* filepath)
 	pkg->filepath = (char*)malloc(strlen(filepath) + 1);
 	strcpy(pkg->filepath, filepath);
 	pkg->filepath[strlen(pkg->filepath)] = 0;
+
+	assert(id != -1);
+	pkg->id = id;
 
 	return pkg;
 }

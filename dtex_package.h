@@ -35,6 +35,8 @@ struct dtex_package {
 	char* name;
 	char* filepath;
 
+	int id;
+
 	struct dtex_texture* textures[DTEX_PACK_TEX_SZ];
 	int texture_count;
 	int LOD;
@@ -57,7 +59,7 @@ struct dtex_package {
 	struct dtex_c2_strategy* c2_stg;
 };
 
-struct dtex_package* dtex_package_create();
+//struct dtex_package* dtex_package_create();
 void dtex_package_release(struct dtex_package*);
 
 int dtex_get_spr_id(struct dtex_package*, const char* name);

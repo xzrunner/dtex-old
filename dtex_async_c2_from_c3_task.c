@@ -51,7 +51,6 @@ _cb_func(void* ud) {
 	struct load_params* params = (struct load_params*)ud;
 
 	if (!params->c2) {
-		dtex_swap_quad_src_info(params->pkg, params->pic_ids);
 		DTEX_ASYNC_QUEUE_PUSH(PARAMS_QUEUE, params);
 		return;
 	}
@@ -62,7 +61,6 @@ _cb_func(void* ud) {
 	pkg->c2_loading = 0;
 
 	dtex_swap_quad_src_info(pkg, params->pic_ids);
-
 	dtex_c2_load_begin(params->c2); 
 	int spr_sz = dtex_array_size(params->spr_ids);
 	for (int i = 0; i < spr_sz; ++i) {
@@ -70,32 +68,6 @@ _cb_func(void* ud) {
 		dtex_c2_load(params->c2, pkg, spr_id);
 	}
 	dtex_c2_load_end(params->c2, params->loader);
-
-	struct dtex_texture* dst_textures[pkg->texture_count];
-	struct dtex_rect* dst_regions[pkg->texture_count];
-	dtex_c3_query_map_info(params->c3, pkg, dst_textures, dst_regions);
-
-	int sz = dtex_array_size(params->tex_ids);
-	for (int i = 0; i < sz; ++i) {
-		int idx = *(int*)dtex_array_fetch(params->tex_ids, i);
-
-		struct dtex_texture *src_tex = pkg->textures[idx], 
-			*dst_tex = dst_textures[idx];
-
-		assert(src_tex->type == DTEX_TT_RAW && dst_tex->type == DTEX_TT_MID);
-		struct dtex_texture_with_rect src, dst;
-
-		src.tex = src_tex;
-		src.rect.xmin = src.rect.ymin = 0;
-		src.rect.xmax = src_tex->width;
-		src.rect.ymax = src_tex->height;
-
-		dst.tex = dst_tex;
-		dst.rect = *dst_regions[idx];
-
-		dtex_relocate_c2_key(params->c2, pkg, idx, params->pic_ids, &src, &dst);
-	}
-
 	dtex_swap_quad_src_info(pkg, params->pic_ids);
 
 	for (int i = 0; i < pkg->texture_count; ++i) {
@@ -105,6 +77,7 @@ _cb_func(void* ud) {
 		}
 	}
 
+	int sz = dtex_array_size(params->tex_ids);
 	for (int i = 0; i < sz; ++i) {
 		int idx = *(int*)dtex_array_fetch(params->tex_ids, i);
 		if (!pkg->textures[idx]) {
