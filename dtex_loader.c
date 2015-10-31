@@ -9,6 +9,7 @@
 #include "dtex_texture.h"
 #include "dtex_ej_utility.h"
 #include "dtex_resource.h"
+#include "dtex_c2_strategy.h"
 
 #ifndef USED_IN_EDITOR
 #include <LzAlloc.h>
@@ -165,8 +166,8 @@ struct unpack_pkg_params {
 	struct dtex_package* pkg;
 	int file_format;
 	float scale;
-	int load_c3;
-	int load_c2;
+	struct dtex_c3_stg_cfg* c3_stg_cfg;
+	struct dtex_c2_stg_cfg* c2_stg_cfg;
 };
 
 struct unpack_tex_params {
@@ -208,7 +209,7 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 	struct dtex_package* pkg = params->pkg;
 	switch (params->file_format) {
 	case FILE_EPE:
-		dtex_load_epe(is, pkg, params->scale, params->load_c3, params->load_c2);
+		dtex_load_epe(is, pkg, params->scale, params->c3_stg_cfg, params->c2_stg_cfg);
 		break;
 	case FILE_RRP:
 		// pkg->rrp_pkg = dtex_load_rrp(is);
@@ -318,7 +319,8 @@ _new_package(struct dtex_loader* loader, const char* name, const char* filepath)
 }
 
 struct dtex_package* 
-dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* filepath, int format, float scale, int lod, int load_c3, int load_c2) {
+dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* filepath, int format, float scale, int lod, 
+			  struct dtex_c3_stg_cfg* c3_stg_cfg, struct dtex_c2_stg_cfg* c2_stg_cfg) {
 	assert(format != FILE_EPT);
 	char path_full[strlen(filepath) + 10];
 	dtex_get_resource_filepath(filepath, format, path_full);
@@ -339,8 +341,8 @@ dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* filepath
 	params.pkg = pkg;
 	params.file_format = format;
 	params.scale = scale;
-	params.load_c3 = load_c3;
-	params.load_c2 = load_c2;
+	params.c3_stg_cfg = c3_stg_cfg;
+	params.c2_stg_cfg = c2_stg_cfg;
 	_unpack_file(loader, file, &_unpack_memory_to_pkg, &params);
 
 	dtex_file_close(file);

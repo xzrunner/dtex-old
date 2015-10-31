@@ -2,26 +2,28 @@
 #include "dtex_package.h"
 #include "dtex_facade.h"
 
+#include "dtex_log.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-#define MAX_PKG_DRAW_COUNT 1024
-
 struct dtex_c2_strategy {
-	bool clear;
+	struct dtex_c2_stg_cfg cfg;
 
- 	int tot_draw_count;
+	int single_max_count;
+	int diff_spr_count;
+ 	int tot_count;
 	int spr_draw_count[1];
 };
 
 struct dtex_c2_strategy* 
-dtex_c2_strategy_create(int n, bool clear) {
+dtex_c2_strategy_create(int n, struct dtex_c2_stg_cfg* cfg) {
 	size_t sz = sizeof(struct dtex_c2_strategy) + sizeof(int) * n;
 	struct dtex_c2_strategy* stg = (struct dtex_c2_strategy*)malloc(sz);
 	memset(stg, 0, sz);
 
-	stg->clear = clear;
+	stg->cfg = *cfg;
 
 	return stg;
 }
@@ -37,15 +39,7 @@ _load_c2(struct dtex_package* pkg) {
 	assert(stg);
 
 	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
-
-	int spr_count = 0;
- 	for (int i = 0; i < ej_pkg->n; ++i) {
- 		if (stg->spr_draw_count[i] > 0) {
-			++spr_count;
- 		}
- 	}	
-
-	int* spr_ids = malloc(sizeof(int) * spr_count);
+	int spr_ids[stg->diff_spr_count];
 	int idx = 0;
 	for (int i = 0; i < ej_pkg->n; ++i) {
 		if (stg->spr_draw_count[i] > 0) {
@@ -59,14 +53,14 @@ _load_c2(struct dtex_package* pkg) {
 
 	bool succ = false;
 	if (pkg->c3_stg) {
-		succ = dtexf_async_load_texture_with_c2_from_c3(pkg, spr_ids, spr_count);
+		succ = dtexf_async_load_texture_with_c2_from_c3(pkg, spr_ids, stg->diff_spr_count);
 	} else {
 //		succ = dtexf_async_load_texture_with_c2(pkg, spr_ids, spr_count);
 
 		// already exists
 		// suppose 100% scale
 		dtexf_c2_load_begin();
-		for (int i = 0; i < spr_count; ++i) {
+		for (int i = 0; i < stg->diff_spr_count; ++i) {
 			int spr_id = spr_ids[i];
 			dtexf_c2_load(pkg, spr_id);
 		}
@@ -77,16 +71,11 @@ _load_c2(struct dtex_package* pkg) {
 		return;
 	}
 
-	stg->tot_draw_count = 0;
-	for (int i = 0; i < ej_pkg->n; ++i) {
-		if (stg->spr_draw_count[i] > 0) {
-			stg->spr_draw_count[i] = -1;
-		}
-	}
+	dtex_c2_strategy_clear(pkg);
 }
 
 void 
-dtex_c2_on_draw_sprite(struct ej_sprite* spr) {
+dtex_c2_on_draw_query_fail(struct ej_sprite* spr) {
 	struct dtex_package* pkg = spr->pkg;
 	if (!pkg) {
 		return;
@@ -96,10 +85,23 @@ dtex_c2_on_draw_sprite(struct ej_sprite* spr) {
 		return;
 	}
 
-	++stg->tot_draw_count;
+	++stg->tot_count;
+	if (stg->spr_draw_count[spr->id] == 0) {
+		++stg->diff_spr_count;
+	}
 	++stg->spr_draw_count[spr->id];
+	if (stg->spr_draw_count[spr->id] > stg->single_max_count) {
+		stg->single_max_count = stg->spr_draw_count[spr->id];
+	}
 
-	if (stg->tot_draw_count > MAX_PKG_DRAW_COUNT) {
+	if (stg->single_max_count > stg->cfg.single_max_count) {
+		dtex_debug(" c2 single_max_count > %d", stg->cfg.single_max_count);
+		_load_c2(pkg);
+	} else if (stg->diff_spr_count > stg->cfg.diff_spr_count) {
+		dtex_info(" c2 diff_spr_count > %d", stg->cfg.diff_spr_count);
+		_load_c2(pkg);
+	} else if (stg->tot_count > stg->cfg.tot_count) {
+		dtex_info(" c2 tot_count > %d", stg->cfg.tot_count);
 		_load_c2(pkg);
 	}
 }
@@ -107,16 +109,18 @@ dtex_c2_on_draw_sprite(struct ej_sprite* spr) {
 void 
 dtex_c2_strategy_clear(struct dtex_package* pkg) {
 	struct dtex_c2_strategy* stg = pkg->c2_stg;
-	if (!stg) {
+	if (!stg || !stg->cfg.clear_enable) {
 		return;
 	}
-
-	stg->tot_draw_count = 0;
+	assert(stg);
 	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
+	stg->tot_count = 0;
+	stg->single_max_count = 0;
+	stg->diff_spr_count = 0;
 	memset(stg->spr_draw_count, 0, sizeof(int) * ej_pkg->n);
 }
 
 bool 
 dtex_c2_insert_can_clear(struct dtex_c2_strategy* stg) {
-	return stg->clear;
+	return stg->cfg.clear_enable;
 }

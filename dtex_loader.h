@@ -11,11 +11,13 @@ extern "C"
 struct dtex_loader;
 struct dtex_import_stream;
 struct dtex_package;
+struct dtex_c3_stg_cfg;
+struct dtex_c2_stg_cfg;
 
 struct dtex_loader* dtexloader_create();
 void dtexloader_release(struct dtex_loader*);
 
-struct dtex_package* dtex_load_pkg(struct dtex_loader*, const char* name, const char* filepath, int format, float scale, int lod, int load_c3, int load_c2);
+struct dtex_package* dtex_load_pkg(struct dtex_loader*, const char* name, const char* filepath, int format, float scale, int lod, struct dtex_c3_stg_cfg*, struct dtex_c2_stg_cfg*);
 void dtex_unload_pkg(struct dtex_loader*, struct dtex_package* pkg);
 
 int dtex_preload_all_textures(const char* filepath, struct dtex_loader*, struct dtex_package* pkg, float scale);

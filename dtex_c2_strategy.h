@@ -10,10 +10,18 @@ extern "C"
 
 struct dtex_c2_strategy;
 
-struct dtex_c2_strategy* dtex_c2_strategy_create(int n, bool clear);
+struct dtex_c2_stg_cfg {
+	bool clear_enable;
+
+	int single_max_count;
+	int diff_spr_count;
+	int tot_count;
+};
+
+struct dtex_c2_strategy* dtex_c2_strategy_create(int n, struct dtex_c2_stg_cfg* cfg);
 void dtex_c2_strategy_release(struct dtex_c2_strategy*);
 
-void dtex_c2_on_draw_sprite(struct ej_sprite* spr);
+void dtex_c2_on_draw_query_fail(struct ej_sprite* spr);
 
 void dtex_c2_strategy_clear(struct dtex_package*);
 

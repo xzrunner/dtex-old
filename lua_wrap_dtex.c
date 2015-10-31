@@ -3,6 +3,8 @@
 #include "dtex_package.h"
 #include "dtex_shader.h"
 #include "dtex_gl.h"
+#include "dtex_c3_strategy.h"
+#include "dtex_c2_strategy.h"
 
 #include <string.h>
 #include <assert.h>
@@ -38,11 +40,8 @@ static int
 lload_package(lua_State* L) {
 	const char* name = luaL_checkstring(L, 1);
 	const char* path = luaL_checkstring(L, 2);
-	const char* stype = luaL_checkstring(L, 3);
-	int lod = luaL_optinteger(L, 4, 0);
-	int load_c3 = luaL_optinteger(L, 5, 0);
-	int load_c2 = luaL_optinteger(L, 6, 0);
 
+	const char* stype = luaL_checkstring(L, 3);
 	int itype = FILE_INVALID;
 	if (strcmp(stype, "epe") == 0) {
 		itype = FILE_EPE;
@@ -50,7 +49,38 @@ lload_package(lua_State* L) {
 		luaL_error(L, "unknown file type %s", stype);
 	}
 
-	struct dtex_package* pkg = dtexf_load_pkg(name, path, itype, 1, lod, load_c3, load_c2);
+	int lod = luaL_optinteger(L, 4, 0);
+
+	struct dtex_c3_stg_cfg c3_cfg;
+	struct dtex_c2_stg_cfg c2_cfg;
+
+	struct dtex_c3_stg_cfg* c3_cfg_ptr;
+	struct dtex_c2_stg_cfg* c2_cfg_ptr;
+
+	if (lua_istable(L, 5)) {
+		lua_getfield(L, 5, "clear_enable");
+		c3_cfg.clear_enable = lua_toboolean(L, -1);
+		lua_pop(L, 1);
+		c3_cfg_ptr = &c3_cfg;
+	} else {
+		c3_cfg_ptr = NULL;
+	}
+	if (lua_istable(L, 6)) {
+		lua_getfield(L, 6, "clear_enable");
+		c2_cfg.clear_enable = lua_toboolean(L, -1);
+		lua_getfield(L, 6, "single_max_count");
+		c2_cfg.single_max_count = luaL_checkinteger(L, -1);
+		lua_getfield(L, 6, "diff_spr_count");
+		c2_cfg.diff_spr_count = luaL_checkinteger(L, -1);
+		lua_getfield(L, 6, "tot_count");
+		c2_cfg.tot_count = luaL_checkinteger(L, -1);
+		lua_pop(L, 4);
+		c2_cfg_ptr = &c2_cfg;
+	} else {
+		c2_cfg_ptr = NULL;
+	}
+
+	struct dtex_package* pkg = dtexf_load_pkg(name, path, itype, 1, lod, c3_cfg_ptr, c2_cfg_ptr);
 	lua_pushlightuserdata(L, pkg);
 
 	return 1;

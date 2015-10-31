@@ -10,7 +10,11 @@ extern "C"
 
 struct dtex_c3_strategy;
 
-struct dtex_c3_strategy* dtex_c3_strategy_create(bool is_static);
+struct dtex_c3_stg_cfg {
+	bool clear_enable;
+};
+
+struct dtex_c3_strategy* dtex_c3_strategy_create(struct dtex_c3_stg_cfg* cfg);
 void dtex_c3_strategy_release(struct dtex_c3_strategy*);
 
 bool dtex_c3_is_static(struct dtex_c3_strategy*);

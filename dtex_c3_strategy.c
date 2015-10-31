@@ -3,15 +3,13 @@
 #include <stdlib.h>
 
 struct dtex_c3_strategy {
-	bool is_static;
+	struct dtex_c3_stg_cfg cfg;
 };
 
 struct dtex_c3_strategy* 
-dtex_c3_strategy_create(bool is_static) {
+dtex_c3_strategy_create(struct dtex_c3_stg_cfg* cfg) {
 	struct dtex_c3_strategy* stg = (struct dtex_c3_strategy*)malloc(sizeof(*stg));
-
-	stg->is_static = is_static;
-
+	stg->cfg = *cfg;
 	return stg;
 }
 
@@ -22,5 +20,5 @@ dtex_c3_strategy_release(struct dtex_c3_strategy* stg) {
 
 bool 
 dtex_c3_is_static(struct dtex_c3_strategy* stg) {
-	return stg->is_static;
+	return !stg->cfg.clear_enable;
 }

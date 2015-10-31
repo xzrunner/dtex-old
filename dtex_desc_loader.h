@@ -8,12 +8,14 @@ extern "C"
 
 struct dtex_import_stream;
 struct dtex_package;
+struct dtex_c3_stg_cfg;
+struct dtex_c2_stg_cfg;
 // struct dtex_rrp;
 // struct dtex_pts;
 // struct dtex_rrr;
 // struct dtex_b4r;
 
-void dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float scale, int load_c3, int load_c2);
+void dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float scale, struct dtex_c3_stg_cfg*, struct dtex_c2_stg_cfg*);
 
 // struct dtex_rrp* dtex_load_rrp(struct dtex_import_stream* is);
 
