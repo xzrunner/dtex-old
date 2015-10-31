@@ -719,6 +719,8 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 	int unique_sz = 0;
 	_get_unique_prenodes(c2, unique_set, &unique_sz);
 
+	dtex_debug(" c2 end count: %d", unique_sz);
+
 	// insert
 	qsort((void*)unique_set, unique_sz, sizeof(struct c2_prenode*), _compare_max_edge);	
 	for (int i = 0; i < unique_sz; ++i) {
@@ -762,12 +764,12 @@ dtex_c2_debug_draw(struct dtex_c2* c2) {
 	dtex_debug_draw(c2->t.ONE.texture->id);
 #else
 	if (c2->one_tex_mode) {
-		dtex_debug_draw_ej(c2->t.ONE.texture->uid_3rd, 1);
+		dtex_debug_draw_ej(c2->t.ONE.texture->uid_3rd, 4);
 	} else {
 		if (c2->t.MULTI.tex_size > 0) {
-			dtex_debug_draw_ej(c2->t.MULTI.textures[0]->uid_3rd, 1);
+			dtex_debug_draw_ej(c2->t.MULTI.textures[0]->uid_3rd, 4);
 			if (c2->t.MULTI.tex_size > 1) {
-				dtex_debug_draw_ej(c2->t.MULTI.textures[1]->uid_3rd, 4);
+				dtex_debug_draw_ej(c2->t.MULTI.textures[1]->uid_3rd, 3);
 			}
 		}
 	}
