@@ -33,6 +33,7 @@
 #include "dtex_render.h"
 #include "dtex_texture_cache.h"
 #include "dtex_timer_task.h"
+#include "dtex_c2_strategy.h"
 
 #include <cJSON.h>
 
@@ -64,6 +65,8 @@ struct dtex_config {
 	int c3_tex_size;
 
 	int LOD[3];
+
+	int c2_max_no_update_count;
 };
 struct dtex_config CFG;
 
@@ -100,6 +103,8 @@ _config(const char* str) {
 		}
 	}
 
+	CFG.c2_max_no_update_count = cJSON_GetObjectItem(root, "c2_max_no_update_count")->valueint;
+
 	cJSON_Delete(root);
 }
 
@@ -119,6 +124,8 @@ dtexf_create(const char* cfg) {
 	CFG.LOD[1] = 50;
 	CFG.LOD[2] = 25;
 
+	CFG.c2_max_no_update_count = 60 * 30;
+
 	if (cfg) {
 		_config(cfg);		
 	}
@@ -134,6 +141,8 @@ dtexf_create(const char* cfg) {
 	dtex_texture_cache_init(2048 * 2048 * 2);
 
 	dtex_timer_task_init();
+
+	dtex_c2_strategy_init(CFG.c2_max_no_update_count);
 
 	// async load
 	dtex_async_loader_init();
@@ -364,6 +373,7 @@ void
 dtexf_update() {
 	dtex_async_loader_update();
 	dtex_timer_task_update();
+	dtex_c2_strategy_update();
 }
 //
 //bool 

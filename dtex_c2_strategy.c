@@ -17,6 +17,15 @@ struct dtex_c2_strategy {
 	int spr_draw_count[1];
 };
 
+static int MAX_NO_UPDATE_COUNT;
+static int NO_UPDATE_COUNT = 0;
+static float DISCOUNT = 1;
+
+void 
+dtex_c2_strategy_init(int max_no_update_count) {
+	MAX_NO_UPDATE_COUNT = max_no_update_count;
+}
+
 struct dtex_c2_strategy* 
 dtex_c2_strategy_create(int n, struct dtex_c2_stg_cfg* cfg) {
 	size_t sz = sizeof(struct dtex_c2_strategy) + sizeof(int) * n;
@@ -72,6 +81,9 @@ _load_c2(struct dtex_package* pkg) {
 	}
 
 	dtex_c2_strategy_clear(pkg);
+
+	NO_UPDATE_COUNT = 0;
+	DISCOUNT = 1;
 }
 
 void 
@@ -94,15 +106,23 @@ dtex_c2_on_draw_query_fail(struct ej_sprite* spr) {
 		stg->single_max_count = stg->spr_draw_count[spr->id];
 	}
 
-	if (stg->single_max_count > stg->cfg.single_max_count) {
-		dtex_debug(" c2 single_max_count > %d", stg->cfg.single_max_count);
+	if (stg->single_max_count > stg->cfg.single_max_count * DISCOUNT) {
+		dtex_info(" c2 single_max_count > %d", (int)(stg->cfg.single_max_count * DISCOUNT));
 		_load_c2(pkg);
-	} else if (stg->diff_spr_count > stg->cfg.diff_spr_count) {
-		dtex_info(" c2 diff_spr_count > %d", stg->cfg.diff_spr_count);
+	} else if (stg->diff_spr_count > stg->cfg.diff_spr_count * DISCOUNT) {
+		dtex_info(" c2 diff_spr_count > %d", (int)(stg->cfg.diff_spr_count * DISCOUNT));
 		_load_c2(pkg);
-	} else if (stg->tot_count > stg->cfg.tot_count) {
-		dtex_info(" c2 tot_count > %d", stg->cfg.tot_count);
+	} else if (stg->tot_count > stg->cfg.tot_count * DISCOUNT) {
+		dtex_info(" c2 tot_count > %d", (int)(stg->cfg.tot_count * DISCOUNT));
 		_load_c2(pkg);
+	} 
+}
+
+void 
+dtex_c2_strategy_update() {
+	++NO_UPDATE_COUNT;
+	if (NO_UPDATE_COUNT <= MAX_NO_UPDATE_COUNT) {
+		DISCOUNT = (float)(MAX_NO_UPDATE_COUNT - NO_UPDATE_COUNT) / MAX_NO_UPDATE_COUNT;
 	}
 }
 
