@@ -179,6 +179,12 @@ dtex_gl_release_texture(unsigned int id, int channel) {
 	glDeleteTextures(1, &id);
 }
 
+void 
+dtex_gl_update_subtex(const void* pixels, int x, int y, int w, int h, unsigned int id) {
+	dtex_shader_texture(id);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+}
+
 #ifndef USED_IN_EDITOR
 void 
 dtex_release_ej_texture(int uid_3rd) {

@@ -735,7 +735,7 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 }
 
 float* 
-dtex_c2_lookup_texcoords(struct dtex_c2* c2, int pkg_id, int spr_id, float vb[8], int* out_texid) {
+dtex_c2_lookup_texcoords(struct dtex_c2* c2, int pkg_id, int spr_id, int* out_texid) {
 	struct c2_node* node = _query_node(c2, pkg_id, spr_id);
 	if (!node) {
 		return NULL;
