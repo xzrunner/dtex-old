@@ -284,9 +284,9 @@ dtexf_c2_load_end() {
 }
 
 float* 
-dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, float* ori_vb, int* dst_tex) {
+dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, int* dst_tex) {
 	if (C2) {
-		return dtex_c2_lookup_texcoords(C2, pkg_id, spr_id, ori_vb, dst_tex);
+		return dtex_c2_lookup_texcoords(C2, pkg_id, spr_id, dst_tex);
 	} else {
 		return NULL;
 	}
