@@ -157,16 +157,11 @@ dtex_shader_load() {
 		return;
 	}
 
-#if 0
+#if OPENGLES >= 2
 #define FLOAT_PRECISION \
-	"#ifdef GL_FRAGMENT_PRECISION_HIGH  \n" \
-	"precision highp float;  \n" \
-	"#else  \n" \
-	"precision lowp float;  \n" \
-	"#endif  \n"
+	"#version 100\nprecision highp float;  \n"
 #else
-#define FLOAT_PRECISION \
-	"#version 100\nprecision highp float;\n"
+#define FLOAT_PRECISION ""
 #endif
 
 	static const char * sprite_vs =
