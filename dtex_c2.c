@@ -741,7 +741,8 @@ dtex_c2_lookup_texcoords(struct dtex_c2* c2, int pkg_id, int spr_id, float vb[8]
 		return NULL;
 	}
 
-	*out_texid = node->dst_tex->id;
+	*out_texid = node->dst_tex->uid_3rd;
+
 	return node->dst_vb;
 }
 
