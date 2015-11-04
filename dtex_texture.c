@@ -5,7 +5,7 @@
 #include "dtex_target.h"
 #include "dtex_res_cache.h"
 #include "dtex_hard_res.h"
-#include "dtex_resource.h"
+#include "dtex_lod.h"
 #include "dtex_shader.h"
 #include "dtex_screen.h"
 

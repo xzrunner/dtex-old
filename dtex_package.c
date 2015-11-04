@@ -1,8 +1,9 @@
 #include "dtex_package.h"
-#include "dtex_resource.h"
+#include "dtex_lod.h"
 #include "dtex_texture.h"
 #include "dtex_c2_strategy.h"
 #include "dtex_c3_strategy.h"
+#include "dtex_res_path.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -18,8 +19,9 @@
 void 
 dtex_package_release(struct dtex_package* pkg) {
  	free(pkg->name);
- 	free(pkg->filepath);
- 
+
+	dtex_res_path_release(pkg->rp);
+
  	for (int i = 0; i < pkg->texture_count; ++i) {
  		dtex_texture_release(pkg->textures[i]);
  	}

@@ -5,7 +5,7 @@
 #include "dtex_async_loader.h"
 #include "dtex_texture.h"
 #include "dtex_array.h"
-#include "dtex_resource.h"
+#include "dtex_res_path.h"
 #include "dtex_log.h"
 
 #include <pthread.h>
@@ -113,8 +113,7 @@ dtex_async_load_multi_textures(struct dtex_package* pkg, int* texture_idx_list, 
 		}
 		params->tex = pkg->textures[idx];
 
-		char path_full[strlen(pkg->filepath) + 10];
-		dtex_get_texture_filepath(pkg->filepath, idx, pkg->LOD, path_full);
-		dtex_async_load_file(path_full, _load_multi_textures_func, params, desc);
+		const char* path = dtex_get_img_filepath(pkg->rp, idx, pkg->LOD);
+		dtex_async_load_file(path, _load_multi_textures_func, params, desc);
 	}
 }

@@ -8,8 +8,8 @@
 #include "dtex_typedef.h"
 #include "dtex_texture.h"
 #include "dtex_ej_utility.h"
-#include "dtex_resource.h"
 #include "dtex_c2_strategy.h"
+#include "dtex_res_path.h"
 
 #ifndef USED_IN_EDITOR
 #include <LzAlloc.h>
@@ -167,8 +167,6 @@ struct unpack_pkg_params {
 	struct dtex_package* pkg;
 	int file_format;
 	float scale;
-	struct dtex_c3_stg_cfg* c3_stg_cfg;
-	struct dtex_c2_stg_cfg* c2_stg_cfg;
 };
 
 struct unpack_tex_params {
@@ -210,7 +208,7 @@ _unpack_memory_to_pkg(struct dtex_import_stream* is, void* ud) {
 	struct dtex_package* pkg = params->pkg;
 	switch (params->file_format) {
 	case FILE_EPE:
-		dtex_load_epe(is, pkg, params->scale, params->c3_stg_cfg, params->c2_stg_cfg);
+		dtex_load_epe(is, pkg, params->scale);
 		break;
 	case FILE_RRP:
 		// pkg->rrp_pkg = dtex_load_rrp(is);
@@ -285,7 +283,7 @@ _find_package(struct dtex_loader* loader, const char* name) {
 }
 
 static inline struct dtex_package*
-_new_package(struct dtex_loader* loader, const char* name, const char* filepath) {
+_new_package(struct dtex_loader* loader, const char* name) {
 	if (loader->pkg_size >= PACKAGE_SIZE) {
 		dtex_fault("_new_package: loader->pack_size >= PACKAGE_SIZE\n");
 	}
@@ -309,10 +307,6 @@ _new_package(struct dtex_loader* loader, const char* name, const char* filepath)
 	strcpy(pkg->name, name);
 	pkg->name[strlen(pkg->name)] = 0;
 
-	pkg->filepath = (char*)malloc(strlen(filepath) + 1);
-	strcpy(pkg->filepath, filepath);
-	pkg->filepath[strlen(pkg->filepath)] = 0;
-
 	assert(id != -1);
 	pkg->id = id;
 
@@ -320,30 +314,23 @@ _new_package(struct dtex_loader* loader, const char* name, const char* filepath)
 }
 
 struct dtex_package* 
-dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* filepath, int format, float scale, int lod, 
-			  struct dtex_c3_stg_cfg* c3_stg_cfg, struct dtex_c2_stg_cfg* c2_stg_cfg) {
-	assert(format != FILE_EPT);
-	char path_full[strlen(filepath) + 10];
-	dtex_get_resource_filepath(filepath, format, path_full);
-
-	struct dtex_file* file = dtex_file_open(path_full, "rb");
+dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* epe_path, float scale, int lod) {
+	struct dtex_file* file = dtex_file_open(epe_path, "rb");
 	if (!file) {
-		dtex_fault("dtexloader_preload_pkg: can't open file %s\n", path_full);
+		dtex_fault("dtexloader_preload_pkg: can't open file %s\n", epe_path);
 	}
 
 	struct dtex_package* pkg = _find_package(loader, name);
 	if (!pkg) {
-		pkg = _new_package(loader, name, filepath);
+		pkg = _new_package(loader, name);
 	}
 
 	pkg->LOD = lod;
 
 	struct unpack_pkg_params params;
 	params.pkg = pkg;
-	params.file_format = format;
+	params.file_format = FILE_EPE;
 	params.scale = scale;
-	params.c3_stg_cfg = c3_stg_cfg;
-	params.c2_stg_cfg = c2_stg_cfg;
 	_unpack_file(loader, file, &_unpack_memory_to_pkg, &params);
 
 	dtex_file_close(file);
@@ -384,12 +371,10 @@ dtex_preload_all_textures(const char* filepath, struct dtex_loader* loader, stru
 
 void 
 dtex_preload_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx, float scale) {
-	char path_full[strlen(pkg->filepath) + 10];
-	dtex_get_texture_filepath(pkg->filepath, idx, pkg->LOD, path_full);
-
-	struct dtex_file* file = dtex_file_open(path_full, "rb");
+	const char* path = dtex_get_img_filepath(pkg->rp, idx, pkg->LOD);
+	struct dtex_file* file = dtex_file_open(path, "rb");
 	if (!file) {
-		dtex_fault("dtex_preload_texture: can't open file %s\n", path_full);
+		dtex_fault("dtex_preload_texture: can't open file %s\n", path);
 	}
 
 	struct unpack_pretex_params params;
@@ -402,12 +387,10 @@ dtex_preload_texture(struct dtex_loader* loader, struct dtex_package* pkg, int i
 
 void 
 dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx, bool create_by_ej) {
-	char path_full[strlen(pkg->filepath) + 10];
-	dtex_get_texture_filepath(pkg->filepath, idx, pkg->LOD, path_full);
-
-	struct dtex_file* file = dtex_file_open(path_full, "rb");
+	const char* path = dtex_get_img_filepath(pkg->rp, idx, pkg->LOD);
+	struct dtex_file* file = dtex_file_open(path, "rb");
 	if (!file) {
-		dtex_fault("dtex_load_texture: can't open file %s\n", path_full);
+		dtex_fault("dtex_load_texture: can't open file %s\n", path);
 	}
 
 	struct unpack_tex_params params;

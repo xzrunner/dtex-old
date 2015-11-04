@@ -13,8 +13,6 @@ extern "C"
 struct dtex_package;
 struct dtex_texture;
 struct dtex_tp_pos;
-struct dtex_c3_stg_cfg;
-struct dtex_c2_stg_cfg;
 
 /************************************************************************/
 /* dtexf overall                                                        */
@@ -32,8 +30,7 @@ void dtexf_sprite_draw(struct dtex_package*, struct ej_sprite*, struct ej_srt*);
 /************************************************************************/
 /* common load                                                          */
 /************************************************************************/
-struct dtex_package* dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lod, 
-                                    struct dtex_c3_stg_cfg*, struct dtex_c2_stg_cfg*);
+struct dtex_package* dtexf_load_pkg(const char* name, const char* epe_path, float scale, int lod);
 void dtexf_unload_pkg(struct dtex_package* pkg);
 
 int dtexf_preload_all_textures(const char* path, struct dtex_package* pkg, float scale);

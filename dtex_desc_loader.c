@@ -3,8 +3,6 @@
 #include "dtex_stream_import.h"
 #include "dtex_package.h"
 #include "dtex_ej_utility.h"
-#include "dtex_c2_strategy.h"
-#include "dtex_c3_strategy.h"
 
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
@@ -90,8 +88,7 @@ _load_sprites_extend_info(struct dtex_package* pkg) {
 }
 
 void
-dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float scale, 
-              struct dtex_c3_stg_cfg* c3_stg_cfg, struct dtex_c2_stg_cfg* c2_stg_cfg) {
+dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float scale) {
 	uint16_t export_n = dtex_import_uint16(is);
 	uint16_t maxid = dtex_import_uint16(is);
 	uint16_t tex = dtex_import_uint16(is);
@@ -119,16 +116,8 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 	}
 	pkg->ej_pkg = ej_pkg;
 
-	if (c3_stg_cfg) {
-		pkg->c3_stg = dtex_c3_strategy_create(c3_stg_cfg);
-	} else {
-		pkg->c3_stg = NULL;
-	}
-	if (c2_stg_cfg) {
-		pkg->c2_stg = dtex_c2_strategy_create(ej_pkg->n, c2_stg_cfg);
-	} else {
-		pkg->c2_stg = NULL;
-	}
+	pkg->c3_stg = NULL;
+	pkg->c2_stg = NULL;
 
 	_load_sprites_extend_info(pkg);
 }

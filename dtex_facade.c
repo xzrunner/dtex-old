@@ -24,7 +24,7 @@
 #include "dtex_array.h"
 #include "dtex_hard_res.h"
 #include "dtex_res_cache.h"
-#include "dtex_resource.h"
+#include "dtex_lod.h"
 #include "dtex_async_one_tex_task.h"
 #include "dtex_async_multi_tex_task.h"
 #include "dtex_async_c3_task.h"
@@ -207,9 +207,8 @@ dtexf_sprite_draw(struct dtex_package* pkg, struct ej_sprite* spr, struct ej_srt
 /************************************************************************/
 
 struct dtex_package* 
-dtexf_load_pkg(const char* name, const char* path, int type, float scale, int lod, 
-               struct dtex_c3_stg_cfg* c3_stg_cfg, struct dtex_c2_stg_cfg* c2_stg_cfg) {
-	return dtex_load_pkg(LOADER, name, path, type, scale, lod, c3_stg_cfg, c2_stg_cfg);
+dtexf_load_pkg(const char* name, const char* epe_path, float scale, int lod) {
+	return dtex_load_pkg(LOADER, name, epe_path, scale, lod);
 }
 
 void 

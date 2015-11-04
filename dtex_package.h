@@ -33,7 +33,8 @@ struct pic_ext_info {
 
 struct dtex_package {
 	char* name;
-	char* filepath;
+
+	struct dtex_res_path* rp;
 
 	int id;
 

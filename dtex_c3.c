@@ -13,7 +13,7 @@
 #include "dtex_async_loader.h"
 #include "dtex_texture.h"
 #include "dtex_res_cache.h"
-#include "dtex_resource.h"
+#include "dtex_res_path.h"
 #include "dtex_hash.h"
 #include "dtex_log.h"
 #include "dtex_array.h"
@@ -554,9 +554,8 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 				}
 			} else {
 				++pkg->c3_loading;
-				char path_full[strlen(pkg->filepath) + 10];
-				dtex_get_texture_filepath(pkg->filepath, pkg_idx, pkg->LOD, path_full);
- 				dtex_async_load_file(path_full, _relocate_nodes_cb, node, "c3");
+				const char* path = dtex_get_img_filepath(pkg->rp, pkg_idx, pkg->LOD);
+ 				dtex_async_load_file(path, _relocate_nodes_cb, node, "c3");
  			}
 		}
 
