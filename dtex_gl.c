@@ -84,7 +84,7 @@ _create_texture_dtex(int type, int width, int height, const void* data, int chan
 	GLint _format = GL_RGBA;
 	GLenum _type = GL_UNSIGNED_BYTE;
 
-	bool is_compressed;
+	bool is_compressed = false;
 	unsigned int size = 0;
 	uint8_t* uncompressed = NULL;
 

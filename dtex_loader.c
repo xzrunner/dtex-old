@@ -23,6 +23,7 @@
 #include <assert.h>
 
 #define PACKAGE_SIZE 512
+#define UNUSED(x)	((void)(x))
 
 struct dtex_loader {
 	struct dtex_package packages[PACKAGE_SIZE];	// todo malloc
@@ -58,8 +59,8 @@ dtexloader_release(struct dtex_loader* loader) {
 
 #define LZMA_PROPS_SIZE 5
 
-static void *SzAlloc(void *p, size_t size) { p = p; return MyAlloc(size); }
-static void SzFree(void *p, void *address) { p = p; MyFree(address); }
+static void *SzAlloc(void *p, size_t size) { UNUSED(p); return MyAlloc(size); }
+static void SzFree(void *p, void *address) { UNUSED(p); MyFree(address); }
 static ISzAlloc g_Alloc = { SzAlloc, SzFree };
 
 static inline int
@@ -124,7 +125,7 @@ _unpack_file(struct dtex_loader* loader, struct dtex_file* file, void (*unpack_f
 	} else {
 		uint8_t ori_sz_arr[4];
 		dtex_file_read(file, ori_sz_arr, sizeof(ori_sz_arr));
-		dtex_file_seek_from_cur(file, -sizeof(ori_sz_arr));
+		dtex_file_seek_from_cur(file, -(int)sizeof(ori_sz_arr));
 		size_t ori_sz = ori_sz_arr[0] << 24 | ori_sz_arr[1] << 16 | ori_sz_arr[2] << 8 | ori_sz_arr[3];
 		size_t need_sz = sz + 7 + ori_sz;
 
