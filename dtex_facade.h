@@ -63,6 +63,11 @@ void dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr);
 //bool dtexf_c1_draw_anim(struct dtex_package* pkg, struct animation* ani, int action, 
 //	int frame, struct draw_params* params);
 
+/************************************************************************/
+/* CG                                                                   */
+/************************************************************************/
+struct dtex_cg* dtexf_get_cg();
+
 //void dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path);
 
 /************************************************************************/

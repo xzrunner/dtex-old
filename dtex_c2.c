@@ -12,6 +12,7 @@
 #include "dtex_c2_strategy.h"
 #include "dtex_debug.h"
 #include "dtex_render.h"
+#include "dtex_cg.h"
 
 #include "ejoy2d.h"
 
@@ -81,6 +82,7 @@ struct dtex_c2 {
 			struct tp_index index[4];	// 0 1
 										// 2 3
 			int clear_idx;
+			struct dtex_cg* cg;
 		} ONE;
 
 		struct {
@@ -109,7 +111,7 @@ _equal_func(void* key0, void* key1) {
 }
 
 struct dtex_c2* 
-dtex_c2_create(int texture_size, bool one_tex_mode, int static_count) {
+dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_cg) {
 	size_t sz = sizeof(struct dtex_c2) + sizeof(struct c2_prenode) * PRELOAD_SIZE;
 	struct dtex_c2* c2 = (struct dtex_c2*)malloc(sz);
 	if (!c2) {
@@ -127,6 +129,10 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count) {
 			index->hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
 			index->tp = dtex_tp_create(half_sz, half_sz, PRELOAD_SIZE / 4);
 			index->is_static = i < static_count;
+		}
+		c2->t.ONE.cg = NULL;
+		if (open_cg) {
+			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[0].tp, c2->t.ONE.texture, 1024);
 		}
 	} else {
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
@@ -756,6 +762,15 @@ dtexc2_lookup_node(struct dtex_c2* c2, int pkg_id, int spr_id,
 	} else {
 		*out_tex = NULL;
 		*out_pos = NULL;
+	}
+}
+
+struct dtex_cg* 
+dtex_c2_get_cg(struct dtex_c2* c2) {
+	if (c2->one_tex_mode) {
+		return c2->t.ONE.cg;
+	} else {
+		return NULL;
 	}
 }
 

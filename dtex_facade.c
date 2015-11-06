@@ -59,6 +59,7 @@ struct dtex_config {
 	bool open_c1;
 	bool open_c2;
 	bool open_c3;
+	bool open_cg;
 
 	int c1_tex_size;
 	int c2_tex_size;
@@ -84,6 +85,9 @@ _config(const char* str) {
 	CFG.open_c1 = cJSON_GetObjectItem(root, "open_c1")->valueint;
 	CFG.open_c2 = cJSON_GetObjectItem(root, "open_c2")->valueint;
 	CFG.open_c3 = cJSON_GetObjectItem(root, "open_c3")->valueint;
+	if (cJSON_GetObjectItem(root, "open_cg")) {
+		CFG.open_cg = cJSON_GetObjectItem(root, "open_cg")->valueint;
+	}
 
 	if (cJSON_GetObjectItem(root, "c1_tex_size")) {
 		CFG.c1_tex_size = cJSON_GetObjectItem(root, "c1_tex_size")->valueint;
@@ -103,7 +107,9 @@ _config(const char* str) {
 		}
 	}
 
-	CFG.c2_max_no_update_count = cJSON_GetObjectItem(root, "c2_max_no_update_count")->valueint;
+	if (cJSON_GetObjectItem(root, "c2_max_no_update_count")) {
+		CFG.c2_max_no_update_count = cJSON_GetObjectItem(root, "c2_max_no_update_count")->valueint;
+	}
 
 	cJSON_Delete(root);
 }
@@ -115,6 +121,7 @@ dtexf_create(const char* cfg) {
 	CFG.open_c1 = true;
 	CFG.open_c2 = true;
 	CFG.open_c3 = true;
+	CFG.open_cg = false;
 
 	CFG.c1_tex_size = 1024;
 	CFG.c2_tex_size = 4096;
@@ -164,7 +171,7 @@ dtexf_create(const char* cfg) {
  		C1 = dtex_c1_create(CFG.c1_tex_size);		
  	}
  	if (CFG.open_c2) {
- 		C2 = dtex_c2_create(CFG.c2_tex_size, true, 0);		
+ 		C2 = dtex_c2_create(CFG.c2_tex_size, true, 0, CFG.open_cg);		
  	}
 }
 
@@ -321,6 +328,15 @@ dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, int* dst_tex) {
 void 
 dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 	dtex_c1_update(C1, C2, pkg, spr);
+}
+
+/************************************************************************/
+/* CG                                                                   */
+/************************************************************************/
+
+struct dtex_cg* 
+dtexf_get_cg() {
+	return dtex_c2_get_cg(C2);
 }
 
 //void 
