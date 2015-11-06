@@ -10,6 +10,8 @@ extern "C"
 #include <stdbool.h>
 
 struct dtex_cg;
+struct dtex_tp;
+struct dtex_texture;
 
 struct dtex_glyph_style {
 	uint32_t color;

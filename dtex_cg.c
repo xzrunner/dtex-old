@@ -121,10 +121,6 @@ dtex_cg_load(struct dtex_cg* cg, uint8_t* buf, int width, int height, struct dte
 				_g = ((a * g) >> 8) + 1,
 				_b = ((a * b) >> 8) + 1;
 
-		if (a != 0) {
-			int zz = 0;
-		}
-
 //		_r = _g = _b = a = 101;
 
 // 		a = 128;
