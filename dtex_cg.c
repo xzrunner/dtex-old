@@ -112,9 +112,9 @@ dtex_cg_load(struct dtex_cg* cg, uint8_t* buf, int width, int height, struct dte
 	dtex_hash_insert(cg->hash, &node->key, node, true);
 
 	// draw
-	uint8_t r = (glyph->style.color >> 24) && 0xff;
-	uint8_t g = (glyph->style.color >> 16) && 0xff;
-	uint8_t b = (glyph->style.color >> 8) && 0xff;
+	uint8_t r = (glyph->style.color >> 24) & 0xff;
+	uint8_t g = (glyph->style.color >> 16) & 0xff;
+	uint8_t b = (glyph->style.color >> 8) & 0xff;
 	size_t sz = width * height;
 	assert(sz <= cg->buf_sz);
 	for (int i = 0; i < sz; ++i) {
