@@ -767,7 +767,7 @@ dtexc2_lookup_node(struct dtex_c2* c2, int pkg_id, int spr_id,
 
 struct dtex_cg* 
 dtex_c2_get_cg(struct dtex_c2* c2) {
-	if (c2->one_tex_mode) {
+	if (c2 && c2->one_tex_mode) {
 		return c2->t.ONE.cg;
 	} else {
 		return NULL;

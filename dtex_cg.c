@@ -152,3 +152,8 @@ dtex_cg_query(struct dtex_cg* cg, struct dtex_glyph* glyph, int* out_texid) {
 
 	return node->texcoords;
 }
+
+int 
+dtex_cg_get_texid(struct dtex_cg* cg) {
+	return cg->tex->id;
+}

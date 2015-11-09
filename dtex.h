@@ -14,3 +14,5 @@
 #include "dtex_ej_sprite.h"
 
 #include "dtex_c2_strategy.h"
+
+#include "dtex_cg.h"
