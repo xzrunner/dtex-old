@@ -120,18 +120,7 @@ dtex_cg_load(struct dtex_cg* cg, uint8_t* buf, int width, int height, struct dte
 		uint8_t _r = ((a * r) >> 8) + 1,
 				_g = ((a * g) >> 8) + 1,
 				_b = ((a * b) >> 8) + 1;
-
-//		_r = _g = _b = a = 101;
-
-// 		a = 128;
-// 		_r = 255;
-// 		_g = 0;
-// 		_b = 255;
-
-		_r = _g = _b = a;
-
-//		cg->buf[i] = _r << 24 || _g << 16 || _b << 8 || a;
-		cg->buf[i] = a << 24 || _b << 16 || _g << 8 || _r;
+		cg->buf[i] = a << 24 | _b << 16 | _g << 8 | _r;
 	}
 	dtex_gl_update_subtex(cg->buf, pos->r.xmin, pos->r.ymin, width, height, cg->tex->id);
 }
