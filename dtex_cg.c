@@ -12,6 +12,8 @@
 #define MAX_NODE 1024
 #define MAX_PRENODE 1024
 
+#define PADDING 1
+
 struct glyph_node {
 	struct dtex_glyph key;
 	float texcoords[8];
@@ -97,11 +99,11 @@ dtex_cg_load(struct dtex_cg* cg, uint8_t* buf, int width, int height, struct dte
 
 	// insert
 //	bool rot = false;
-	struct dtex_tp_pos* pos = dtex_tp_add(cg->tp, width, height, false);
-	float xmin = pos->r.xmin * cg->tex->inv_width,
-		  xmax = pos->r.xmax * cg->tex->inv_width,
-		  ymin = pos->r.ymin * cg->tex->inv_height,
-		  ymax = pos->r.ymax * cg->tex->inv_height;
+	struct dtex_tp_pos* pos = dtex_tp_add(cg->tp, width + PADDING * 2, height + PADDING * 2, false);
+	float xmin = (pos->r.xmin + PADDING) * cg->tex->inv_width,
+		  xmax = (pos->r.xmax - PADDING) * cg->tex->inv_width,
+		  ymin = (pos->r.ymin + PADDING) * cg->tex->inv_height,
+		  ymax = (pos->r.ymax - PADDING) * cg->tex->inv_height;
 	node->texcoords[0] = xmin;	node->texcoords[1] = ymax;
 	node->texcoords[4] = xmax;	node->texcoords[5] = ymin;
 	node->texcoords[2] = xmin;	node->texcoords[3] = ymin;
@@ -122,7 +124,7 @@ dtex_cg_load(struct dtex_cg* cg, uint8_t* buf, int width, int height, struct dte
 				_b = ((a * b) >> 8) + 1;
 		cg->buf[i] = a << 24 | _b << 16 | _g << 8 | _r;
 	}
-	dtex_gl_update_subtex(cg->buf, pos->r.xmin, pos->r.ymin, width, height, cg->tex->id);
+	dtex_gl_update_subtex(cg->buf, pos->r.xmin + PADDING, pos->r.ymin + PADDING, width, height, cg->tex->id);
 }
 
 void 
