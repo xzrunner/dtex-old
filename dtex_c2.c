@@ -132,7 +132,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 		}
 		c2->t.ONE.cg = NULL;
 		if (open_cg) {
-			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[0].tp, c2->t.ONE.texture, 1024);
+			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[0].tp, c2->t.ONE.texture);
 		}
 	} else {
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);

@@ -14,18 +14,21 @@ struct dtex_tp;
 struct dtex_texture;
 
 struct dtex_glyph_style {
-	uint32_t color;
-	int size;
 	int font;
+	int font_size;
+	uint32_t font_color;
+
 	bool edge;
+	float edge_size;
+	uint32_t edge_color;
 };
 
 struct dtex_glyph {
 	int unicode;
-	struct dtex_glyph_style style;
+	struct dtex_glyph_style s;
 };
 
-struct dtex_cg* dtex_cg_create(struct dtex_tp*, struct dtex_texture*, int buf_sz);
+struct dtex_cg* dtex_cg_create(struct dtex_tp*, struct dtex_texture*);
 void dtex_cg_release(struct dtex_cg*);
 
 void dtex_cg_clear(struct dtex_cg*);

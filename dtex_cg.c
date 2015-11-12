@@ -38,28 +38,48 @@ struct dtex_cg {
 
 static inline unsigned int
 _hash_func(int hash_sz, void* key) {
-	struct dtex_glyph* g = (struct dtex_glyph*)key;
-	unsigned int ret = g->unicode 
-		 ^ g->style.color 
-		 ^ (g->style.edge * 11) 
-		 ^ (g->style.font * 1597) 
-		 ^ (g->style.size * 51439);
-	return ret % hash_sz;
+	struct dtex_glyph* hk = (struct dtex_glyph*)key;
+	uint32_t hash;
+	if (hk->s.edge) {
+		hash = 
+			hk->unicode ^ 
+			(hk->s.font * 97) ^ 
+			(hk->s.font_size * 101) ^
+			hk->s.font_color ^ 
+			(int)(hk->s.edge_size * 10000) ^
+			hk->s.edge_color;
+	} else {
+		hash = 
+			hk->unicode ^ 
+			(hk->s.font * 97) ^ 
+			(hk->s.font_size * 101) ^
+			hk->s.font_color;
+	}
+	return hash % hash_sz;
 }
 
 static inline bool
 _equal_func(void* key0, void* key1) {
 	struct dtex_glyph* hk0 = (struct dtex_glyph*)key0;
 	struct dtex_glyph* hk1 = (struct dtex_glyph*)key1;
-	return hk0->unicode == hk1->unicode
-		&& hk0->style.color == hk1->style.color
-		&& hk0->style.edge == hk1->style.edge
-		&& hk0->style.font == hk1->style.font
-		&& hk0->style.size == hk1->style.size;
+	if (hk0->unicode == hk1->unicode && 
+		hk0->s.font == hk1->s.font && 
+		hk0->s.font_size	== hk1->s.font_size && 
+		hk0->s.font_color == hk1->s.font_color && 
+		hk0->s.edge == hk1->s.edge) {
+		if (hk0->s.edge) {
+			return hk0->s.edge_size	== hk1->s.edge_size
+				&& hk0->s.edge_color == hk1->s.edge_color;
+		} else {
+			return true;
+		}
+	} else {
+		return false;
+	}
 }
 
 struct dtex_cg* 
-dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex, int buf_sz) {
+dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex) {
 	size_t sz = sizeof(struct dtex_cg);
 	struct dtex_cg* cg = (struct dtex_cg*)malloc(sz);
 	memset(cg, 0, sz);
@@ -69,8 +89,9 @@ dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex, int buf_sz) {
 
 	cg->hash = dtex_hash_create(MAX_NODE, MAX_NODE * 2, 0.5f, _hash_func, _equal_func);
 
-	cg->buf_sz = buf_sz;
-	cg->buf = malloc(buf_sz * buf_sz * sizeof(uint32_t));
+	cg->buf = NULL;
+	cg->buf_sz = 0;
+
 //	cg->buf_tp = dtex_tp_create(buf_sz, buf_sz, buf_sz * buf_sz / );
 
 	return cg;
@@ -112,9 +133,13 @@ dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dt
 	dtex_hash_insert(cg->hash, &node->key, node, true);
 
 	// draw
-	size_t sz = width * height;
-	assert(sz <= cg->buf_sz);
-	for (int i = 0; i < sz; ++i) {
+	size_t sz = width * height * sizeof(uint32_t);
+	if (sz > cg->buf_sz) {
+		free(cg->buf);
+		cg->buf = malloc(sz);
+		cg->buf_sz = sz;
+	}
+	for (int i = 0, n = width * height; i < n; ++i) {
 		uint32_t src = buf[i];
 		uint8_t r = (src >> 24) & 0xff;
 		uint8_t g = (src >> 16) & 0xff;
