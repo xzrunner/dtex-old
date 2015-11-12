@@ -30,7 +30,7 @@ void dtex_cg_release(struct dtex_cg*);
 
 void dtex_cg_clear(struct dtex_cg*);
 
-void dtex_cg_load(struct dtex_cg*, uint8_t* buf, int width, int height, struct dtex_glyph* glyph);
+void dtex_cg_load(struct dtex_cg*, uint32_t* buf, int width, int height, struct dtex_glyph* glyph);
 void dtex_cg_commit(struct dtex_cg*);
 
 // return texcoords float[8]

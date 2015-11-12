@@ -89,7 +89,7 @@ dtex_cg_clear(struct dtex_cg* cg) {
 }
 
 void 
-dtex_cg_load(struct dtex_cg* cg, uint8_t* buf, int width, int height, struct dtex_glyph* glyph) {
+dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dtex_glyph* glyph) {
 	if (cg->node_size >= MAX_NODE) {
 		dtex_warning(" cg nodes empty.");
 		return;
@@ -112,17 +112,15 @@ dtex_cg_load(struct dtex_cg* cg, uint8_t* buf, int width, int height, struct dte
 	dtex_hash_insert(cg->hash, &node->key, node, true);
 
 	// draw
-	uint8_t r = (glyph->style.color >> 24) & 0xff;
-	uint8_t g = (glyph->style.color >> 16) & 0xff;
-	uint8_t b = (glyph->style.color >> 8) & 0xff;
 	size_t sz = width * height;
 	assert(sz <= cg->buf_sz);
 	for (int i = 0; i < sz; ++i) {
-		uint8_t a = buf[i];
-		uint8_t _r = ((a * r) >> 8) + 1,
-				_g = ((a * g) >> 8) + 1,
-				_b = ((a * b) >> 8) + 1;
-		cg->buf[i] = a << 24 | _b << 16 | _g << 8 | _r;
+		uint32_t src = buf[i];
+		uint8_t r = (src >> 24) & 0xff;
+		uint8_t g = (src >> 16) & 0xff;
+		uint8_t b = (src >> 8) & 0xff;
+		uint8_t a = src & 0xff;
+		cg->buf[i] = a << 24 | b << 16 | g << 8 | r;
 	}
 	dtex_gl_update_subtex(cg->buf, pos->r.xmin + PADDING, pos->r.ymin + PADDING, width, height, cg->tex->id);
 }
