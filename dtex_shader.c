@@ -272,7 +272,7 @@ dtex_shader_unload() {
 	}
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 0);        
+	glBindTexture(GL_TEXTURE_2D, 0);
 	if (PROG[RS->activeprog].sampler1) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, 0);     
@@ -374,7 +374,7 @@ dtex_shader_blend(int mode) {
 
 void 
 dtex_shader_texture(int id) {
-	if (RS->texture == id) {
+	if (!RS || RS->texture == id) {
 		return;
 	}
 
