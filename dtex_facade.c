@@ -339,6 +339,12 @@ dtexf_get_cg() {
 	return dtex_c2_get_cg(C2);
 }
 
+void 
+dtexf_cg_clear() {
+//	dtex_c2_clear_cg(C2, LOADER);
+	dtex_cg_clear(dtex_c2_get_cg(C2));
+}
+
 //void 
 //dtexf_c1_load_anim(struct ej_package* pkg, struct animation* ani, int action) {
 //	if (C1) {

@@ -21,6 +21,7 @@ struct dtex_c2* dtex_c2_create(int texture_size, bool one_tex, int static_count,
 void dtex_c2_release(struct dtex_c2*);
 
 void dtex_c2_clear(struct dtex_c2*, struct dtex_loader*);
+void dtex_c2_clear_cg(struct dtex_c2*, struct dtex_loader*);
 
 void dtex_c2_load_begin(struct dtex_c2*);
 void dtex_c2_load(struct dtex_c2*, struct dtex_package* pkg, int spr_id);

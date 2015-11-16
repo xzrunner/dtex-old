@@ -213,6 +213,16 @@ dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 }
 
 void 
+dtex_c2_clear_cg(struct dtex_c2* c2, struct dtex_loader* loader) {
+	if (!c2->one_tex_mode) {
+		return;
+	}
+
+	dtex_texture_clear_part(c2->t.ONE.texture, 0, 0.5f, 0.5f, 1);
+	_clear_tp_index(&c2->t.ONE.index[0]);
+}
+
+void 
 dtex_c2_load_begin(struct dtex_c2* c2) {
 	c2->loadable++;
 }
