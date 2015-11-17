@@ -132,7 +132,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 		}
 		c2->t.ONE.cg = NULL;
 		if (open_cg) {
-			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[0].tp, c2->t.ONE.texture);
+			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[2].tp, c2->t.ONE.texture);
 		}
 	} else {
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
@@ -194,6 +194,10 @@ dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 			x = 0.5f;
 		}
 
+		if (idx == 2) {
+			dtex_cg_clear(c2->t.ONE.cg);
+		}
+
 		dtex_texture_clear_part(c2->t.ONE.texture, x, y, x+0.5f, y+0.5f);
 		_clear_tp_index(&c2->t.ONE.index[idx]);
 		c2->t.ONE.clear_idx = (idx + 1) % 4;
@@ -220,6 +224,17 @@ dtex_c2_clear_cg(struct dtex_c2* c2, struct dtex_loader* loader) {
 
 	dtex_texture_clear_part(c2->t.ONE.texture, 0, 0.5f, 0.5f, 1);
 	_clear_tp_index(&c2->t.ONE.index[0]);
+}
+
+void 
+dtex_c2_clear_from_cg(struct dtex_c2* c2, struct dtex_loader* loader)
+{
+	if (!c2->one_tex_mode) {
+		return;
+	}
+
+	c2->t.ONE.clear_idx = 2;
+	dtex_c2_clear(c2, loader);
 }
 
 void 

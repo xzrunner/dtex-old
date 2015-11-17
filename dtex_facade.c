@@ -308,6 +308,11 @@ dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, int* dst_tex) {
 	}
 }
 
+void 
+dtexf_c2_clear_from_cg() {
+	dtex_c2_clear_from_cg(C2, LOADER);
+}
+
 //void 
 //dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, 
 //	struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos) {

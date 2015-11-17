@@ -22,6 +22,7 @@ void dtex_c2_release(struct dtex_c2*);
 
 void dtex_c2_clear(struct dtex_c2*, struct dtex_loader*);
 void dtex_c2_clear_cg(struct dtex_c2*, struct dtex_loader*);
+void dtex_c2_clear_from_cg(struct dtex_c2*, struct dtex_loader*);
 
 void dtex_c2_load_begin(struct dtex_c2*);
 void dtex_c2_load(struct dtex_c2*, struct dtex_package* pkg, int spr_id);

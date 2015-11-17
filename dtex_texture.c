@@ -74,6 +74,16 @@ dtex_texture_create_mid(int edge) {
 		dtex_fault("dtex_texture_create_mid malloc fail.");
 		return NULL;
 	}
+	
+// 	uint32_t col = 0xff000000;
+// 	int ptr = 0;
+// 	for (int i = 0; i < edge; ++i) {
+// 		for (int j = 0; j < edge; ++j) {
+// 			memcpy(&empty_data[ptr], &col, 4);
+// 			ptr += 4;
+// 		}
+// 	}
+
 	memset(empty_data, 0x00, edge*edge*4);
 
 	unsigned int gl_id;

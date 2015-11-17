@@ -5,6 +5,8 @@
 #include "dtex_log.h"
 #include "dtex_tp.h"
 
+#include "dtex_facade.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -121,6 +123,10 @@ dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dt
 	// insert
 //	bool rot = false;
 	struct dtex_tp_pos* pos = dtex_tp_add(cg->tp, width + PADDING * 2, height + PADDING * 2, false);
+	if (!pos) {
+		dtexf_c2_clear_from_cg();
+		return;
+	}
 	float xmin = (pos->r.xmin + PADDING) * cg->tex->inv_width,
 		  xmax = (pos->r.xmax - PADDING) * cg->tex->inv_width,
 		  ymin = (pos->r.ymin + PADDING) * cg->tex->inv_height,
