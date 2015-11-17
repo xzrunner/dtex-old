@@ -34,6 +34,7 @@
 #include "dtex_texture_cache.h"
 #include "dtex_timer_task.h"
 #include "dtex_c2_strategy.h"
+#include "dtex_cg"
 
 #include <cJSON.h>
 
