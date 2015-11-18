@@ -347,8 +347,13 @@ dtexf_get_cg() {
 
 void 
 dtexf_cg_clear() {
-//	dtex_c2_clear_cg(C2, LOADER);
+	dtex_c2_clear_cg(C2, LOADER);
 	dtex_cg_clear(dtex_c2_get_cg(C2));
+}
+
+void 
+dtexf_cg_reload_texture() {
+	dtex_cg_reload_texture(dtex_c2_get_cg(C2));
 }
 
 //void 

@@ -51,27 +51,28 @@ _create_texture_ej(int type, int width, int height, const void* data, int channe
 
 #endif // USED_IN_EDITOR
 
-unsigned int
-_gen_texture_dtex(int channel) {
-	unsigned int id = 0;
+void
+_gen_texture_dtex(int channel, unsigned int* id) {
+	unsigned int old = *id;
 
 	glActiveTexture(GL_TEXTURE0 + channel);
-	glGenTextures(1, &id);
 
-	dtex_shader_texture(id);
+	if (*id == 0) {
+		glGenTextures(1, id);
+	}
+
+	dtex_shader_texture(*id);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	return id;
 }
 
-unsigned int 
-_create_texture_dtex(int type, int width, int height, const void* data, int channel) {
+void 
+_create_texture_dtex(int type, int width, int height, const void* data, int channel, unsigned int* id) {
 	if (type == DTEX_TF_INVALID) {
-		return 0;
+		return;
 	}
 
 	// todo
@@ -136,7 +137,7 @@ _create_texture_dtex(int type, int width, int height, const void* data, int chan
 		dtex_fault("dtex_gl_create_texture: unknown texture type.");
 	}
 
-	unsigned int id = _gen_texture_dtex(channel);
+	_gen_texture_dtex(channel, id);
 	if (is_compressed) {
 		glCompressedTexImage2D(GL_TEXTURE_2D, 0, _type, width, height, 0, size, data);	
 	} else {
@@ -148,7 +149,6 @@ _create_texture_dtex(int type, int width, int height, const void* data, int chan
 		}
 	}
 	dtex_stat_add_texture(id, width, height);
-	return id;
 }
 
 void
@@ -162,11 +162,11 @@ dtex_gl_create_texture(int type, int width, int height, const void* data, int ch
 		_create_texture_ej(type, width, height, data, channel, gl_id, uid_3rd);
 #else
 		*uid_3rd = 0;
-		*gl_id = _create_texture_dtex(type, width, height, data, channel);
+		_create_texture_dtex(type, width, height, data, channel, gl_id);
 #endif // USED_IN_EDITOR
 	} else {
 		*uid_3rd = 0;
-		*gl_id = _create_texture_dtex(type, width, height, data, channel);
+		_create_texture_dtex(type, width, height, data, channel, gl_id);
 	}
 }
 

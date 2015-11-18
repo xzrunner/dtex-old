@@ -86,8 +86,8 @@ dtex_texture_create_mid(int edge) {
 
 	memset(empty_data, 0x00, edge*edge*4);
 
-	unsigned int gl_id;
-	int uid_3rd;
+	unsigned int gl_id = 0;
+	int uid_3rd = 0;
 	dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, &gl_id, &uid_3rd, true);
 	free(empty_data);
 	if (dtex_gl_out_of_memory()) {
@@ -133,6 +133,29 @@ dtex_texture_release(struct dtex_texture* tex) {
 
 	memset(tex, 0, sizeof(*tex));
 	tex->type = DTEX_TT_INVALID;
+}
+
+void 
+dtex_texture_reload(struct dtex_texture* tex) {
+	int sz = tex->width * tex->height * 4;
+	uint8_t* empty_data = (uint8_t*)malloc(sz);
+	if (!empty_data) {
+		dtex_fault("dtex_texture_create_mid malloc fail.");
+		return;
+	}
+	memset(empty_data, 0x00, sz);
+
+	if (tex->id > 100) {
+		int zz = 0;
+	}
+
+	dtex_gl_create_texture(DTEX_TF_RGBA8, tex->width, tex->height, empty_data, 0, &tex->id, &tex->uid_3rd, true);
+
+	if (tex->id > 100) {
+		int zz = 0;
+	}
+
+	free(empty_data);
 }
 
 void 
