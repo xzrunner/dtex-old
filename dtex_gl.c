@@ -148,7 +148,7 @@ _create_texture_dtex(int type, int width, int height, const void* data, int chan
 			glTexImage2D(GL_TEXTURE_2D, 0, _format, (GLsizei)width, (GLsizei)height, 0, _format, _type, data);
 		}
 	}
-	dtex_stat_add_texture(id, width, height);
+	dtex_stat_add_texture(*id, width, height);
 }
 
 void
