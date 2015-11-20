@@ -100,7 +100,7 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
 		   }
 	   }
 
-	   dtex_shader_texture(texid);
+	   dtex_shader_set_texture(texid);
 	   dtex_shader_draw(vb);
    }
 }

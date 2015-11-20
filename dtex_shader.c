@@ -373,7 +373,7 @@ dtex_shader_blend(int mode) {
 }
 
 void 
-dtex_shader_texture(int id) {
+dtex_shader_set_texture(int id) {
 	if (!RS || RS->texture == id) {
 		return;
 	}
@@ -381,6 +381,11 @@ dtex_shader_texture(int id) {
 	_rs_commit();
 	RS->texture = (GLuint)id;
 	glBindTexture(GL_TEXTURE_2D, RS->texture);
+}
+
+int 
+dtex_shader_get_texture() {
+	return RS->texture;
 }
 
 void 

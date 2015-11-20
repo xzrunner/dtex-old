@@ -16,7 +16,9 @@ void dtex_shader_unload();
 
 void dtex_shader_program(int n);
 void dtex_shader_blend(int mode);
-void dtex_shader_texture(int id);
+
+void dtex_shader_set_texture(int id);
+int dtex_shader_get_texture();
 
 void dtex_shader_set_target(int id);
 int dtex_shader_get_target();

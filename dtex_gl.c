@@ -61,7 +61,7 @@ _gen_texture_dtex(int channel, unsigned int* id) {
 		glGenTextures(1, id);
 	}
 
-	dtex_shader_texture(*id);
+	dtex_shader_set_texture(*id);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -172,7 +172,7 @@ dtex_gl_create_texture(int type, int width, int height, const void* data, int ch
 
 void 
 dtex_gl_release_texture(unsigned int id, int channel) {
-	dtex_shader_texture(0);
+	dtex_shader_set_texture(0);
 	dtex_stat_delete_texture(id);
 
 	glActiveTexture(GL_TEXTURE0 + channel);
@@ -181,8 +181,10 @@ dtex_gl_release_texture(unsigned int id, int channel) {
 
 void 
 dtex_gl_update_subtex(const void* pixels, int x, int y, int w, int h, unsigned int id) {
-	dtex_shader_texture(id);
+	int old_id = dtex_shader_get_texture();
+	glBindTexture(GL_TEXTURE_2D, id);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	glBindTexture(GL_TEXTURE_2D, old_id);
 }
 
 #ifndef USED_IN_EDITOR

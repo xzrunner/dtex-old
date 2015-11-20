@@ -31,7 +31,7 @@ dtex_debug_draw_with_pos(unsigned int texid,
 	vb[8] = xmax, vb[9] = ymax;
 	vb[12] = xmax, vb[13] = ymin;
 
-	dtex_shader_texture(texid);
+	dtex_shader_set_texture(texid);
 	dtex_shader_draw(vb);		
 }
 

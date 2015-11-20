@@ -28,7 +28,7 @@ static inline void
 _before_all_draw() {
 #ifndef USED_IN_EDITOR
 	// dtex_gl_bind_vertex_array(1);
-	dtex_shader_texture(0);
+	dtex_shader_set_texture(0);
 	dtex_shader_program(PROGRAM_NULL);
 #endif // USED_IN_EDITOR
 
@@ -101,7 +101,7 @@ _draw(const float vb[16], struct dtex_texture* src) {
 		//		shader_draw_separate(vb, src->id, src->id_alpha);
 	} else { 
 		assert(src->id != 0);
-		dtex_shader_texture(src->id);
+		dtex_shader_set_texture(src->id);
 		dtex_shader_draw(vb);
 	}
 }
