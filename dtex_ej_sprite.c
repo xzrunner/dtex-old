@@ -90,7 +90,7 @@ _draw_quad(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_pack_picture*
 
 	   if (c2) {
 		   int new_texid = 0;
-		   float* tex_vb = dtex_c2_lookup_texcoords(c2, pkg->id, spr_id, &new_texid);
+		   float* tex_vb = dtex_c2_query_spr(c2, pkg->id, spr_id, &new_texid);
 		   if (tex_vb != NULL) {
 			   memcpy(vb+2, tex_vb, 2*sizeof(float));
 			   memcpy(vb+6, tex_vb+2, 2*sizeof(float));

@@ -10,8 +10,9 @@ struct dtex_texture;
 
 void dtex_render_init();
 
+void dtex_draw_begin();
 void dtex_draw_to_texture(struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]);
-void dtex_draw_finish();
+void dtex_draw_end();
 
 #endif // dynamic_texture_render_target_h
 

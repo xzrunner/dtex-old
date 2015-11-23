@@ -6,7 +6,7 @@
 
 void 
 dtex_debug_draw(unsigned int texid) {
-	dtex_debug_draw_with_pos(texid, -1, -1, 1, 1);
+	dtex_debug_draw_with_pos(texid, 0, 0, 1, 1);
 }
 
 void 
@@ -31,8 +31,10 @@ dtex_debug_draw_with_pos(unsigned int texid,
 	vb[8] = xmax, vb[9] = ymax;
 	vb[12] = xmax, vb[13] = ymin;
 
+	dtex_shader_begin();
 	dtex_shader_set_texture(texid);
 	dtex_shader_draw(vb);		
+	dtex_shader_end();
 }
 
 #ifndef USED_IN_EDITOR

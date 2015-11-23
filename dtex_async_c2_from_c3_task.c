@@ -65,7 +65,7 @@ _cb_func(void* ud) {
 	int spr_sz = dtex_array_size(params->spr_ids);
 	for (int i = 0; i < spr_sz; ++i) {
 		int spr_id = *(int*)dtex_array_fetch(params->spr_ids, i);
-		dtex_c2_load(params->c2, pkg, spr_id);
+		dtex_c2_load_spr(params->c2, pkg, spr_id);
 	}
 	dtex_c2_load_end(params->c2, params->loader);
 	dtex_swap_quad_src_info(pkg, params->pic_ids);

@@ -25,11 +25,13 @@ void dtex_c2_clear_cg(struct dtex_c2*, struct dtex_loader*);
 void dtex_c2_clear_from_cg(struct dtex_c2*, struct dtex_loader*);
 
 void dtex_c2_load_begin(struct dtex_c2*);
-void dtex_c2_load(struct dtex_c2*, struct dtex_package* pkg, int spr_id);
+void dtex_c2_load_spr(struct dtex_c2*, struct dtex_package* pkg, int spr_id);
+void dtex_c2_load_tex(struct dtex_c2*, int tex_id, int tex_width, int tex_height, int key);
 void dtex_c2_load_end(struct dtex_c2*, struct dtex_loader*);
 
-float* dtex_c2_lookup_texcoords(struct dtex_c2*, int pkg_id, int spr_id, int* out_texid);
-void dtexc2_lookup_node(struct dtex_c2*, int pkg_id, int spr_id, struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos);
+float* dtex_c2_query_spr(struct dtex_c2*, int pkg_id, int spr_id, int* out_texid);
+float* dtex_c2_query_tex(struct dtex_c2*, int key, int* out_texid);
+void dtexc2_query_map_addr(struct dtex_c2*, int pkg_id, int spr_id, struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos);
 
 struct dtex_cg* dtex_c2_get_cg(struct dtex_c2*);
 

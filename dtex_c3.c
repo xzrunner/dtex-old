@@ -480,8 +480,11 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 	} else {
 		tex_loaded = true;
 	}
+
+	dtex_draw_begin();
 	_relocate_node(tex, node);
-	dtex_draw_finish();
+	dtex_draw_end();
+
 	if (!tex_loaded) {
 		dtex_package_remove_texture_ref(node->pkg, tex);
 		dtex_texture_release(tex);
@@ -621,8 +624,9 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 
 	/*float scale = */_pack_nodes(c3, unique_set, unique_sz, alloc_scale);
 
+	dtex_draw_begin();
 	_relocate_nodes(c3, loader, async);
-	dtex_draw_finish();
+	dtex_draw_end();
 
 	c3->prenode_size = 0;
 }

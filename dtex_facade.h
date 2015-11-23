@@ -51,8 +51,10 @@ void dtexf_c3_load_end(bool async);
 /************************************************************************/
 void dtexf_c2_load_begin();
 void dtexf_c2_load(struct dtex_package* pkg, int spr_id);
+void dtexf_c2_load_tex(int tex_id, int tex_width, int tex_height, int key);
 void dtexf_c2_load_end();
 float* dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, int* dst_tex);
+float* dtexf_c2_query_tex(int key, int* out_texid);
 //void dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos);
 void dtexf_c2_clear_from_cg();
 

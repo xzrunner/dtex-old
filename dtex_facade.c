@@ -288,7 +288,14 @@ dtexf_c2_load_begin() {
 void 
 dtexf_c2_load(struct dtex_package* pkg, int spr_id) {
 	if (C2) {
-		dtex_c2_load(C2, pkg, spr_id);		
+		dtex_c2_load_spr(C2, pkg, spr_id);		
+	}
+}
+
+void 
+dtexf_c2_load_tex(int tex_id, int tex_width, int tex_height, int key) {
+	if (C2) {
+		dtex_c2_load_tex(C2, tex_id, tex_width, tex_height, key);
 	}
 }
 
@@ -302,7 +309,16 @@ dtexf_c2_load_end() {
 float* 
 dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, int* dst_tex) {
 	if (C2) {
-		return dtex_c2_lookup_texcoords(C2, pkg_id, spr_id, dst_tex);
+		return dtex_c2_query_spr(C2, pkg_id, spr_id, dst_tex);
+	} else {
+		return NULL;
+	}
+}
+
+float* 
+dtexf_c2_query_tex(int key, int* out_texid) {
+	if (C2) {
+		return dtex_c2_query_tex(C2, key, out_texid);
 	} else {
 		return NULL;
 	}
@@ -324,7 +340,7 @@ dtexf_c2_clear_from_cg() {
 //	struct dtex_rect rect;
 //	_get_pic_ori_rect(1/ori_tex->width, 1/ori_tex->height, ori_vb, &rect);
 //
-//	dtexc2_lookup_node(C2, ori_tex->id, &rect, out_tex, out_pos);
+//	dtexc2_query_map_addr(C2, ori_tex->id, &rect, out_tex, out_pos);
 //}
 
 /************************************************************************/

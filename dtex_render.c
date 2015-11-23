@@ -107,6 +107,11 @@ _draw(const float vb[16], struct dtex_texture* src) {
 }
 
 void 
+dtex_draw_begin() {
+	dtex_shader_begin();
+}
+
+void 
 dtex_draw_to_texture(struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]) {
 	if (RS.dst == NULL) {
 		_before_all_draw();
@@ -119,6 +124,7 @@ dtex_draw_to_texture(struct dtex_texture* src, struct dtex_texture* dst, const f
 }
 
 void 
-dtex_draw_finish() {
+dtex_draw_end() {
 	_after_all_draw();
+	dtex_shader_end();
 }

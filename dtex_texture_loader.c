@@ -136,8 +136,9 @@ _scale_texture(struct dtex_texture* tex, float scale, bool create_by_ej) {
 	dst.type = DTEX_TT_MID;
 	dst.t.MID.tp = NULL;
 
+	dtex_draw_begin();
 	dtex_draw_to_texture(tex, &dst, vb);
-	dtex_draw_finish();
+	dtex_draw_end();
 
 	dtex_gl_release_texture(tex->id, 0);
 

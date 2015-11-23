@@ -26,6 +26,8 @@
 #define NODE_SIZE 4096*2
 #define PRELOAD_SIZE 4096*2
 
+#define TEX_PKG_ID -1
+
 #define PADDING 1
 //#define EXTRUDE 1
 
@@ -35,10 +37,6 @@ struct hash_key {
 };
 
 struct c2_node {
-	// ori info
-	struct dtex_texture* ori_tex;
-	struct dtex_rect ori_rect;
-
 	// dst info
 	struct dtex_texture* dst_tex;
 	struct dtex_tp_pos* dst_pos;
@@ -51,13 +49,29 @@ struct c2_node {
 	struct hash_key hk;
 };
 
-struct c2_prenode {
-	struct dtex_package* pkg;
-	struct ej_pack_quad* ej_quad;
-	struct dtex_texture* ori_tex;
-	int spr_id;
+enum C2_PRENODE_TYPE {
+	C2_PT_SPR = 0,
+	C2_PT_TEX,
+};
 
-	struct dtex_rect rect;
+struct c2_prenode {
+	int type;
+	union {
+		struct {
+			struct dtex_package* pkg;
+			struct ej_pack_quad* ej_quad;
+			struct dtex_texture* ori_tex;
+			int spr_id;
+
+			struct dtex_rect rect;
+		} SPR;
+
+		struct {
+			int key;
+			int id;
+			int w, h;
+		} TEX;
+	} t;
 };
 
 struct tp_index {
@@ -278,20 +292,21 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		}
 		struct ej_pack_quad* ej_q = &ej_pic->rect[i];
 		struct c2_prenode* pn = &params->c2->prenodes[params->c2->prenode_size++];
-		pn->pkg = params->pkg;
-		pn->ej_quad = ej_q;
+		pn->type == C2_PT_SPR;
+		pn->t.SPR.pkg = params->pkg;
+		pn->t.SPR.ej_quad = ej_q;
 		if (ej_q->texid < QUAD_TEXID_IN_PKG_MAX) {
-			pn->ori_tex = params->pkg->textures[ej_q->texid];
+			pn->t.SPR.ori_tex = params->pkg->textures[ej_q->texid];
 		} else {
-			pn->ori_tex = dtex_texture_fetch(ej_q->texid);
+			pn->t.SPR.ori_tex = dtex_texture_fetch(ej_q->texid);
 		}
-		pn->spr_id = pic_id;
-		_get_texcoords_region(ej_q->texture_coord, &pn->rect);
+		pn->t.SPR.spr_id = pic_id;
+		_get_texcoords_region(ej_q->texture_coord, &pn->t.SPR.rect);
 	}
 }
 
 void 
-dtex_c2_load(struct dtex_c2* c2, struct dtex_package* pkg, int spr_id) {
+dtex_c2_load_spr(struct dtex_c2* c2, struct dtex_package* pkg, int spr_id) {
 	assert(spr_id >= 0);
 
 	if (c2->loadable == 0) {
@@ -309,32 +324,55 @@ dtex_c2_load(struct dtex_c2* c2, struct dtex_package* pkg, int spr_id) {
 	dtex_ej_spr_traverse(pkg->ej_pkg, spr_id, _preload_picture, &params);
 }
 
+void 
+dtex_c2_load_tex(struct dtex_c2* c2, int tex_id, int tex_width, int tex_height, int key) {
+	if (tex_id <= 0 || tex_width <= 0 || tex_height <= 0) {
+		return;
+	}
+	if (c2->prenode_size == PRELOAD_SIZE - 1) {
+		return;
+	}
+
+	struct c2_prenode* pn = &c2->prenodes[c2->prenode_size++];
+	pn->type = C2_PT_TEX;
+	pn->t.TEX.key = key;
+	pn->t.TEX.id = tex_id;
+	pn->t.TEX.w = tex_width;
+	pn->t.TEX.h = tex_height;
+}
+
 static inline int 
-_compare_bound(const void *arg1, const void *arg2) {
+_compare_unique(const void *arg1, const void *arg2) {
 	struct c2_prenode *node1, *node2;
 
 	node1 = *((struct c2_prenode**)(arg1));
 	node2 = *((struct c2_prenode**)(arg2));
 
-	if(node1->rect.xmin < node2->rect.xmin) return -1;
-	if(node1->rect.xmin > node2->rect.xmin) return 1;
+	if (node1->type == C2_PT_SPR && node2->type == C2_PT_SPR) {
+		if(node1->t.SPR.rect.xmin < node2->t.SPR.rect.xmin) return -1;
+		if(node1->t.SPR.rect.xmin > node2->t.SPR.rect.xmin) return 1;
 
-	if(node1->rect.xmax < node2->rect.xmax) return -1;
-	if(node1->rect.xmax > node2->rect.xmax) return 1;
+		if(node1->t.SPR.rect.xmax < node2->t.SPR.rect.xmax) return -1;
+		if(node1->t.SPR.rect.xmax > node2->t.SPR.rect.xmax) return 1;
 
-	if(node1->rect.ymin < node2->rect.ymin) return -1;
-	if(node1->rect.ymin > node2->rect.ymin) return 1;
+		if(node1->t.SPR.rect.ymin < node2->t.SPR.rect.ymin) return -1;
+		if(node1->t.SPR.rect.ymin > node2->t.SPR.rect.ymin) return 1;
 
-	if(node1->rect.ymax < node2->rect.ymax) return -1;
-	if(node1->rect.ymax > node2->rect.ymax) return 1;
+		if(node1->t.SPR.rect.ymax < node2->t.SPR.rect.ymax) return -1;
+		if(node1->t.SPR.rect.ymax > node2->t.SPR.rect.ymax) return 1;
 
-	if(node1->pkg->id < node2->pkg->id) return -1;
-	if(node1->pkg->id > node2->pkg->id) return 1;
+		if(node1->t.SPR.pkg->id < node2->t.SPR.pkg->id) return -1;
+		if(node1->t.SPR.pkg->id > node2->t.SPR.pkg->id) return 1;
 
-	if(node1->spr_id < node2->spr_id) return -1;
-	if(node1->spr_id > node2->spr_id) return 1;
+		if(node1->t.SPR.spr_id < node2->t.SPR.spr_id) return -1;
+		if(node1->t.SPR.spr_id > node2->t.SPR.spr_id) return 1;
 
-	return 0;
+		return 0;
+	} else if (node1->type == C2_PT_TEX && node2->type == C2_PT_TEX) {
+		return node1->t.TEX.key < node2->t.TEX.key ? -1 : 1;
+	} else {
+		return node1->type == C2_PT_SPR ? -1 : 1;
+	}	
 }
 
 static inline void
@@ -342,7 +380,7 @@ _get_unique_prenodes(struct dtex_c2* c2, struct c2_prenode** ret_set, int* ret_s
 	for (int i = 0; i < c2->prenode_size; ++i) {
 		ret_set[i] = &c2->prenodes[i];
 	}
-	qsort((void*)ret_set, c2->prenode_size, sizeof(struct c2_prenode*), _compare_bound);
+	qsort((void*)ret_set, c2->prenode_size, sizeof(struct c2_prenode*), _compare_unique);
 
 	struct c2_prenode* unique[PRELOAD_SIZE];
 	unique[0] = ret_set[0];
@@ -350,7 +388,7 @@ _get_unique_prenodes(struct dtex_c2* c2, struct c2_prenode** ret_set, int* ret_s
 	for (int i = 1; i < c2->prenode_size; ++i) {
 		struct c2_prenode* last = unique[unique_size-1];
 		struct c2_prenode* curr = ret_set[i];
-		if (_compare_bound(&curr, &last) == 0) {
+		if (_compare_unique(&curr, &last) == 0) {
 			;
 		} else {
 			unique[unique_size++] = curr;
@@ -367,10 +405,22 @@ _compare_max_edge(const void *arg1, const void *arg2) {
 	node1 = *((struct c2_prenode**)(arg1));
 	node2 = *((struct c2_prenode**)(arg2));
 
-	int16_t w1 = node1->rect.xmax - node1->rect.xmin,
-			h1 = node1->rect.ymax - node1->rect.ymin;
-	int16_t w2 = node2->rect.xmax - node2->rect.xmin,
-			h2 = node2->rect.ymax - node2->rect.ymin;
+	int16_t w1, h1, w2, h2;
+	if (node1->type == C2_PT_SPR) {
+		w1 = node1->t.SPR.rect.xmax - node1->t.SPR.rect.xmin;
+		h1 = node1->t.SPR.rect.ymax - node1->t.SPR.rect.ymin;
+	} else {
+		w1 = node1->t.TEX.w;
+		h1 = node1->t.TEX.h;
+	}
+	if (node2->type == C2_PT_SPR) {
+		w2 = node2->t.SPR.rect.xmax - node2->t.SPR.rect.xmin;
+		h2 = node2->t.SPR.rect.ymax - node2->t.SPR.rect.ymin;
+	} else {
+		w2 = node2->t.TEX.w;
+		h2 = node2->t.TEX.h;
+	}
+
 	int16_t long1, long2, short1, short2;
 	if (w1 > h1) {
 		long1 = w1;
@@ -502,6 +552,25 @@ _relocate_draw_vb(uint16_t part_src[8],
 	}	
 }
 
+static inline void
+_rotate_texcoords(float val[8], bool clockwise) {
+	if (!clockwise) {
+		float x, y;
+		x = val[6]; y = val[7];
+		val[6] = val[4]; val[7] = val[5];
+		val[4] = val[2]; val[5] = val[3];
+		val[2] = val[0]; val[3] = val[1];
+		val[0] = x;      val[1] = y;
+	} else {
+		float x, y;
+		x = val[6]; y = val[7];
+		val[6] = val[0]; val[7] = val[1];
+		val[0] = val[2]; val[1] = val[3];
+		val[2] = val[4]; val[3] = val[5];
+		val[4] = x;      val[5] = y;
+	}	
+}
+
 static inline void 
 _relocate_draw_texcoords(uint16_t part_src[8], 
                          struct dtex_inv_size* src_sz, 
@@ -549,37 +618,51 @@ _relocate_draw_texcoords(uint16_t part_src[8],
 			val[3] = dst_ymax; val[7] = dst_ymin;
 	    }
     }
-
-	if (rotate == 1) {
-		float x, y;
-		x = val[6]; y = val[7];
-		val[6] = val[4]; val[7] = val[5];
-		val[4] = val[2]; val[5] = val[3];
-		val[2] = val[0]; val[3] = val[1];
-		val[0] = x;         val[1] = y;
-	} else if (rotate == -1) {
-		float x, y;
-		x = val[6]; y = val[7];
-		val[6] = val[0]; val[7] = val[1];
-		val[0] = val[2]; val[1] = val[3];
-		val[2] = val[4]; val[3] = val[5];
-		val[4] = x;         val[5] = y;
+	if (rotate) {
+		_rotate_texcoords(val, rotate == -1);
 	}
 }
 
 static inline void
 _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
-	struct dtex_inv_size src_sz;
-	src_sz.inv_w = pn->ori_tex->inv_width;
-	src_sz.inv_h = pn->ori_tex->inv_height;
+	if (pn->type == C2_PT_SPR) {
+		struct dtex_inv_size src_sz;
+		src_sz.inv_w = pn->t.SPR.ori_tex->inv_width;
+		src_sz.inv_h = pn->t.SPR.ori_tex->inv_height;
 
-	struct dtex_inv_size dst_sz;	
-	dst_sz.inv_w = n->dst_tex->inv_width;
-	dst_sz.inv_h = n->dst_tex->inv_height;
+		struct dtex_inv_size dst_sz;	
+		dst_sz.inv_w = n->dst_tex->inv_width;
+		dst_sz.inv_h = n->dst_tex->inv_height;
 
-	int rotate_times = rotate ? 1 : 0;
-	_relocate_draw_vb(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb);
-	_relocate_draw_texcoords(pn->ej_quad->texture_coord, &src_sz, &n->ori_rect, &dst_sz, &n->dst_pos->r, rotate_times, n->dst_vb);
+		int rotate_times = rotate ? 1 : 0;
+		_relocate_draw_vb(pn->t.SPR.ej_quad->texture_coord, &src_sz, &pn->t.SPR.rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb);
+		_relocate_draw_texcoords(pn->t.SPR.ej_quad->texture_coord, &src_sz, &pn->t.SPR.rect, &dst_sz, &n->dst_pos->r, rotate_times, n->dst_vb);
+	} else {
+		struct dtex_rect* dst_rect = &n->dst_pos->r;
+		float dst_inv_w = n->dst_tex->inv_width,
+			  dst_inv_h = n->dst_tex->inv_height;
+		float dst_xmin = dst_rect->xmin * dst_inv_w,
+			  dst_xmax = dst_rect->xmax * dst_inv_w,
+			  dst_ymin = dst_rect->ymin * dst_inv_h,
+			  dst_ymax = dst_rect->ymax * dst_inv_h;
+		float vd_xmin = dst_xmin * 2 - 1,
+			  vd_xmax = dst_xmax * 2 - 1,
+			  vd_ymin = dst_ymin * 2 - 1,
+			  vd_ymax = dst_ymax * 2 - 1;
+
+		n->trans_vb[0] = vd_xmin; n->trans_vb[1] = vd_ymin; n->trans_vb[2] = 0; n->trans_vb[3] = 0;
+		n->trans_vb[4] = vd_xmax; n->trans_vb[5] = vd_ymin; n->trans_vb[6] = 1; n->trans_vb[7] = 0;
+		n->trans_vb[8] = vd_xmax; n->trans_vb[9] = vd_ymax; n->trans_vb[10]= 1; n->trans_vb[11]= 1;
+		n->trans_vb[12]= vd_xmin; n->trans_vb[13]= vd_ymax; n->trans_vb[14]= 0; n->trans_vb[15]= 1;
+
+		n->dst_vb[0] = dst_xmin; n->dst_vb[1] = dst_ymin; 
+		n->dst_vb[2] = dst_xmax; n->dst_vb[3] = dst_ymin; 
+		n->dst_vb[4] = dst_xmax; n->dst_vb[5] = dst_ymax; 
+		n->dst_vb[6] = dst_xmin; n->dst_vb[7] = dst_ymax;
+		if (rotate) {
+			_rotate_texcoords(n->dst_vb, false);
+		}
+	}
 }
 
 struct insert_params {
@@ -663,29 +746,34 @@ _mode_multi_insert_node(struct insert_params* p) {
 
 static inline bool
 _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* pn) {
-	if (_query_node(c2, pn->pkg->id, pn->spr_id)) {
-		return true;
-	}
-
 	struct insert_params ip;
 	ip.c2 = c2;
 	ip.loader = loader;
-	ip.w = pn->rect.xmax - pn->rect.xmin,
-	ip.h = pn->rect.ymax - pn->rect.ymin;
-	ip.can_clear = dtex_c2_insert_can_clear(pn->pkg->c2_stg);
-
-	// rrp
-	struct rrp_picture* rrp_pic = NULL;
-	if (pn->rect.xmin < 0) {
-// 		struct dtex_rrp* rrp = dtexloader_query_rrp(loader, pn->ej_pkg);
-// 		if (rrp == NULL) {
-// 			return;
-// 		}
-// 		rrp_pic = dtex_rrp_get_pic(rrp, -pn->rect.xmin);
-// 		assert(rrp_pic);
-// 		w = rrp_pic->w;
-// 		h = rrp_pic->h;
+	if (pn->type == C2_PT_SPR) {
+		if (_query_node(c2, pn->t.SPR.pkg->id, pn->t.SPR.spr_id)) {
+			return true;
+		}		
+		ip.w = pn->t.SPR.rect.xmax - pn->t.SPR.rect.xmin;
+		ip.h = pn->t.SPR.rect.ymax - pn->t.SPR.rect.ymin;
+		ip.can_clear = dtex_c2_insert_can_clear(pn->t.SPR.pkg->c2_stg);
+	} else {
+		ip.w = pn->t.TEX.w;
+		ip.h = pn->t.TEX.h;
+		ip.can_clear = true;
 	}
+
+	//// rrp
+	//struct rrp_picture* rrp_pic = NULL;
+	//if (pn->rect.xmin < 0) {
+	//	struct dtex_rrp* rrp = dtexloader_query_rrp(loader, pn->ej_pkg);
+	//	if (rrp == NULL) {
+	//		return;
+	//	}
+	//	rrp_pic = dtex_rrp_get_pic(rrp, -pn->rect.xmin);
+	//	assert(rrp_pic);
+	//	w = rrp_pic->w;
+	//	h = rrp_pic->h;
+	//}
 
 	ip.rotate = false;
 	ip.pos = NULL;
@@ -714,8 +802,6 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	node = &ip.index->nodes[ip.index->node_size++];
 
 	assert(ip.tex);
-	node->ori_tex = pn->ori_tex;
-	node->ori_rect = pn->rect;
 	node->dst_tex = ip.tex;
 	node->dst_pos = ip.pos;
 	node->dst_pos->r.xmin += PADDING;
@@ -723,19 +809,36 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	node->dst_pos->r.xmax -= PADDING;
 	node->dst_pos->r.ymax -= PADDING;
 
-	node->hk.pkg_id = pn->pkg->id;
-	node->hk.spr_id = pn->spr_id;
-	dtex_hash_insert(ip.index->hash, &node->hk, node, true);
+	struct dtex_texture tex;
+	if (pn->type == C2_PT_SPR) {
+		node->hk.pkg_id = pn->t.SPR.pkg->id;
+		node->hk.spr_id = pn->t.SPR.spr_id;
+		tex = *pn->t.SPR.ori_tex;
+	} else {
+		node->hk.pkg_id = TEX_PKG_ID;
+		node->hk.spr_id = pn->t.TEX.key;
+		tex.id = pn->t.TEX.id;
+		tex.width = pn->t.TEX.w;
+		tex.height = pn->t.TEX.h;
+		tex.inv_width = 1.0f / tex.width;
+		tex.inv_height = 1.0f / tex.height;
+		tex.uid = tex.uid_3rd = 0;
+		tex.type = DTEX_TT_RAW;
+		tex.t.RAW.id_alpha = 0;
+		tex.t.RAW.format = TEXTURE8;
+		tex.t.RAW.scale = tex.t.RAW.lod_scale = 1;
+	}
 
+	dtex_hash_insert(ip.index->hash, &node->hk, node, true);
 	_set_rect_vb(pn, node, ip.rotate);
 
 	ip.pos->ud = node;
 
-	if (rrp_pic) {
-//		dtex_draw_rrp_to_tex(node->ori_tex, rrp_pic, tex, pos, rotate);
-	} else {
-		dtex_draw_to_texture(node->ori_tex, ip.tex, node->trans_vb);
-	}
+// 	if (rrp_pic) {
+// 		dtex_draw_rrp_to_tex(&tex, rrp_pic, tex, pos, rotate);
+// 	} else {
+		dtex_draw_to_texture(&tex, ip.tex, node->trans_vb);
+//	}
 
 	return true;
 }
@@ -753,6 +856,7 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 	dtex_debug(" c2 end count: %d", unique_sz);
 
 	// insert
+	dtex_draw_begin();
 	qsort((void*)unique_set, unique_sz, sizeof(struct c2_prenode*), _compare_max_edge);	
 	for (int i = 0; i < unique_sz; ++i) {
 		bool succ = _insert_node(c2, loader, unique_set[i]);
@@ -760,13 +864,13 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 			break;
 		}
 	}
-	dtex_draw_finish();
+	dtex_draw_end();
 
 	c2->prenode_size = 0;
 }
 
 float* 
-dtex_c2_lookup_texcoords(struct dtex_c2* c2, int pkg_id, int spr_id, int* out_texid) {
+dtex_c2_query_spr(struct dtex_c2* c2, int pkg_id, int spr_id, int* out_texid) {
 	struct c2_node* node = _query_node(c2, pkg_id, spr_id);
 	if (!node) {
 		return NULL;
@@ -777,8 +881,20 @@ dtex_c2_lookup_texcoords(struct dtex_c2* c2, int pkg_id, int spr_id, int* out_te
 	return node->dst_vb;
 }
 
+float* 
+dtex_c2_query_tex(struct dtex_c2* c2, int key, int* out_texid) {
+	struct c2_node* node = _query_node(c2, TEX_PKG_ID, key);
+	if (!node) {
+		return NULL;
+	}
+
+	*out_texid = node->dst_tex->id;
+
+	return node->dst_vb;
+}
+
 void 
-dtexc2_lookup_node(struct dtex_c2* c2, int pkg_id, int spr_id,
+dtexc2_query_map_addr(struct dtex_c2* c2, int pkg_id, int spr_id,
 	               struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos) {
 	struct c2_node* node = _query_node(c2, pkg_id, spr_id);
 	if (node) {
