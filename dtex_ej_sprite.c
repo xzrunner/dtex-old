@@ -154,7 +154,7 @@ _draw(struct dtex_package* pkg, struct dtex_c2* c2, struct ej_sprite* spr, struc
 
 	switch (spr->type) {
 	case TYPE_PICTURE:
-		dtex_shader_program(PROGRAM_NORMAL);
+		dtex_shader_program(DTEX_PROGRAM_NORMAL);
 		_draw_quad(pkg, c2, spr->s.pic, spr->id, srt, t);
 		break;
 	case TYPE_ANIMATION:

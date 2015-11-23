@@ -48,10 +48,10 @@ dtex_c1_update(struct dtex_c1* c1, struct dtex_c2* c2, struct dtex_package* pkg,
 
 	dtex_gl_clear_color(0, 0, 0, 1);
 
-	dtex_shader_program(PROGRAM_NORMAL);
+	dtex_shader_program(DTEX_PROGRAM_NORMAL);
 	dtex_ej_sprite_draw(pkg, c2, spr, NULL);
 
-	dtex_shader_flush();
+//	dtex_shader_flush();
 //	glViewport(0, 0, w, h);
 
 	dtex_target_unbind(ori);

@@ -17,7 +17,7 @@ dtex_debug_draw_with_pos(unsigned int texid,
 						 float ymax) {
 	assert(dtex_gl_is_texture(texid));
 
-	dtex_shader_program(PROGRAM_NORMAL);
+	dtex_shader_program(DTEX_PROGRAM_NORMAL);
 
 	float vb[16];
 

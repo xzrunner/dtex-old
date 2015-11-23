@@ -29,7 +29,7 @@ _before_all_draw() {
 #ifndef USED_IN_EDITOR
 	// dtex_gl_bind_vertex_array(1);
 	dtex_shader_set_texture(0);
-	dtex_shader_program(PROGRAM_NULL);
+	dtex_shader_program(DTEX_PROGRAM_NULL);
 #endif // USED_IN_EDITOR
 
 	assert(RS.target == NULL);
@@ -44,8 +44,6 @@ _after_all_draw() {
 	if (!RS.dst) {
 		return;
 	}
-
-	dtex_shader_flush();
 
 	dtex_target_unbind_texture(RS.target);
 	dtex_target_unbind(RS.ori_target);  
@@ -77,9 +75,9 @@ _before_draw(struct dtex_texture* tex) {
 	// 	} 
 
 	if (tex->type == DTEX_TT_RAW && tex->t.RAW.format == PKMC) {
-		dtex_shader_program(PROGRAM_ETC1);
+		dtex_shader_program(DTEX_PROGRAM_ETC1);
 	} else {
-		dtex_shader_program(PROGRAM_NORMAL);
+		dtex_shader_program(DTEX_PROGRAM_NORMAL);
 	}
 }
 

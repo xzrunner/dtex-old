@@ -62,21 +62,16 @@ dtex_shader_get_target() {
 }
 
 void 
+dtex_shader_begin() {
+	DRAW_BEGIN();
+}
+
+void 
 dtex_shader_draw(const float vb[16]) {
 	DRAW(vb);
 }
 
 //void dtex_shader_draw_triangle(const float* vb, int count);
-
-void 
-dtex_shader_flush() {
-	DRAW_END();
-}
-
-void 
-dtex_shader_begin() {
-	DRAW_BEGIN();
-}
 
 void 
 dtex_shader_end() {
