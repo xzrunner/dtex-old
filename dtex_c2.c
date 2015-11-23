@@ -822,7 +822,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 		tex.height = pn->t.TEX.h;
 		tex.inv_width = 1.0f / tex.width;
 		tex.inv_height = 1.0f / tex.height;
-		tex.uid = tex.uid_3rd = 0;
+		tex.uid = 0;
 		tex.type = DTEX_TT_RAW;
 		tex.t.RAW.id_alpha = 0;
 		tex.t.RAW.format = TEXTURE8;
@@ -876,7 +876,7 @@ dtex_c2_query_spr(struct dtex_c2* c2, int pkg_id, int spr_id, int* out_texid) {
 		return NULL;
 	}
 
-	*out_texid = node->dst_tex->uid_3rd;
+	*out_texid = node->dst_tex->id;
 
 	return node->dst_vb;
 }
@@ -921,12 +921,12 @@ dtex_c2_debug_draw(struct dtex_c2* c2) {
 	dtex_debug_draw(c2->t.ONE.texture->id);
 #else
 	if (c2->one_tex_mode) {
-		dtex_debug_draw_ej(c2->t.ONE.texture->uid_3rd, 4);
+		dtex_debug_draw_ej(c2->t.ONE.texture->id, 4);
 	} else {
 		if (c2->t.MULTI.tex_size > 0) {
-			dtex_debug_draw_ej(c2->t.MULTI.textures[0]->uid_3rd, 4);
+			dtex_debug_draw_ej(c2->t.MULTI.textures[0]->id, 4);
 			if (c2->t.MULTI.tex_size > 1) {
-				dtex_debug_draw_ej(c2->t.MULTI.textures[1]->uid_3rd, 3);
+				dtex_debug_draw_ej(c2->t.MULTI.textures[1]->id, 3);
 			}
 		}
 	}

@@ -60,6 +60,8 @@ _check_framebuffer_status() {
 
 void 
 dtex_target_bind_texture(struct dtex_target* target, int texid) {
+	texid = dtex_gl_texture_id(texid);
+
 	if (target->texture_id == texid) {
 		return;
 	}

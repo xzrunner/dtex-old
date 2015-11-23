@@ -15,15 +15,13 @@ enum DTEX_TF_TYPE {
 };
 
 struct dtex_texture {
-	unsigned int id;		// gl id
+	unsigned int id;
 
 	int width, height;
 	float inv_width, inv_height;
 
 	int uid;				// id in dtex
 							// >= QUAD_TEXID_IN_PKG_MAX
-
-	int uid_3rd;			// id in other engine
 
 	bool cache_locked;
 

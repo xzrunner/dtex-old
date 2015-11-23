@@ -27,29 +27,29 @@
 #define COMPRESSED_RGBA_PVRTC_4BPPV1_IMG 4
 #define COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 2
 
-#ifndef USED_IN_EDITOR
-static struct ej_render* EJ_R = NULL;
-
-void 
-dtex_gl_init(struct ej_render* R) {
-	EJ_R = R;
-}
-
-static inline void
-_create_texture_ej(int type, int width, int height, const void* data, int channel, unsigned int* gl_id, int* uid_3rd) {
-	if (type == DTEX_TF_INVALID) {
-		return;
-	}
-
-	*uid_3rd = ej_render_texture_create(EJ_R, width, height, EJ_TEXTURE_RGBA8, TEXTURE_2D, 0);
-
-	ej_render_texture_update(EJ_R, *uid_3rd, width, height, data, 0, 0);
-
-	*gl_id = ej_render_get_texture_gl_id(EJ_R, *uid_3rd);
-	dtex_stat_add_texture(*gl_id, width, height);
-}
-
-#endif // USED_IN_EDITOR
+//#ifndef USED_IN_EDITOR
+//static struct ej_render* EJ_R = NULL;
+//
+//void 
+//dtex_gl_init(struct ej_render* R) {
+//	EJ_R = R;
+//}
+//
+//static inline void
+//_create_texture_ej(int type, int width, int height, const void* data, int channel, unsigned int* gl_id, int* uid_3rd) {
+//	if (type == DTEX_TF_INVALID) {
+//		return;
+//	}
+//
+//	*uid_3rd = ej_render_texture_create(EJ_R, width, height, EJ_TEXTURE_RGBA8, TEXTURE_2D, 0);
+//
+//	ej_render_texture_update(EJ_R, *uid_3rd, width, height, data, 0, 0);
+//
+//	*gl_id = ej_render_get_texture_gl_id(EJ_R, *uid_3rd);
+//	dtex_stat_add_texture(*gl_id, width, height);
+//}
+//
+//#endif // USED_IN_EDITOR
 
 void
 _gen_texture_dtex(int channel, unsigned int* id) {
@@ -151,48 +151,88 @@ _create_texture_dtex(int type, int width, int height, const void* data, int chan
 	dtex_stat_add_texture(*id, width, height);
 }
 
-void
-dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, unsigned int* gl_id, int* uid_3rd, bool create_by_ej) {
-	if (type == DTEX_TF_INVALID) {
-		return;
-	}
+// void
+// dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, unsigned int* gl_id, int* uid_3rd, bool create_by_ej) {
+// 	if (type == DTEX_TF_INVALID) {
+// 		return;
+// 	}
+// 
+// 	if (create_by_ej) {
+// #ifndef USED_IN_EDITOR
+// 		_create_texture_ej(type, width, height, data, channel, gl_id, uid_3rd);
+// #else
+// 		*uid_3rd = 0;
+// 		_create_texture_dtex(type, width, height, data, channel, gl_id);
+// #endif // USED_IN_EDITOR
+// 	} else {
+// 		*uid_3rd = 0;
+// 		_create_texture_dtex(type, width, height, data, channel, gl_id);
+// 	}
+// }
+// 
+// void 
+// dtex_gl_release_texture(unsigned int id, int channel) {
+// 	dtex_shader_set_texture(0);
+// 	dtex_stat_delete_texture(id);
+// 
+// 	glActiveTexture(GL_TEXTURE0 + channel);
+// 	glDeleteTextures(1, &id);
+// }
+// 
+// void 
+// dtex_gl_update_subtex(const void* pixels, int x, int y, int w, int h, unsigned int id) {
+// 	int old_id = dtex_shader_get_texture();
+// 	glBindTexture(GL_TEXTURE_2D, id);
+// 	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+// 	glBindTexture(GL_TEXTURE_2D, old_id);
+// }
 
-	if (create_by_ej) {
-#ifndef USED_IN_EDITOR
-		_create_texture_ej(type, width, height, data, channel, gl_id, uid_3rd);
-#else
-		*uid_3rd = 0;
-		_create_texture_dtex(type, width, height, data, channel, gl_id);
-#endif // USED_IN_EDITOR
-	} else {
-		*uid_3rd = 0;
-		_create_texture_dtex(type, width, height, data, channel, gl_id);
-	}
+static int (*TEXTURE_CREATE)(int type, int width, int height, const void* data, int channel);
+static void (*TEXTURE_RELEASE)(int id);
+static void (*TEXTURE_UPDATE)(const void* pixels, int x, int y, int w, int h, unsigned int id);
+static  int (*TEXTURE_ID)(int id);
+
+void 
+dtex_gl_texture_init(int (*texture_create)(int type, int width, int height, const void* data, int channel),
+					 void (*texture_release)(int id),
+					 void (*texture_update)(const void* pixels, int x, int y, int w, int h, unsigned int id),
+					  int (*texture_id)(int id)) {
+	TEXTURE_CREATE = texture_create;
+	TEXTURE_RELEASE = texture_release;
+	TEXTURE_UPDATE = texture_update;
+	TEXTURE_ID = texture_id;
+}
+
+int 
+dtex_gl_create_texture(int type, int width, int height, const void* data, int channel) {
+	int id = TEXTURE_CREATE(type, width, height, data, channel);
+	dtex_stat_add_texture(id, width, height);
+	return id;
 }
 
 void 
-dtex_gl_release_texture(unsigned int id, int channel) {
+dtex_gl_release_texture(int id) {
 	dtex_shader_set_texture(0);
+	TEXTURE_RELEASE(id);
 	dtex_stat_delete_texture(id);
-
-	glActiveTexture(GL_TEXTURE0 + channel);
-	glDeleteTextures(1, &id);
 }
 
 void 
-dtex_gl_update_subtex(const void* pixels, int x, int y, int w, int h, unsigned int id) {
-	int old_id = dtex_shader_get_texture();
-	glBindTexture(GL_TEXTURE_2D, id);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	glBindTexture(GL_TEXTURE_2D, old_id);
+dtex_gl_update_texture(const void* pixels, int x, int y, int w, int h, unsigned int id) {
+	TEXTURE_UPDATE(pixels, x, y, w, h, id);
 }
 
-#ifndef USED_IN_EDITOR
-void 
-dtex_release_ej_texture(int uid_3rd) {
-	ej_render_release(EJ_R, EJ_TEXTURE, uid_3rd);
+int 
+dtex_gl_texture_id(int id) {
+	return TEXTURE_ID(id);
 }
-#endif // USED_IN_EDITOR
+
+// #ifndef USED_IN_EDITOR
+// void 
+// dtex_release_ej_texture(int uid_3rd) {
+// 	ej_render_release(EJ_R, EJ_TEXTURE, uid_3rd);
+// }
+// #endif // USED_IN_EDITOR
 
 void 
 dtex_gl_clear_color(float r, float g, float b, float a) {

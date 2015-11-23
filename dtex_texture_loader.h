@@ -16,7 +16,7 @@ struct dtex_texture;
 int dtex_load_all_textures_desc(struct dtex_import_stream* is, struct dtex_package* pkg, float scale);
 
 void dtex_load_texture_only_desc(struct dtex_import_stream* is, struct dtex_texture* tex, float scale);
-void dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex, bool create_by_ej);
+void dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex);
 
 #endif // dynamic_texture_texture_loader_h
 

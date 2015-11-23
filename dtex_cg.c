@@ -158,7 +158,7 @@ dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dt
 		uint8_t a = src & 0xff;
 		cg->buf[i] = a << 24 | b << 16 | g << 8 | r;
 	}
-	dtex_gl_update_subtex(cg->buf, pos->r.xmin + PADDING, pos->r.ymin + PADDING, width, height, cg->tex->id);
+	dtex_gl_update_texture(cg->buf, pos->r.xmin + PADDING, pos->r.ymin + PADDING, width, height, cg->tex->id);
 }
 
 void 

@@ -75,20 +75,18 @@ dtex_texture_create_mid(int edge) {
 		return NULL;
 	}
 	
-// 	uint32_t col = 0xff000000;
-// 	int ptr = 0;
-// 	for (int i = 0; i < edge; ++i) {
-// 		for (int j = 0; j < edge; ++j) {
-// 			memcpy(&empty_data[ptr], &col, 4);
-// 			ptr += 4;
-// 		}
-// 	}
+	uint32_t col = 0xffff0000;
+	int ptr = 0;
+	for (int i = 0; i < edge; ++i) {
+		for (int j = 0; j < edge; ++j) {
+			memcpy(&empty_data[ptr], &col, 4);
+			ptr += 4;
+		}
+	}
 
-	memset(empty_data, 0x00, edge*edge*4);
+//	memset(empty_data, 0x00, edge*edge*4);
 
-	unsigned int gl_id = 0;
-	int uid_3rd = 0;
-	dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, &gl_id, &uid_3rd, true);
+	int id = dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0);
 	free(empty_data);
 	if (dtex_gl_out_of_memory()) {
 		dtex_fault("dtex_texture_create_mid dtex_gl_create_texture fail.");
@@ -96,8 +94,7 @@ dtex_texture_create_mid(int edge) {
 	}
 
 	tex->type = DTEX_TT_MID;
-	tex->id = gl_id;
-	tex->uid_3rd = uid_3rd;
+	tex->id = id;
 	tex->width = tex->height = edge;
 	tex->inv_width = tex->inv_height = 1.0f / edge;
 	tex->t.MID.tp = NULL;
@@ -125,11 +122,11 @@ dtex_texture_release(struct dtex_texture* tex) {
 		}
 	}
 
-#ifndef USED_IN_EDITOR
-	if (tex->uid_3rd != 0) {
-		dtex_release_ej_texture(tex->uid_3rd);
-	}
-#endif // USED_IN_EDITOR
+// #ifndef USED_IN_EDITOR
+// 	if (tex->uid_3rd != 0) {
+// 		dtex_release_ej_texture(tex->uid_3rd);
+// 	}
+// #endif // USED_IN_EDITOR
 
 	memset(tex, 0, sizeof(*tex));
 	tex->type = DTEX_TT_INVALID;
@@ -145,15 +142,7 @@ dtex_texture_reload(struct dtex_texture* tex) {
 	}
 	memset(empty_data, 0x00, sz);
 
-	if (tex->id > 100) {
-		int zz = 0;
-	}
-
-	dtex_gl_create_texture(DTEX_TF_RGBA8, tex->width, tex->height, empty_data, 0, &tex->id, &tex->uid_3rd, true);
-
-	if (tex->id > 100) {
-		int zz = 0;
-	}
+	dtex_gl_create_texture(DTEX_TF_RGBA8, tex->width, tex->height, empty_data, 0);
 
 	free(empty_data);
 }

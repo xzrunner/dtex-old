@@ -26,11 +26,11 @@ dtex_render_init() {
 
 static inline void 
 _before_all_draw() {
-#ifndef USED_IN_EDITOR
-	// dtex_gl_bind_vertex_array(1);
-	dtex_shader_set_texture(0);
-	dtex_shader_program(DTEX_PROGRAM_NULL);
-#endif // USED_IN_EDITOR
+// #ifndef USED_IN_EDITOR
+// 	// dtex_gl_bind_vertex_array(1);
+// 	dtex_shader_set_texture(0);
+// 	dtex_shader_program(DTEX_PROGRAM_NULL);
+// #endif // USED_IN_EDITOR
 
 	assert(RS.target == NULL);
 	RS.target = dtex_res_cache_fetch_target();
@@ -56,12 +56,12 @@ _after_all_draw() {
 	dtex_get_screen(&scr_w, &scr_h, &scr_s);
 	dtex_gl_viewport(0, 0, scr_w, scr_h);
 
-#ifndef USED_IN_EDITOR
-	ej_shader_texture(0, 0);
-	ej_shader_program(PROGRAM_DEFAULT, NULL);
-	// dtex_gl_bind_vertex_array(1);
-	// ej_shader_reset();
-#endif // USED_IN_EDITOR
+// #ifndef USED_IN_EDITOR
+// 	ej_shader_texture(0, 0);
+// 	ej_shader_program(PROGRAM_DEFAULT, NULL);
+// 	// dtex_gl_bind_vertex_array(1);
+// 	// ej_shader_reset();
+// #endif // USED_IN_EDITOR
 }
 
 static inline void

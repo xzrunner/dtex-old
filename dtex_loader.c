@@ -172,7 +172,6 @@ struct unpack_pkg_params {
 struct unpack_tex_params {
 	struct dtex_package* pkg;
 	int load_tex_idx;
-	bool create_by_ej;
 };
 
 struct unpack_alltex_params {
@@ -235,7 +234,7 @@ _unpack_memory_to_texture(struct dtex_import_stream* is, void* ud) {
 	assert(params->load_tex_idx < pkg->texture_count);
 	struct dtex_texture* tex = pkg->textures[params->load_tex_idx];
 	assert(tex);
-	dtex_load_texture_all(is, tex, params->create_by_ej);
+	dtex_load_texture_all(is, tex);
 }
 
 static inline void
@@ -386,7 +385,7 @@ dtex_preload_texture(struct dtex_loader* loader, struct dtex_package* pkg, int i
 }
 
 void 
-dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx, bool create_by_ej) {
+dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx) {
 	const char* path = dtex_get_img_filepath(pkg->rp, idx, pkg->LOD);
 	struct dtex_file* file = dtex_file_open(path, "rb");
 	if (!file) {
@@ -396,7 +395,6 @@ dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx,
 	struct unpack_tex_params params;
 	params.pkg = pkg;
 	params.load_tex_idx = idx;
-	params.create_by_ej = create_by_ej;
 	_unpack_file(loader, file, &_unpack_memory_to_texture, &params);
 
 	dtex_file_close(file);

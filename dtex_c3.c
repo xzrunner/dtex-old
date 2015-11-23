@@ -777,11 +777,11 @@ dtex_c3_debug_draw(struct dtex_c3* c3) {
 	}
 #else
 	if (c3->one_tex_mode) {
-		dtex_debug_draw_ej(c3->t.ONE.texture->uid_3rd, 1);
+		dtex_debug_draw_ej(c3->t.ONE.texture->id, 1);
 	} else {
-		dtex_debug_draw_ej(c3->t.MULTI.textures[0]->uid_3rd, 1);
+		dtex_debug_draw_ej(c3->t.MULTI.textures[0]->id, 1);
 		if (c3->t.MULTI.tex_size > 1) {
-			dtex_debug_draw_ej(c3->t.MULTI.textures[1]->uid_3rd, 2);
+			dtex_debug_draw_ej(c3->t.MULTI.textures[1]->id, 2);
 		}
 	}
 #endif // USED_IN_EDITOR

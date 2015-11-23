@@ -22,13 +22,11 @@ static int
 lcreate(lua_State* L) {
 	const char* str = lua_tostring(L, 1);	
 	dtexf_create(str);
-	dtex_shader_load();
 	return 0;
 }
 
 static int
 lrelease(lua_State* L) {
-	dtex_shader_unload();
 	dtexf_release();
 	return 0;
 }
@@ -162,7 +160,7 @@ lload_texture(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
 	int idx = (int)lua_tointeger(L, 2);
 
-	dtexf_load_texture(pkg, idx, true);
+	dtexf_load_texture(pkg, idx);
 
 	return 0;
 }
