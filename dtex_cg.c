@@ -108,7 +108,7 @@ void
 dtex_cg_clear(struct dtex_cg* cg) {
 //	cg->prenode_size = 0;
 	cg->node_size = 0;
-	dtex_hash_clear(cg->hash);
+//	dtex_hash_clear(cg->hash);
 }
 
 void 

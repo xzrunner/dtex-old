@@ -26,7 +26,7 @@
 #define NODE_SIZE 4096*2
 #define PRELOAD_SIZE 4096*2
 
-#define TEX_PKG_ID -1
+#define TEX_PKG_ID 4096
 
 #define PADDING 1
 //#define EXTRUDE 1
@@ -249,6 +249,22 @@ dtex_c2_clear_from_cg(struct dtex_c2* c2, struct dtex_loader* loader)
 
 	c2->t.ONE.clear_idx = 2;
 	dtex_c2_clear(c2, loader);
+}
+
+void 
+dtex_c2_reload(struct dtex_c2* c2, struct dtex_loader* loader) {
+	assert(c2->one_tex_mode);
+
+	// clear texture
+	dtex_texture_reload(c2->t.ONE.texture);
+	for (int i = 0; i < 4; ++i) {
+		_clear_tp_index(&c2->t.ONE.index[i]);
+	}
+	c2->prenode_size = 0;
+	dtex_package_traverse(loader, dtex_c2_strategy_clear);
+
+	// clear cg
+	dtex_cg_clear(c2->t.ONE.cg);
 }
 
 void 

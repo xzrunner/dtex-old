@@ -136,6 +136,7 @@ dtex_texture_reload(struct dtex_texture* tex) {
 	}
 	memset(empty_data, 0x00, sz);
 
+	dtex_shader_set_texture(tex->id);
 	dtex_gl_create_texture(DTEX_TF_RGBA8, tex->width, tex->height, empty_data, 0);
 
 	free(empty_data);
