@@ -75,16 +75,16 @@ dtex_texture_create_mid(int edge) {
 		return NULL;
 	}
 	
-	uint32_t col = 0xffff0000;
-	int ptr = 0;
-	for (int i = 0; i < edge; ++i) {
-		for (int j = 0; j < edge; ++j) {
-			memcpy(&empty_data[ptr], &col, 4);
-			ptr += 4;
-		}
-	}
+// 	uint32_t col = 0xffff0000;
+// 	int ptr = 0;
+// 	for (int i = 0; i < edge; ++i) {
+// 		for (int j = 0; j < edge; ++j) {
+// 			memcpy(&empty_data[ptr], &col, 4);
+// 			ptr += 4;
+// 		}
+// 	}
 
-//	memset(empty_data, 0x00, edge*edge*4);
+	memset(empty_data, 0x00, edge*edge*4);
 
 	int id = dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0);
 	free(empty_data);
