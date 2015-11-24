@@ -2,8 +2,7 @@
 #include "dtex_file.h"
 #include "dtex_log.h"
 #include "dtex_shader.h"
-
-#include "ejoy2d.h"
+#include "dtex_gl.h"
 
 #include <opengl.h>
 

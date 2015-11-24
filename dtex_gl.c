@@ -27,34 +27,8 @@
 #define COMPRESSED_RGBA_PVRTC_4BPPV1_IMG 4
 #define COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 2
 
-//#ifndef USED_IN_EDITOR
-//static struct ej_render* EJ_R = NULL;
-//
-//void 
-//dtex_gl_init(struct ej_render* R) {
-//	EJ_R = R;
-//}
-//
-//static inline void
-//_create_texture_ej(int type, int width, int height, const void* data, int channel, unsigned int* gl_id, int* uid_3rd) {
-//	if (type == DTEX_TF_INVALID) {
-//		return;
-//	}
-//
-//	*uid_3rd = ej_render_texture_create(EJ_R, width, height, EJ_TEXTURE_RGBA8, TEXTURE_2D, 0);
-//
-//	ej_render_texture_update(EJ_R, *uid_3rd, width, height, data, 0, 0);
-//
-//	*gl_id = ej_render_get_texture_gl_id(EJ_R, *uid_3rd);
-//	dtex_stat_add_texture(*gl_id, width, height);
-//}
-//
-//#endif // USED_IN_EDITOR
-
 void
 _gen_texture_dtex(int channel, unsigned int* id) {
-	unsigned int old = *id;
-
 	glActiveTexture(GL_TEXTURE0 + channel);
 
 	if (*id == 0) {

@@ -917,27 +917,14 @@ dtex_c2_get_cg(struct dtex_c2* c2) {
 
 void 
 dtex_c2_debug_draw(struct dtex_c2* c2) {
-#ifdef USED_IN_EDITOR
-	dtex_debug_draw(c2->t.ONE.texture->id);
-#else
 	if (c2->one_tex_mode) {
-		dtex_debug_draw_ej(c2->t.ONE.texture->id, 4);
+		dtex_debug_draw(c2->t.ONE.texture->id, 4);
 	} else {
 		if (c2->t.MULTI.tex_size > 0) {
-			dtex_debug_draw_ej(c2->t.MULTI.textures[0]->id, 4);
+			dtex_debug_draw(c2->t.MULTI.textures[0]->id, 4);
 			if (c2->t.MULTI.tex_size > 1) {
-				dtex_debug_draw_ej(c2->t.MULTI.textures[1]->id, 3);
+				dtex_debug_draw(c2->t.MULTI.textures[1]->id, 3);
 			}
 		}
 	}
-#endif // USED_IN_EDITOR
-
-	// const float edge = 0.5f;
-	// int col = 2 / edge;
-	// for (int i = 0; i < 16; ++i) {
-	// 	int x = i % col;
-	// 	int y = i / col;
-	// 	dtex_debug_draw_with_pos(i + 1, 
-	// 		-1 + x * edge, 1 - y * edge - edge, -1 + x * edge + edge, 1 - y * edge);
-	// }
 }

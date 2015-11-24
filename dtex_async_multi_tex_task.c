@@ -58,7 +58,7 @@ _load_multi_textures_func(struct dtex_import_stream* is, void* ud) {
 	struct params* params = (struct params*)ud;	
 	struct share_params* share_params = params->share_params;
 
-	dtex_load_texture_all(is, params->tex, true);
+	dtex_load_texture_all(is, params->tex);
 
 	DTEX_ASYNC_QUEUE_PUSH(PARAMS_QUEUE, params);
 

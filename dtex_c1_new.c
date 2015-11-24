@@ -59,5 +59,5 @@ dtex_c1_update(struct dtex_c1* c1, struct dtex_c2* c2, struct dtex_package* pkg,
 
 void 
 dtex_c1_debug_draw(struct dtex_c1* c1) {
-	dtex_debug_draw(c1->texture->id);
+	dtex_debug_draw(c1->texture->id, 3);
 }

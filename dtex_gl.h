@@ -6,10 +6,6 @@ extern "C"
 #ifndef dynamic_texture_gl_h
 #define dynamic_texture_gl_h
 
-#ifndef USED_IN_EDITOR
-#include "ejoy2d.h"
-#endif // USED_IN_EDITOR
-
 #include <stdbool.h>
 
 //#ifndef USED_IN_EDITOR

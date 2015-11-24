@@ -108,25 +108,19 @@ dtex_texture_release(struct dtex_texture* tex) {
 
 	if (tex->type == DTEX_TT_RAW) {
 		if (tex->id != 0) {
-			dtex_gl_release_texture(tex->id, 0);
+			dtex_gl_release_texture(tex->id);
 		}
 		if (tex->t.RAW.id_alpha != 0) {
-			dtex_gl_release_texture(tex->t.RAW.id_alpha, 1);
+			dtex_gl_release_texture(tex->t.RAW.id_alpha);
 		}
 	} else if (tex->type == DTEX_TT_MID) {
 		if (tex->id != 0) {
-			dtex_gl_release_texture(tex->id, 0);
+			dtex_gl_release_texture(tex->id);
 		}
 		if (tex->t.MID.tp != NULL) {
 			dtex_tp_release(tex->t.MID.tp); 
 		}
 	}
-
-// #ifndef USED_IN_EDITOR
-// 	if (tex->uid_3rd != 0) {
-// 		dtex_release_ej_texture(tex->uid_3rd);
-// 	}
-// #endif // USED_IN_EDITOR
 
 	memset(tex, 0, sizeof(*tex));
 	tex->type = DTEX_TT_INVALID;

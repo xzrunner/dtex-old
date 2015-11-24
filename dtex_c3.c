@@ -476,7 +476,7 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 	bool tex_loaded = false;
 	if (tex->id == 0) {
 		tex_loaded = false;
-		dtex_load_texture_all(is, tex, true);
+		dtex_load_texture_all(is, tex);
 	} else {
 		tex_loaded = true;
 	}
@@ -551,7 +551,7 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 			if (!async) {
 				if (ori_tex->id == 0) {
 					tex_loaded = false;
-					dtex_load_texture(loader, pkg, pkg_idx, false);
+					dtex_load_texture(loader, pkg, pkg_idx);
 				} else {
 					tex_loaded = true;
 				}
@@ -760,29 +760,12 @@ dtex_c3_query_map_info(struct dtex_c3* c3, struct dtex_package* pkg, struct dtex
 
 void 
 dtex_c3_debug_draw(struct dtex_c3* c3) {
-#ifdef USED_IN_EDITOR
-//  	const float edge = 0.5f;
-//  	for (int i = 0; i < c3->tex_size; ++i) {
-//  		dtex_debug_draw_with_pos(c3->textures[i]->tex, 
-//  			-1 + i * edge, 1 - edge, -1 + i * edge + edge, 1);
-//  	}
-
 	if (c3->one_tex_mode) {
-		dtex_debug_draw(c3->t.ONE.texture->id);
+		dtex_debug_draw(c3->t.ONE.texture->id, 1);
 	} else {
-		dtex_debug_draw(c3->t.MULTI.textures[0]->id);
+		dtex_debug_draw(c3->t.MULTI.textures[0]->id, 1);
 		if (c3->t.MULTI.tex_size > 1) {
-			dtex_debug_draw(c3->t.MULTI.textures[1]->id);
+			dtex_debug_draw(c3->t.MULTI.textures[1]->id, 2);
 		}
 	}
-#else
-	if (c3->one_tex_mode) {
-		dtex_debug_draw_ej(c3->t.ONE.texture->id, 1);
-	} else {
-		dtex_debug_draw_ej(c3->t.MULTI.textures[0]->id, 1);
-		if (c3->t.MULTI.tex_size > 1) {
-			dtex_debug_draw_ej(c3->t.MULTI.textures[1]->id, 2);
-		}
-	}
-#endif // USED_IN_EDITOR
 }

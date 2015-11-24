@@ -137,7 +137,7 @@ _scale_texture(struct dtex_texture* tex, float scale) {
 	dtex_draw_to_texture(tex, &dst, vb);
 	dtex_draw_end();
 
-	dtex_gl_release_texture(tex->id, 0);
+	dtex_gl_release_texture(tex->id);
 
 	tex->t.RAW.format = TEXTURE8;
 	tex->id = id;

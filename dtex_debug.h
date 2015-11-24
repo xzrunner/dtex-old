@@ -6,12 +6,9 @@ extern "C"
 #ifndef dynamic_texture_debug_h
 #define dynamic_texture_debug_h
 
-void dtex_debug_draw(unsigned int texid);
-void dtex_debug_draw_with_pos(unsigned int texid, float xmin, float ymin, float xmax, float ymax);
-
-#ifndef USED_IN_EDITOR
-void dtex_debug_draw_ej(int uid_3rd, int pos);
-#endif // USED_IN_EDITOR
+// 2 1
+// 3 4
+void dtex_debug_draw(int id, int pos);
 
 #endif // dynamic_texture_debug_h
 

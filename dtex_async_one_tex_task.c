@@ -9,7 +9,7 @@
 static inline void
 _load_texture_func(struct dtex_import_stream* is, void* ud) {
 	struct dtex_texture* tex = (struct dtex_texture*)ud;	
- 	dtex_load_texture_all(is, tex, true);
+ 	dtex_load_texture_all(is, tex);
 }
 
 void 
