@@ -33,6 +33,8 @@ dtex_debug_draw(int id, int pos) {
 	vb[8] = xmax; vb[9] = ymax; vb[10]= 1; vb[11]= 1;
 	vb[12]= xmax; vb[13]= ymin; vb[14]= 1; vb[15]= 0;
 
+	dtex_shader_program(DTEX_PROGRAM_NORMAL);
+
 	dtex_shader_begin();
 	dtex_shader_set_texture(id);
 	dtex_shader_draw(vb);		
