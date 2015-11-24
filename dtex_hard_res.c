@@ -43,11 +43,11 @@ _init_max_texture_area(int need_texture_area) {
 		if (dtex_gl_out_of_memory()) {
 			break;			
 		} else {
+			id_list[curr_count++] = texid;
+			curr_area += area;
 			if (curr_area >= need_texture_area) {
 				break;
 			}
-			id_list[curr_count++] = texid;
-			curr_area += area;
 		}
 	}
 
