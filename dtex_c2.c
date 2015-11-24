@@ -292,7 +292,7 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		}
 		struct ej_pack_quad* ej_q = &ej_pic->rect[i];
 		struct c2_prenode* pn = &params->c2->prenodes[params->c2->prenode_size++];
-		pn->type == C2_PT_SPR;
+		pn->type = C2_PT_SPR;
 		pn->t.SPR.pkg = params->pkg;
 		pn->t.SPR.ej_quad = ej_q;
 		if (ej_q->texid < QUAD_TEXID_IN_PKG_MAX) {
