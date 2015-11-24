@@ -15,6 +15,8 @@ struct render_state {
 	struct dtex_target* target;
 //	float scr_w, scr_h;
 	int ori_target;
+
+	bool dirty;
 };
 
 static struct render_state RS;
@@ -106,11 +108,14 @@ _draw(const float vb[16], struct dtex_texture* src) {
 
 void 
 dtex_draw_begin() {
+	RS.dirty = false;
 	dtex_shader_begin();
 }
 
 void 
 dtex_draw_to_texture(struct dtex_texture* src, struct dtex_texture* dst, const float vb[16]) {
+	RS.dirty = true;
+
 	if (RS.dst == NULL) {
 		_before_all_draw();
 		_before_target_draw(src, dst);
@@ -123,6 +128,10 @@ dtex_draw_to_texture(struct dtex_texture* src, struct dtex_texture* dst, const f
 
 void 
 dtex_draw_end() {
-	_after_all_draw();
+	if (!RS.dirty) {
+		return;
+	}
+
 	dtex_shader_end();
+	_after_all_draw();
 }
