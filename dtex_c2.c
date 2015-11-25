@@ -191,8 +191,8 @@ _clear_tp_index(struct tp_index* index) {
 	}
 }
 
-void
-dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
+static inline void
+_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 	dtex_warning(" c2 clear");
 
 	c2->loadable = 0;
@@ -231,13 +231,16 @@ dtex_c2_clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 }
 
 void 
-dtex_c2_clear_cg(struct dtex_c2* c2, struct dtex_loader* loader) {
+dtex_c2_clear(struct dtex_c2* c2) {
 	if (!c2->one_tex_mode) {
 		return;
 	}
 
-	dtex_texture_clear_part(c2->t.ONE.texture, 0, 0.5f, 0.5f, 1);
-	_clear_tp_index(&c2->t.ONE.index[0]);
+	dtex_texture_clear(c2->t.ONE.texture);
+	for (int i = 0; i < 4; ++i) {
+		_clear_tp_index(&c2->t.ONE.index[i]);
+	}
+	dtex_cg_clear(c2->t.ONE.cg);
 }
 
 void 
@@ -248,23 +251,7 @@ dtex_c2_clear_from_cg(struct dtex_c2* c2, struct dtex_loader* loader)
 	}
 
 	c2->t.ONE.clear_idx = 2;
-	dtex_c2_clear(c2, loader);
-}
-
-void 
-dtex_c2_reload(struct dtex_c2* c2, struct dtex_loader* loader) {
-	assert(c2->one_tex_mode);
-
-	// clear texture
-	dtex_texture_reload(c2->t.ONE.texture);
-	for (int i = 0; i < 4; ++i) {
-		_clear_tp_index(&c2->t.ONE.index[i]);
-	}
-	c2->prenode_size = 0;
-	dtex_package_traverse(loader, dtex_c2_strategy_clear);
-
-	// clear cg
-	dtex_cg_clear(c2->t.ONE.cg);
+	_clear(c2, loader);
 }
 
 void 
@@ -726,7 +713,7 @@ _mode_one_insert_node(struct insert_params* p) {
 		// 1. use new texture
 		// 2. scale
 		// 3. clear
-		dtex_c2_clear(p->c2, p->loader);
+		_clear(p->c2, p->loader);
 	}
 
 	return false;
@@ -754,7 +741,7 @@ _mode_multi_insert_node(struct insert_params* p) {
 		// 1. use new texture
 		// 2. scale
 		// 3. clear
-		dtex_c2_clear(p->c2, p->loader);
+		_clear(p->c2, p->loader);
 		return false;
 	}
 	return true;
@@ -883,6 +870,41 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 	dtex_draw_end();
 
 	c2->prenode_size = 0;
+}
+
+void 
+dtex_c2_reload_begin(struct dtex_c2* c2) {
+	dtex_texture_reload(c2->t.ONE.texture);
+	dtex_draw_begin();
+}
+
+void 
+dtex_c2_reload_tex(struct dtex_c2* c2, int tex_id, int tex_width, int tex_height, int key) {
+	if (tex_id <= 0 || tex_width <= 0 || tex_height <= 0) {
+		return;
+	}
+
+	struct c2_node* node = _query_node(c2, TEX_PKG_ID, key);
+	assert(node);
+
+	struct dtex_texture tex;
+	tex.id = tex_id;
+	tex.width = tex_width;
+	tex.height = tex_height;
+	tex.inv_width = 1.0f / tex.width;
+	tex.inv_height = 1.0f / tex.height;
+	tex.uid = 0;
+	tex.type = DTEX_TT_RAW;
+	tex.t.RAW.id_alpha = 0;
+	tex.t.RAW.format = TEXTURE8;
+	tex.t.RAW.scale = tex.t.RAW.lod_scale = 1;
+
+	dtex_draw_to_texture(&tex, node->dst_tex, node->trans_vb);
+}
+
+void 
+dtex_c2_reload_end() {
+	dtex_draw_end();
 }
 
 float* 

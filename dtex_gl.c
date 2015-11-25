@@ -27,13 +27,13 @@
 #define COMPRESSED_RGBA_PVRTC_4BPPV1_IMG 4
 #define COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 2
 
-static int (*TEXTURE_CREATE)(int type, int width, int height, const void* data, int channel);
+static int (*TEXTURE_CREATE)(int type, int width, int height, const void* data, int channel, unsigned int id);
 static void (*TEXTURE_RELEASE)(int id);
 static void (*TEXTURE_UPDATE)(const void* pixels, int x, int y, int w, int h, unsigned int id);
 static  int (*TEXTURE_ID)(int id);
 
 void 
-dtex_gl_texture_init(int (*texture_create)(int type, int width, int height, const void* data, int channel),
+dtex_gl_texture_init(int (*texture_create)(int type, int width, int height, const void* data, int channel, unsigned int id),
 					 void (*texture_release)(int id),
 					 void (*texture_update)(const void* pixels, int x, int y, int w, int h, unsigned int id),
 					  int (*texture_id)(int id)) {
@@ -44,8 +44,8 @@ dtex_gl_texture_init(int (*texture_create)(int type, int width, int height, cons
 }
 
 int 
-dtex_gl_create_texture(int type, int width, int height, const void* data, int channel) {
-	int id = TEXTURE_CREATE(type, width, height, data, channel);
+dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, unsigned int id) {
+	id = TEXTURE_CREATE(type, width, height, data, channel, id);
 	dtex_stat_add_texture(id, width, height);
 	return id;
 }

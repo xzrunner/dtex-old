@@ -15,4 +15,5 @@
 
 #include "dtex_c2_strategy.h"
 
+#include "dtex_c2.h"
 #include "dtex_cg.h"

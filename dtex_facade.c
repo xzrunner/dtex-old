@@ -306,6 +306,27 @@ dtexf_c2_load_end() {
 	}
 }
 
+void 
+dtexf_c2_reload_begin() {
+	if (C2) {
+		dtex_c2_reload_begin(C2);
+	}
+}
+
+void 
+dtexf_c2_reload_tex(int tex_id, int tex_width, int tex_height, int key) {
+	if (C2) {
+		dtex_c2_reload_tex(C2, tex_id, tex_width, tex_height, key);
+	}
+}
+
+void 
+dtexf_c2_reload_end() {
+	if (C2) {
+		dtex_c2_reload_end(C2);
+	}
+}
+
 float* 
 dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, int* dst_tex) {
 	if (C2) {
@@ -326,7 +347,16 @@ dtexf_c2_query_tex(int key, int* out_texid) {
 
 void 
 dtexf_c2_clear_from_cg() {
-	dtex_c2_clear_from_cg(C2, LOADER);
+	if (C2) {
+		dtex_c2_clear_from_cg(C2, LOADER);
+	}
+}
+
+void 
+dtexf_c2_clear() {
+	if (C2) {
+		dtex_c2_clear(C2);
+	}
 }
 
 //void 
@@ -342,11 +372,6 @@ dtexf_c2_clear_from_cg() {
 //
 //	dtexc2_query_map_addr(C2, ori_tex->id, &rect, out_tex, out_pos);
 //}
-
-void 
-dtexf_c2_reload() {
-	dtex_c2_reload(C2, LOADER);	
-}
 
 /************************************************************************/
 /* C1                                                                   */
@@ -364,12 +389,6 @@ dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 struct dtex_cg* 
 dtexf_get_cg() {
 	return dtex_c2_get_cg(C2);
-}
-
-void 
-dtexf_cg_clear() {
-	dtex_c2_clear_cg(C2, LOADER);
-	dtex_cg_clear(dtex_c2_get_cg(C2));
 }
 
 void 
