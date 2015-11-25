@@ -12,6 +12,10 @@ static struct dtex_screen SCREEN;
 
 void 
 dtex_set_screen(float w, float h, float scale) {
+	if (w == 0 || h == 0 || scale == 0) {
+		return;
+	}
+
 	SCREEN.w = w;
 	SCREEN.h = h;
 	SCREEN.scale = scale;
