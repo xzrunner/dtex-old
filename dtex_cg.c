@@ -114,11 +114,11 @@ dtex_cg_reload_texture(struct dtex_cg* cg) {
 	dtex_texture_reload(cg->tex);
 }
 
-void 
+float* 
 dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dtex_glyph* glyph) {
 	if (cg->node_size >= MAX_NODE) {
 		dtex_warning(" cg nodes empty.");
-		return;
+		return NULL;
 	}
 
 	struct glyph_node* node = &cg->nodes[cg->node_size++];
@@ -128,7 +128,7 @@ dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dt
 	struct dtex_tp_pos* pos = dtex_tp_add(cg->tp, width + PADDING * 2, height + PADDING * 2, false);
 	if (!pos) {
 		dtexf_c2_clear_from_cg();
-		return;
+		return NULL;
 	}
 	float xmin = (pos->r.xmin + PADDING) * cg->tex->inv_width,
 		  xmax = (pos->r.xmax - PADDING) * cg->tex->inv_width,
