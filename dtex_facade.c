@@ -452,6 +452,13 @@ dtexf_cs_draw_to_screen() {
 	}
 }
 
+void 
+dtexf_cs_reload() {
+	if (CS) {
+		dtex_cs_reload(CS);
+	}
+}
+
 /************************************************************************/
 /* async load texture                                                   */
 /************************************************************************/
@@ -541,9 +548,9 @@ dtexf_debug_draw() {
 	if (C3) {
 		dtex_c3_debug_draw(C3);
 	}
-	if (CS) {
-		dtex_cs_debug_draw(CS);
-	}
+// 	if (CS) {
+// 		dtex_cs_debug_draw(CS);
+// 	}
 }
 
 //void 

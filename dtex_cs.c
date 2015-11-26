@@ -32,8 +32,17 @@ dtex_cs_create() {
 
 void 
 dtex_cs_on_size(struct dtex_cs* cs, int width, int height) {
+	if (width <= 0 || height <= 0) {
+		return;
+	}
+
 	if (cs->texture) {
-		dtex_texture_release(cs->texture);
+		if (cs->texture->width == width && cs->texture->height == height) {
+			return;
+		} else {
+			dtex_texture_release(cs->texture);
+			cs->texture = NULL;
+		}
 	}
 
 	uint8_t* empty_data = (uint8_t*)malloc(width*height*4);
@@ -102,6 +111,15 @@ dtex_cs_draw_to_screen(struct dtex_cs* cs) {
 }
 
 void 
+dtex_cs_reload(struct dtex_cs* cs) {
+	if (cs->texture) {
+		dtex_texture_reload(cs->texture);
+	}
+}
+
+void 
 dtex_cs_debug_draw(struct dtex_cs* cs) {
-	dtex_debug_draw(cs->texture->id, 2);
+	if (cs->texture) {
+		dtex_debug_draw(cs->texture->id, 2);
+	}
 }

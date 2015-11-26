@@ -18,6 +18,8 @@ void dtex_cs_unbind(struct dtex_cs*);
 
 void dtex_cs_draw_to_screen(struct dtex_cs*);
 
+void dtex_cs_reload(struct dtex_cs*);
+
 void dtex_cs_debug_draw(struct dtex_cs*);
 
 #endif // dynamic_texture_cache_screen_h

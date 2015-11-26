@@ -85,6 +85,7 @@ void dtexf_cs_on_size(int width, int height);
 void dtexf_cs_bind();
 void dtexf_cs_unbind();
 void dtexf_cs_draw_to_screen();
+void dtexf_cs_reload();
 
 //void dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path);
 
