@@ -109,11 +109,6 @@ dtex_cg_clear(struct dtex_cg* cg) {
 	cg->node_size = 0;
 }
 
-void 
-dtex_cg_reload_texture(struct dtex_cg* cg) {
-	dtex_texture_reload(cg->tex);
-}
-
 float* 
 dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dtex_glyph* glyph) {
 	if (cg->node_size >= MAX_NODE) {
