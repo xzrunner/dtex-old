@@ -202,6 +202,18 @@ lc3_load_end(lua_State* L) {
 	return 0;
 }
 
+/************************************************************************/
+/* cs                                                                   */
+/************************************************************************/
+
+static int
+lcs_on_size(lua_State* L) {
+	int w = luaL_checkinteger(L, 1);
+	int h = luaL_checkinteger(L, 2);
+	dtexf_cs_on_size(w, h);
+	return 0;
+}
+
 int
 luaopen_dtex_c(lua_State* L) {
 	luaL_Reg l[] = {
@@ -228,6 +240,9 @@ luaopen_dtex_c(lua_State* L) {
 		// C3
 		{ "c3_load", lc3_load },
 		{ "c3_load_end", lc3_load_end },
+
+		// CS
+		{ "cs_on_size", lcs_on_size },
 
 		{ NULL, NULL },		
 	};
