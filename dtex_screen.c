@@ -1,5 +1,7 @@
 #include "dtex_screen.h"
 
+#include "dtex_facade.h"
+
 struct dtex_screen {
 	int w;
 	int h;
@@ -21,6 +23,8 @@ dtex_set_screen(float w, float h, float scale) {
 	SCREEN.scale = scale;
 	SCREEN.invw = 2.0f / SCALE / w;
 	SCREEN.invh = -2.0f / SCALE / h;
+
+	dtexf_cs_on_size(w, h);
 }
 
 void 

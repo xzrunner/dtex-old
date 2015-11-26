@@ -77,7 +77,14 @@ void dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr);
 /* CG                                                                   */
 /************************************************************************/
 struct dtex_cg* dtexf_get_cg();
-void dtexf_cg_reload_texture();
+
+/************************************************************************/
+/* CS                                                                   */
+/************************************************************************/
+void dtexf_cs_on_size(int width, int height);
+void dtexf_cs_bind();
+void dtexf_cs_unbind();
+void dtexf_cs_draw_to_screen();
 
 //void dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path);
 
