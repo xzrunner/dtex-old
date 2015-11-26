@@ -62,10 +62,6 @@ dtex_cs_on_size(struct dtex_cs* cs, int width, int height) {
 	tex->t.RAW.id_alpha = 0;
 
 	cs->texture = tex;
-
-	int last_target = dtex_target_bind(cs->target);
-	dtex_target_bind_texture(cs->target, cs->texture->id);
-	dtex_target_unbind(last_target);
 }
 
 void 
@@ -78,19 +74,14 @@ dtex_cs_bind(struct dtex_cs* cs) {
 	cs->last_target = dtex_target_bind(cs->target);
 	dtex_target_bind_texture(cs->target, cs->texture->id);
 
-	dtex_shader_begin();
-
-	dtex_gl_viewport(0, 0, cs->texture->width, cs->texture->height);
+//	dtex_shader_begin();
 }
 
 void dtex_cs_unbind(struct dtex_cs* cs) {
-	dtex_shader_end();
+//	dtex_shader_end();
 
+	dtex_target_unbind_texture(cs->target);
 	dtex_target_unbind(cs->last_target);
-
-	float scr_w, scr_h, scr_s;
-	dtex_get_screen(&scr_w, &scr_h, &scr_s);
-	dtex_gl_viewport(0, 0, scr_w, scr_h);
 }
 
 void 
@@ -103,6 +94,7 @@ dtex_cs_draw_to_screen(struct dtex_cs* cs) {
 
 	dtex_shader_begin();
 
+	dtex_shader_program(DTEX_PROGRAM_NORMAL);
 	dtex_shader_set_texture(cs->texture->id);
 	dtex_shader_draw(vb);
 
