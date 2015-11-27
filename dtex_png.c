@@ -8,7 +8,7 @@
 
 #ifdef USED_IN_EDITOR
 
-#include <libpng/png.h>
+#include <png.h>
 
 static int _offset = 0;
 static inline void
