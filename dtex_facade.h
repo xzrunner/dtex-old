@@ -87,6 +87,10 @@ void dtexf_cs_unbind();
 void dtexf_cs_draw_to_screen();
 void dtexf_cs_reload();
 
+void dtexf_cs_add_inv_rect(float xmin, float ymin, float xmax, float ymax);
+void dtexf_cs_clear_inv_rects(float cam_x, float cam_y, float cam_scale);
+void dtexf_cs_set_pos(float x, float y, float scale);
+
 //void dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path);
 
 /************************************************************************/

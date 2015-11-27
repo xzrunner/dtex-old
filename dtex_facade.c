@@ -459,6 +459,32 @@ dtexf_cs_reload() {
 	}
 }
 
+void 
+dtexf_cs_add_inv_rect(float xmin, float ymin, float xmax, float ymax) {
+	if (CS) {
+		struct dtex_cs_rect r;
+		r.xmin = xmin;
+		r.ymin = ymin;
+		r.xmax = xmax;
+		r.ymax = ymax;
+		dtex_cs_add_inv_rect(CS, &r);
+	}
+}
+
+void 
+dtexf_cs_clear_inv_rects(float cam_x, float cam_y, float cam_scale) {
+	if (CS) {
+		dtex_cs_clear_inv_rects(CS, cam_x, cam_y, cam_scale);
+	}
+}
+
+void 
+dtexf_cs_set_pos(float x, float y, float scale) {
+	if (CS) {
+		dtex_cs_set_pos(CS, x, y, scale);
+	}
+}
+
 /************************************************************************/
 /* async load texture                                                   */
 /************************************************************************/
