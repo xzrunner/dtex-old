@@ -6,6 +6,8 @@ extern "C"
 #ifndef dynamic_texture_cache_screen_h
 #define dynamic_texture_cache_screen_h
 
+#include <stdbool.h>
+
 struct dtex_cs;
 
 struct dtex_cs_rect {
