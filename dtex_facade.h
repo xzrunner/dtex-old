@@ -84,7 +84,7 @@ struct dtex_cg* dtexf_get_cg();
 void dtexf_cs_on_size(int width, int height);
 void dtexf_cs_bind();
 void dtexf_cs_unbind();
-void dtexf_cs_draw_to_screen();
+void dtexf_cs_draw_to_screen(void (*before_draw)(void* ud), void* ud);
 void dtexf_cs_reload();
 
 void dtexf_cs_add_inv_rect(float xmin, float ymin, float xmax, float ymax);

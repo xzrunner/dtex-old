@@ -446,9 +446,9 @@ dtexf_cs_unbind() {
 }
 
 void 
-dtexf_cs_draw_to_screen() {
+dtexf_cs_draw_to_screen(void (*before_draw)(void* ud), void* ud) {
 	if (CS) {
-		dtex_cs_draw_to_screen(CS);
+		dtex_cs_draw_to_screen(CS, before_draw, ud);
 	}
 }
 

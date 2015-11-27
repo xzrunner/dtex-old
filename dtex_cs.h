@@ -30,7 +30,7 @@ void dtex_cs_set_pos(struct dtex_cs*, float x, float y, float scale);
 
 bool dtex_cs_dirty(struct dtex_cs*);
 
-void dtex_cs_draw_to_screen(struct dtex_cs*);
+void dtex_cs_draw_to_screen(struct dtex_cs*, void (*before_draw)(void* ud), void* ud);
 
 void dtex_cs_reload(struct dtex_cs*);
 
