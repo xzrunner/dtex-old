@@ -24,7 +24,8 @@ void dtex_cs_bind(struct dtex_cs*);
 void dtex_cs_unbind(struct dtex_cs*);
 
 void dtex_cs_add_inv_rect(struct dtex_cs*, struct dtex_cs_rect* rect);
-void dtex_cs_clear_inv_rects(struct dtex_cs*, float cam_x, float cam_y, float cam_scale);
+
+void dtex_cs_traverse(struct dtex_cs*, void (*cb)(struct dtex_cs_rect* r, void* ud), void* ud);
 
 void dtex_cs_set_pos(struct dtex_cs*, float x, float y, float scale);
 

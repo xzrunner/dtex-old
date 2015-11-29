@@ -35,7 +35,6 @@
 #include "dtex_timer_task.h"
 #include "dtex_c2_strategy.h"
 #include "dtex_cg.h"
-#include "dtex_cs.h"
 
 #include <cJSON.h>
 
@@ -50,7 +49,6 @@ static struct dtex_loader* LOADER = NULL;
 static struct dtex_c3* C3 = NULL;
 static struct dtex_c2* C2 = NULL;
 static struct dtex_c1* C1 = NULL;
-static struct dtex_cs* CS = NULL;
 
 /************************************************************************/
 /* dtexf overall                                                        */
@@ -63,7 +61,6 @@ struct dtex_config {
 	bool open_c2;
 	bool open_c3;
 	bool open_cg;
-	bool open_cs;
 
 	int c1_tex_size;
 	int c2_tex_size;
@@ -91,9 +88,6 @@ _config(const char* str) {
 	CFG.open_c3 = cJSON_GetObjectItem(root, "open_c3")->valueint;
 	if (cJSON_GetObjectItem(root, "open_cg")) {
 		CFG.open_cg = cJSON_GetObjectItem(root, "open_cg")->valueint;
-	}
-	if (cJSON_GetObjectItem(root, "open_cs")) {
-		CFG.open_cs = cJSON_GetObjectItem(root, "open_cs")->valueint;
 	}
 
 	if (cJSON_GetObjectItem(root, "c1_tex_size")) {
@@ -129,7 +123,6 @@ dtexf_create(const char* cfg) {
 	CFG.open_c2 = true;
 	CFG.open_c3 = true;
 	CFG.open_cg = false;
-	CFG.open_cs = false;
 
 	CFG.c1_tex_size = 1024;
 	CFG.c2_tex_size = 4096;
@@ -181,16 +174,10 @@ dtexf_create(const char* cfg) {
  	if (CFG.open_c2) {
  		C2 = dtex_c2_create(CFG.c2_tex_size, true, 0, CFG.open_cg);		
  	}
-	if (CFG.open_cs) {
-		CS = dtex_cs_create();
-	}
 }
 
 void 
 dtexf_release() {
-	if (CS) {
-		dtex_cs_release(CS);
-	}
  	if (C2) {
  		dtex_c2_release(C2);		
  	}
@@ -422,75 +409,6 @@ dtexf_get_cg() {
 }
 
 /************************************************************************/
-/* CS                                                                   */
-/************************************************************************/
-void 
-dtexf_cs_on_size(int width, int height) {
-	if (CS) {
-		dtex_cs_on_size(CS, width, height);
-	}
-}
-
-void 
-dtexf_cs_bind() {
-	if (CS) {
-		dtex_cs_bind(CS);
-	}
-}
-
-void 
-dtexf_cs_unbind() {
-	if (CS) {
-		dtex_cs_unbind(CS);
-	}
-}
-
-void 
-dtexf_cs_draw_to_screen(void (*before_draw)(void* ud), void* ud) {
-	if (CS) {
-		dtex_cs_draw_to_screen(CS, before_draw, ud);
-	}
-}
-
-void 
-dtexf_cs_reload() {
-	if (CS) {
-		dtex_cs_reload(CS);
-	}
-}
-
-void 
-dtexf_cs_add_inv_rect(float xmin, float ymin, float xmax, float ymax) {
-	if (CS) {
-		struct dtex_cs_rect r;
-		r.xmin = xmin;
-		r.ymin = ymin;
-		r.xmax = xmax;
-		r.ymax = ymax;
-		dtex_cs_add_inv_rect(CS, &r);
-	}
-}
-
-void 
-dtexf_cs_clear_inv_rects(float cam_x, float cam_y, float cam_scale) {
-	if (CS) {
-		dtex_cs_clear_inv_rects(CS, cam_x, cam_y, cam_scale);
-	}
-}
-
-void 
-dtexf_cs_set_pos(float x, float y, float scale) {
-	if (CS) {
-		dtex_cs_set_pos(CS, x, y, scale);
-	}
-}
-
-bool 
-dtexf_cs_open() {
-	return CS ? true : false;
-}
-
-/************************************************************************/
 /* async load texture                                                   */
 /************************************************************************/
 
@@ -579,9 +497,6 @@ dtexf_debug_draw() {
 	if (C3) {
 		dtex_c3_debug_draw(C3);
 	}
-// 	if (CS) {
-// 		dtex_cs_debug_draw(CS);
-// 	}
 }
 
 //void 

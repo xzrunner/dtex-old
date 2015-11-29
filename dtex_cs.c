@@ -7,6 +7,7 @@
 #include "dtex_target.h"
 #include "dtex_shader.h"
 #include "dtex_debug.h"
+#include "dtex_math.h"
 
 #include "dtex_screen.h"
 
@@ -17,6 +18,15 @@
 #include <string.h>
 
 #define MAX_RECT 512
+
+#define REGION_COMBINE(in1, in2, out) { \
+	(out).xmin = MIN((in1).xmin, (in2).xmin); \
+	(out).ymin = MIN((in1).ymin, (in2).ymin); \
+	(out).xmax = MAX((in1).xmax, (in2).xmax); \
+	(out).ymax = MAX((in1).ymax, (in2).ymax); \
+}
+
+#define REGION_INTERSECT(a, b) (!((a).xmin > (b).xmax || (a).xmax < (b).xmin || (a).ymin > (b).ymax || (a).ymax < (b).ymin))
 
 struct dtex_cs {
 	struct dtex_texture* texture;
@@ -46,6 +56,9 @@ dtex_cs_create() {
 	cs->scale = 1;
 
 	cs->dirty = false;
+
+	glClearStencil(0x0);
+	glEnable(GL_STENCIL_TEST);
 
 	return cs;
 }
@@ -121,29 +134,21 @@ dtex_cs_add_inv_rect(struct dtex_cs* cs, struct dtex_cs_rect* rect) {
 		return;
 	}
 
+	for (int i = 0; i < cs->rect_count; ++i) {
+		if (REGION_INTERSECT(cs->invalid_rect[i], *rect)) {
+			REGION_COMBINE(cs->invalid_rect[i], *rect, cs->invalid_rect[i]);
+			return;
+		}
+	}
+
 	cs->invalid_rect[cs->rect_count++] = *rect;
 }
 
 void 
-dtex_cs_clear_inv_rects(struct dtex_cs* cs, float cam_x, float cam_y, float cam_scale) {
-	float scr_w, scr_h, scr_s;
-	dtex_get_screen(&scr_w, &scr_h, &scr_s);
-
-	glEnable(GL_SCISSOR_TEST);
-
+dtex_cs_traverse(struct dtex_cs* cs, void (*cb)(struct dtex_cs_rect* r, void* ud), void* ud) {
 	for (int i = 0; i < cs->rect_count; ++i) {
-		struct dtex_cs_rect* r = &cs->invalid_rect[i];
-		
-		float x = (r->xmin - cam_x) / cam_scale + scr_w * 0.5f,
-			  y = (r->ymin - cam_y) / cam_scale + scr_h * 0.5f,
-			  w = (r->xmax - r->xmin) / cam_scale,
-			  h = (r->ymax - r->ymin) / cam_scale;
-		dtex_gl_scissor(x, y, w, h);
-
-		dtex_gl_clear_color(0, 1, 0, 1);
+		cb(&cs->invalid_rect[i], ud);
 	}
-
-	glDisable(GL_SCISSOR_TEST);
 }
 
 void 
