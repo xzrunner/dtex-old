@@ -469,6 +469,25 @@ _query_node(struct dtex_c2* c2, int pkg_id, int spr_id) {
 	return NULL;
 }
 
+static inline void
+_rotate_trans_vb(float trans_vb[16], bool clockwise) {
+	if (!clockwise) {
+		float x, y;
+		x = trans_vb[2]; y = trans_vb[3];
+		trans_vb[2] = trans_vb[6];  trans_vb[3] = trans_vb[7];
+		trans_vb[6] = trans_vb[10]; trans_vb[7] = trans_vb[11];
+		trans_vb[10]= trans_vb[14]; trans_vb[11]= trans_vb[15];
+		trans_vb[14]= x;            trans_vb[15]= y;	
+	} else {
+		float x, y;
+		x = trans_vb[2]; y = trans_vb[3];
+		trans_vb[2] = trans_vb[14];  trans_vb[3] = trans_vb[15];
+		trans_vb[14] = trans_vb[10]; trans_vb[15] = trans_vb[11];
+		trans_vb[10]= trans_vb[6]; trans_vb[11]= trans_vb[7];
+		trans_vb[6]= x;            trans_vb[7]= y;	
+	}	
+}
+
 static inline void 
 _relocate_draw_vb(uint16_t part_src[8], 
                   struct dtex_inv_size* src_sz, 
@@ -538,25 +557,13 @@ _relocate_draw_vb(uint16_t part_src[8],
 	    }
     }
 
-	if (rotate == 1) {
-		float x, y;
-		x = trans_vb[2]; y = trans_vb[3];
-		trans_vb[2] = trans_vb[6];  trans_vb[3] = trans_vb[7];
-		trans_vb[6] = trans_vb[10]; trans_vb[7] = trans_vb[11];
-		trans_vb[10]= trans_vb[14]; trans_vb[11]= trans_vb[15];
-		trans_vb[14]= x;            trans_vb[15]= y;	
-	} else if (rotate == -1) {
-		float x, y;
-		x = trans_vb[2]; y = trans_vb[3];
-		trans_vb[2] = trans_vb[14];  trans_vb[3] = trans_vb[15];
-		trans_vb[14] = trans_vb[10]; trans_vb[15] = trans_vb[11];
-		trans_vb[10]= trans_vb[6]; trans_vb[11]= trans_vb[7];
-		trans_vb[6]= x;            trans_vb[7]= y;	
-	}	
+	if (rotate) {
+		_rotate_trans_vb(trans_vb, rotate == -1);
+	}
 }
 
 static inline void
-_rotate_texcoords(float val[8], bool clockwise) {
+_rotate_dst_vb(float val[8], bool clockwise) {
 	if (!clockwise) {
 		float x, y;
 		x = val[6]; y = val[7];
@@ -622,7 +629,7 @@ _relocate_draw_texcoords(uint16_t part_src[8],
 	    }
     }
 	if (rotate) {
-		_rotate_texcoords(val, rotate == -1);
+		_rotate_dst_vb(val, rotate == -1);
 	}
 }
 
@@ -663,7 +670,8 @@ _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 		n->dst_vb[4] = dst_xmax; n->dst_vb[5] = dst_ymax; 
 		n->dst_vb[6] = dst_xmin; n->dst_vb[7] = dst_ymax;
 		if (rotate) {
-			_rotate_texcoords(n->dst_vb, false);
+			_rotate_trans_vb(n->trans_vb, false);
+			_rotate_dst_vb(n->dst_vb, false);
 		}
 	}
 }
