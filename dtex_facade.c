@@ -35,6 +35,7 @@
 #include "dtex_timer_task.h"
 #include "dtex_c2_strategy.h"
 #include "dtex_cg.h"
+#include "dtex_cs.h"
 
 #include <cJSON.h>
 
@@ -49,6 +50,7 @@ static struct dtex_loader* LOADER = NULL;
 static struct dtex_c3* C3 = NULL;
 static struct dtex_c2* C2 = NULL;
 static struct dtex_c1* C1 = NULL;
+static struct dtex_cs* CS = NULL;
 
 /************************************************************************/
 /* dtexf overall                                                        */
@@ -406,6 +408,43 @@ dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 struct dtex_cg* 
 dtexf_get_cg() {
 	return C2 ? dtex_c2_get_cg(C2) : NULL;
+}
+
+/************************************************************************/
+/* CS                                                                   */
+/************************************************************************/
+
+void 
+dtexf_cs_create() {
+	CS = dtex_cs_create();
+}
+
+void 
+dtexf_cs_on_size(int width, int height) {
+	if (CS) {
+		dtex_cs_on_size(CS, width, height);
+	}
+}
+
+void 
+dtexf_cs_bind() {
+	if (CS) {
+		dtex_cs_bind(CS);
+	}
+}
+
+void 
+dtexf_cs_unbind() {
+	if (CS) {
+		dtex_cs_unbind(CS);
+	}
+}
+
+void 
+dtexf_cs_draw_to_screen(void (*before_draw)(void* ud), void* ud) {
+	if (CS) {
+		dtex_cs_draw_to_screen(CS, before_draw, ud);
+	}
 }
 
 /************************************************************************/

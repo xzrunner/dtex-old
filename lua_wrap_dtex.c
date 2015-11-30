@@ -207,9 +207,10 @@ lc3_load_end(lua_State* L) {
 /************************************************************************/
 
 static int
-lcs_on_size(lua_State* L) {
+lcs_create(lua_State* L) {
 	int w = luaL_checkinteger(L, 1);
 	int h = luaL_checkinteger(L, 2);
+	dtexf_cs_create();
 	dtexf_cs_on_size(w, h);
 	return 0;
 }
@@ -242,7 +243,7 @@ luaopen_dtex_c(lua_State* L) {
 		{ "c3_load_end", lc3_load_end },
 
 		// CS
-		{ "cs_on_size", lcs_on_size },
+		{ "cs_create", lcs_create },
 
 		{ NULL, NULL },		
 	};
