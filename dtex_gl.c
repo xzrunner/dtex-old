@@ -83,11 +83,10 @@ dtex_gl_scissor(int x, int y, int w, int h) {
 	glScissor(x, y, w, h);
 }
 
-void 
-dtex_gl_finish() {
-	glFinish();
-	glFlush();
-}
+// void 
+// dtex_gl_finish() {
+// 	glFinish();
+// }
 
 void 
 dtex_gl_bind_vertex_array(int id) {
