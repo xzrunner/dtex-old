@@ -881,6 +881,24 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 }
 
 void 
+dtex_c2_remove_tex(struct dtex_c2* c2, int key) {
+	struct hash_key hk;
+	hk.pkg_id = TEX_PKG_ID;
+	hk.spr_id = key;
+	if (c2->one_tex_mode) {
+		for (int i = 0; i < 4; ++i) {
+			struct c2_node* ret = (struct c2_node*)dtex_hash_query(c2->t.ONE.index[i].hash, &hk);
+			if (ret) {
+				dtex_hash_remove(c2->t.ONE.index[i].hash, &hk);				
+				return;
+			}
+		}
+	} else {
+		dtex_hash_remove(c2->t.MULTI.index.hash, &hk);
+	}
+}
+
+void 
 dtex_c2_reload_begin(struct dtex_c2* c2) {
 	dtex_texture_reload(c2->t.ONE.texture);
 	dtex_draw_begin();

@@ -54,6 +54,8 @@ void dtexf_c2_load(struct dtex_package* pkg, int spr_id);
 void dtexf_c2_load_tex(int tex_id, int tex_width, int tex_height, int key);
 void dtexf_c2_load_end();
 
+void dtexf_c2_remove_tex(int key);
+
 void dtexf_c2_reload_begin();
 void dtexf_c2_reload_tex(int tex_id, int tex_width, int tex_height, int key);
 void dtexf_c2_reload_end();

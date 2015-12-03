@@ -309,6 +309,13 @@ dtexf_c2_load_end() {
 }
 
 void 
+dtexf_c2_remove_tex(int key) {
+	if (C2) {
+		dtex_c2_remove_tex(C2, key);
+	}
+}
+
+void 
 dtexf_c2_reload_begin() {
 	if (C2) {
 		dtex_c2_reload_begin(C2);
