@@ -89,9 +89,13 @@ dtex_cs_on_size(struct dtex_cs* cs, int width, int height) {
 		return;
 	}
 
-	memset(empty_data, 0xff, width*height*4);
+	memset(empty_data, 0x00, width*height*4);
 
-	int id = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, empty_data, 0, 0);
+	int last_id = 0;
+	if (cs->texture) {
+		last_id = cs->texture->id;
+	}
+	int id = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, empty_data, 0, last_id);
 	free(empty_data);
 	if (dtex_gl_out_of_memory()) {
 		dtex_fault("dtex_cs_on_size dtex_gl_create_texture fail.");
