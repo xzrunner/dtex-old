@@ -147,6 +147,25 @@ void dtex_c3_release(struct dtex_c3* c3) {
 	free(c3);
 }
 
+static inline void
+_clear_tp_index(struct tp_index* index) {
+	index->node_size = 0;
+
+	dtex_hash_clear(index->hash);
+
+	if (index->tp) {
+		dtex_tp_clear(index->tp);
+	}
+}
+
+void 
+dtex_c3_clear(struct dtex_c3* c3) {
+	if (c3->one_tex_mode && c3->t.ONE.d_index.node_size != 0) {
+		dtex_texture_clear_part(c3->t.ONE.texture, 0, 0, 1, 0.5f);
+		_clear_tp_index(&c3->t.ONE.d_index);
+	}
+}
+
 static inline bool
 _is_pkg_loaded(struct dtex_c3* c3, const char* pkg_name) {
 	struct c3_node* node = NULL;

@@ -45,6 +45,7 @@ void dtexf_load_texture(struct dtex_package*, int idx);
 /************************************************************************/
 void dtexf_c3_load(struct dtex_package* pkg, float scale);
 void dtexf_c3_load_end(bool async);
+void dtexf_c3_clear();
 
 /************************************************************************/
 /* C2                                                                   */

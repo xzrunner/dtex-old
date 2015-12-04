@@ -202,6 +202,12 @@ lc3_load_end(lua_State* L) {
 	return 0;
 }
 
+static int
+lc3_clear(lua_State* L) {
+	dtexf_c3_clear();
+	return 0;
+}
+
 /************************************************************************/
 /* cs                                                                   */
 /************************************************************************/
@@ -241,6 +247,7 @@ luaopen_dtex_c(lua_State* L) {
 		// C3
 		{ "c3_load", lc3_load },
 		{ "c3_load_end", lc3_load_end },
+		{ "c3_clear", lc3_clear },
 
 		// CS
 		{ "cs_create", lcs_create },
