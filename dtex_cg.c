@@ -107,6 +107,7 @@ dtex_cg_release(struct dtex_cg* cg) {
 void 
 dtex_cg_clear(struct dtex_cg* cg) {
 	cg->node_size = 0;
+	dtex_hash_clear(cg->hash);
 }
 
 float* 
