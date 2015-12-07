@@ -68,6 +68,8 @@ struct dtex_config {
 	int c2_tex_size;
 	int c3_tex_size;
 
+	int src_extrude;
+
 	int LOD[3];
 
 	int c2_max_no_update_count;
@@ -102,6 +104,10 @@ _config(const char* str) {
 		CFG.c3_tex_size = cJSON_GetObjectItem(root, "c3_tex_size")->valueint;
 	}
 
+	if (cJSON_GetObjectItem(root, "src_extrude")) {
+		CFG.src_extrude = cJSON_GetObjectItem(root, "src_extrude")->valueint;
+	}
+
 	cJSON* lod = cJSON_GetObjectItem(root, "LOD");
 	if (lod) {
 		int lod_sz = cJSON_GetArraySize(lod);
@@ -129,6 +135,8 @@ dtexf_create(const char* cfg) {
 	CFG.c1_tex_size = 1024;
 	CFG.c2_tex_size = 4096;
 	CFG.c3_tex_size = 2048;
+
+	CFG.src_extrude = 0;
 
 	CFG.LOD[0] = 100;
 	CFG.LOD[1] = 50;
@@ -174,7 +182,7 @@ dtexf_create(const char* cfg) {
  		C1 = dtex_c1_create(CFG.c1_tex_size);		
  	}
  	if (CFG.open_c2) {
- 		C2 = dtex_c2_create(CFG.c2_tex_size, true, 0, CFG.open_cg);		
+ 		C2 = dtex_c2_create(CFG.c2_tex_size, true, 0, CFG.open_cg, CFG.src_extrude);
  	}
 }
 

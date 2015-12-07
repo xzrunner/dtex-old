@@ -31,6 +31,8 @@
 #define PADDING 1
 //#define EXTRUDE 1
 
+static int SRC_EXTRUDE = 0;
+
 struct hash_key {
 	int pkg_id;
 	int spr_id;
@@ -125,7 +127,9 @@ _equal_func(void* key0, void* key1) {
 }
 
 struct dtex_c2* 
-dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_cg) {
+dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_cg, int src_extrude) {
+	SRC_EXTRUDE = src_extrude;
+
 	size_t sz = sizeof(struct dtex_c2) + sizeof(struct c2_prenode) * PRELOAD_SIZE;
 	struct dtex_c2* c2 = (struct dtex_c2*)malloc(sz);
 	if (!c2) {
@@ -496,14 +500,14 @@ _relocate_draw_vb(uint16_t part_src[8],
 				  struct dtex_rect* dst_rect, 
 				  int rotate, 
 				  float trans_vb[16]) {
-	float src_xmin = src_rect->xmin * src_sz->inv_w,
-	      src_xmax = src_rect->xmax * src_sz->inv_w,
-	      src_ymin = src_rect->ymin * src_sz->inv_h,
-	      src_ymax = src_rect->ymax * src_sz->inv_h;
-	float dst_xmin = dst_rect->xmin * dst_sz->inv_w,
-	      dst_xmax = dst_rect->xmax * dst_sz->inv_w,
-	      dst_ymin = dst_rect->ymin * dst_sz->inv_h,
-	      dst_ymax = dst_rect->ymax * dst_sz->inv_h;
+	float src_xmin = (src_rect->xmin - SRC_EXTRUDE) * src_sz->inv_w,
+	      src_xmax = (src_rect->xmax + SRC_EXTRUDE) * src_sz->inv_w,
+	      src_ymin = (src_rect->ymin - SRC_EXTRUDE) * src_sz->inv_h,
+	      src_ymax = (src_rect->ymax + SRC_EXTRUDE) * src_sz->inv_h;
+	float dst_xmin = (dst_rect->xmin - SRC_EXTRUDE) * dst_sz->inv_w,
+	      dst_xmax = (dst_rect->xmax + SRC_EXTRUDE) * dst_sz->inv_w,
+	      dst_ymin = (dst_rect->ymin - SRC_EXTRUDE) * dst_sz->inv_h,
+	      dst_ymax = (dst_rect->ymax + SRC_EXTRUDE) * dst_sz->inv_h;
 	float vd_xmin = dst_xmin * 2 - 1,
           vd_xmax = dst_xmax * 2 - 1,
           vd_ymin = dst_ymin * 2 - 1,
@@ -583,8 +587,6 @@ _rotate_dst_vb(float val[8], bool clockwise) {
 
 static inline void 
 _relocate_draw_texcoords(uint16_t part_src[8], 
-                         struct dtex_inv_size* src_sz, 
-						 struct dtex_rect* src_rect, 
 						 struct dtex_inv_size* dst_sz, 
 						 struct dtex_rect* dst_rect, 
 						 int rotate, 
@@ -646,7 +648,7 @@ _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 
 		int rotate_times = rotate ? 1 : 0;
 		_relocate_draw_vb(pn->t.SPR.ej_quad->texture_coord, &src_sz, &pn->t.SPR.rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb);
-		_relocate_draw_texcoords(pn->t.SPR.ej_quad->texture_coord, &src_sz, &pn->t.SPR.rect, &dst_sz, &n->dst_pos->r, rotate_times, n->dst_vb);
+		_relocate_draw_texcoords(pn->t.SPR.ej_quad->texture_coord, &dst_sz, &n->dst_pos->r, rotate_times, n->dst_vb);
 	} else {
 		struct dtex_rect* dst_rect = &n->dst_pos->r;
 		float dst_inv_w = n->dst_tex->inv_width,
