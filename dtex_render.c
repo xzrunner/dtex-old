@@ -115,10 +115,8 @@ dtex_draw_to_texture(struct dtex_texture* src, struct dtex_texture* dst, const f
 
 void 
 dtex_draw_end() {
-	if (!RS.dirty) {
-		return;
-	}
-
 	dtex_shader_end();
-	_after_all_draw();
+	if (RS.dirty) {
+		_after_all_draw();
+	}
 }
