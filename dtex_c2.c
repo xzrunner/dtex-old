@@ -778,7 +778,7 @@ _mode_multi_insert_node(struct insert_params* p) {
 	return true;
 }
 
-static inline bool
+static inline void
 _draw_extrude(struct dtex_texture* src_tex, struct dtex_texture* dst_tex, int src_w, int src_h, struct dtex_rect* dst_rect, bool rotate) {
 	float vb[16];
 	struct dtex_rect src, dst;
