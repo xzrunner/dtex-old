@@ -28,8 +28,8 @@
 
 #define TEX_PKG_ID 4096
 
-#define PADDING 1
-//#define EXTRUDE 1
+#define PADDING 0
+#define EXTRUDE 1
 
 static int SRC_EXTRUDE = 0;
 
@@ -636,6 +636,27 @@ _relocate_draw_texcoords(uint16_t part_src[8],
 }
 
 static inline void
+_gen_draw_vb(struct dtex_texture* src_tex, struct dtex_texture* dst_tex, 
+			 struct dtex_rect* src_rect, struct dtex_rect* dst_rect,
+			 bool rotate, float vb[16]) {
+	float src_xmin = src_rect->xmin * src_tex->inv_width,
+		  src_xmax = src_rect->xmax * src_tex->inv_width,
+		  src_ymin = src_rect->ymin * src_tex->inv_height,
+		  src_ymax = src_rect->ymax * src_tex->inv_height;
+	float dst_xmin = dst_rect->xmin * dst_tex->inv_width * 2 - 1,
+		  dst_xmax = dst_rect->xmax * dst_tex->inv_width * 2 - 1,
+		  dst_ymin = dst_rect->ymin * dst_tex->inv_height * 2 - 1,
+		  dst_ymax = dst_rect->ymax * dst_tex->inv_height * 2 - 1;
+	vb[0] = dst_xmin; vb[1] = dst_ymin; vb[2] = src_xmin; vb[3] = src_ymin;
+	vb[4] = dst_xmax; vb[5] = dst_ymin; vb[6] = src_xmax; vb[7] = src_ymin;
+	vb[8] = dst_xmax; vb[9] = dst_ymax; vb[10]= src_xmax; vb[11]= src_ymax;
+	vb[12]= dst_xmin; vb[13]= dst_ymax; vb[14]= src_xmin; vb[15]= src_ymax;
+ 	if (rotate) {
+ 		_rotate_trans_vb(vb, false);
+ 	}
+}
+
+static inline void
 _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 	if (pn->type == C2_PT_SPR) {
 		struct dtex_inv_size src_sz;
@@ -702,7 +723,7 @@ _mode_one_insert_node(struct insert_params* p) {
 		if (index->is_static == p->can_clear) {
 			continue;
 		}
-		p->pos = dtex_tp_add(index->tp, p->w + PADDING * 2, p->h + PADDING * 2, true);
+		p->pos = dtex_tp_add(index->tp, p->w + PADDING*2 + EXTRUDE*2, p->h + PADDING*2 + EXTRUDE*2, true);
 		p->rotate = false;
 		if (p->pos) {
 			p->index = index;
@@ -736,7 +757,7 @@ _mode_multi_insert_node(struct insert_params* p) {
 		assert(p->tex->type == DTEX_TT_MID);
 		// todo padding and rotate
 		//	if (w >= h) {
-		p->pos = dtex_tp_add(p->tex->t.MID.tp, p->w + PADDING * 2, p->h + PADDING * 2, true);
+		p->pos = dtex_tp_add(p->tex->t.MID.tp, p->w + PADDING*2 + EXTRUDE*2, p->h + PADDING*2 + EXTRUDE*2, true);
 		p->rotate = false;
 		//	} else {
 		//		pos = dtex_tp_add(tex->tp, h, w, true);
@@ -755,6 +776,115 @@ _mode_multi_insert_node(struct insert_params* p) {
 		return false;
 	}
 	return true;
+}
+
+static inline bool
+_draw_extrude(struct dtex_texture* src_tex, struct dtex_texture* dst_tex, int src_w, int src_h, struct dtex_rect* dst_rect, bool rotate) {
+	float vb[16];
+	struct dtex_rect src, dst;
+
+	static const int SRC_EXTRUDE = 1;
+
+	if (!rotate)
+	{
+		// left
+		src.xmin = 0; src.xmax = SRC_EXTRUDE; src.ymin = 0; src.ymax = src_h;
+		dst = *dst_rect; dst.xmax = dst.xmin; dst.xmin -= EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+		// right
+		src.xmin = src_w - SRC_EXTRUDE; src.xmax = src_w; src.ymin = 0; src.ymax = src_h;
+		dst = *dst_rect; dst.xmin = dst.xmax; dst.xmax += EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+		// top
+		src.xmin = 0; src.xmax = src_w; src.ymin = src_h - SRC_EXTRUDE; src.ymax = src_h;
+		dst = *dst_rect; dst.ymin = dst.ymax; dst.ymax += EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+		// bottom
+		src.xmin = 0; src.xmax = src_w; src.ymin = 0; src.ymax = SRC_EXTRUDE;
+		dst = *dst_rect; dst.ymax = dst.ymin; dst.ymin -= EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+		// left-top
+		src.xmin = 0; src.xmax = SRC_EXTRUDE; src.ymin = src_h - SRC_EXTRUDE; src.ymax = src_h;
+		dst = *dst_rect; dst.xmax = dst.xmin; dst.xmin -= EXTRUDE; dst.ymin = dst.ymax; dst.ymax += EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+		// right-top
+		src.xmin = src_w - SRC_EXTRUDE; src.xmax = src_w; src.ymin = src_h - SRC_EXTRUDE; src.ymax = src_h;
+		dst = *dst_rect; dst.xmin = dst.xmax; dst.xmax += EXTRUDE; dst.ymin = dst.ymax; dst.ymax += EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+		// left-bottom
+		src.xmin = 0; src.xmax = SRC_EXTRUDE; src.ymin = 0; src.ymax = SRC_EXTRUDE;
+		dst = *dst_rect; dst.xmax = dst.xmin; dst.xmin -= EXTRUDE; dst.ymax = dst.ymin; dst.ymin -= EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+		// right-bottom
+		src.xmin = src_w - SRC_EXTRUDE; src.xmax = src_w; src.ymin = 0; src.ymax = SRC_EXTRUDE;
+		dst = *dst_rect; dst.xmin = dst.xmax; dst.xmax += EXTRUDE; dst.ymax = dst.ymin; dst.ymin -= EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+	} 
+	else
+	{
+		// left
+		src.xmin = 0; src.xmax = SRC_EXTRUDE; src.ymin = 0; src.ymax = src_h;
+		dst = *dst_rect; dst.ymin = dst.ymax; dst.ymax += EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+		// right
+		src.xmin = src_w - SRC_EXTRUDE; src.xmax = src_w; src.ymin = 0; src.ymax = src_h;
+		dst = *dst_rect; dst.ymax = dst.ymin; dst.ymin -= EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+		// top
+		src.xmin = 0; src.xmax = src_w; src.ymin = src_h - SRC_EXTRUDE; src.ymax = src_h;
+		dst = *dst_rect; dst.xmin = dst.xmax; dst.xmax += EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+		// bottom
+		src.xmin = 0; src.xmax = src_w; src.ymin = 0; src.ymax = SRC_EXTRUDE;
+		dst = *dst_rect; dst.xmax = dst.xmin; dst.xmin -= EXTRUDE;
+		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+		dtex_draw_to_texture(src_tex, dst_tex, vb);
+
+ 		// left-top
+ 		src.xmin = 0; src.xmax = SRC_EXTRUDE; src.ymin = src_h - SRC_EXTRUDE; src.ymax = src_h;
+ 		dst = *dst_rect; dst.xmin = dst.xmax; dst.xmax += EXTRUDE; dst.ymin = dst.ymax; dst.ymax += EXTRUDE;
+ 		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+ 		dtex_draw_to_texture(src_tex, dst_tex, vb);
+ 
+ 		// right-top
+ 		src.xmin = src_w - SRC_EXTRUDE; src.xmax = src_w; src.ymin = src_h - SRC_EXTRUDE; src.ymax = src_h;
+ 		dst = *dst_rect; dst.xmin = dst.xmax; dst.xmax += EXTRUDE; dst.ymax = dst.ymin; dst.ymin -= EXTRUDE;
+ 		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+ 		dtex_draw_to_texture(src_tex, dst_tex, vb);
+ 
+ 		// left-bottom
+ 		src.xmin = 0; src.xmax = SRC_EXTRUDE; src.ymin = 0; src.ymax = SRC_EXTRUDE;
+ 		dst = *dst_rect; dst.xmax = dst.xmin; dst.xmin -= EXTRUDE; dst.ymin = dst.ymax; dst.ymax += EXTRUDE;
+ 		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+ 		dtex_draw_to_texture(src_tex, dst_tex, vb);
+ 
+ 		// right-bottom
+ 		src.xmin = src_w - SRC_EXTRUDE; src.xmax = src_w; src.ymin = 0; src.ymax = SRC_EXTRUDE;
+ 		dst = *dst_rect; dst.xmax = dst.xmin; dst.xmin -= EXTRUDE; dst.ymax = dst.ymin; dst.ymin -= EXTRUDE;
+ 		_gen_draw_vb(src_tex, dst_tex, &src, &dst, rotate, vb);
+ 		dtex_draw_to_texture(src_tex, dst_tex, vb);
+	}
 }
 
 static inline bool
@@ -817,10 +947,10 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	assert(ip.tex);
 	node->dst_tex = ip.tex;
 	node->dst_pos = ip.pos;
-	node->dst_pos->r.xmin += PADDING;
-	node->dst_pos->r.ymin += PADDING;
-	node->dst_pos->r.xmax -= PADDING;
-	node->dst_pos->r.ymax -= PADDING;
+	node->dst_pos->r.xmin += PADDING + EXTRUDE;
+	node->dst_pos->r.ymin += PADDING + EXTRUDE;
+	node->dst_pos->r.xmax -= PADDING + EXTRUDE;
+	node->dst_pos->r.ymax -= PADDING + EXTRUDE;
 
 	struct dtex_texture tex;
 	if (pn->type == C2_PT_SPR) {
@@ -852,6 +982,10 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 // 	} else {
 		dtex_draw_to_texture(&tex, ip.tex, node->trans_vb);
 //	}
+
+	if (pn->type == C2_PT_TEX) {
+		_draw_extrude(&tex, ip.tex, ip.w, ip.h, &ip.pos->r, ip.rotate);
+	}
 
 	return true;
 }
