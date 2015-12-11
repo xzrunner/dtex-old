@@ -9,7 +9,6 @@
 #include "dtex_async_multi_tex_task.h"
 #include "dtex_async_queue.h"
 #include "dtex_texture_cache.h"
-#include "dtex_timer_task.h"
 
 #include "dtex_log.h"
 
@@ -61,7 +60,7 @@ _cb_func(void* ud) {
 	pkg->c2_loading = 0;
 
 	dtex_swap_quad_src_info(pkg, params->pic_ids);
-	dtex_c2_load_begin(params->c2); 
+	dtex_c2_load_begin(params->c2);
 	int spr_sz = dtex_array_size(params->spr_ids);
 	for (int i = 0; i < spr_sz; ++i) {
 		int spr_id = *(int*)dtex_array_fetch(params->spr_ids, i);
@@ -154,7 +153,7 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 	dtex_package_change_lod(pkg, 0);
 
 	if (tex_ids_sz == 0) {
-		dtex_timer_task_init_add(10, _cb_func, params);
+		_cb_func(params);
 	} else {
 		dtex_async_load_multi_textures(pkg, tex_ids, tex_ids_sz, _cb_func, params, "c2 from c3");
 	}

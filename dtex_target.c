@@ -84,6 +84,11 @@ dtex_target_unbind_texture(struct dtex_target* target) {
 int 
 dtex_target_bind(struct dtex_target* target) {
 	int ori = dtex_shader_get_target();
+	if (ori == target->target_id) {
+		return ori;
+	}
+
+	dtex_shader_end();
 	dtex_shader_set_target(target->target_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, target->target_id);
 	return ori;
@@ -91,6 +96,12 @@ dtex_target_bind(struct dtex_target* target) {
 
 void 
 dtex_target_unbind(int ori_target) {
+	int ori = dtex_shader_get_target();
+	if (ori == ori_target) {
+		return;
+	}
+
+	dtex_shader_end();
 	dtex_shader_set_target(ori_target);
 	glBindFramebuffer(GL_FRAMEBUFFER, ori_target);
 }

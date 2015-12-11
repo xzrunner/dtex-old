@@ -5,7 +5,6 @@
 #include "dtex_array.h"
 #include "dtex_utility.h"
 #include "dtex_async_multi_tex_task.h"
-#include "dtex_timer_task.h"
 
 #include <pthread.h>
 
@@ -79,7 +78,7 @@ bool dtex_async_load_c3(struct dtex_loader* loader,
 	}
 
 	if (tex_ids_sz == 0) {
-		dtex_timer_task_init_add(10, _cb_func, params);
+		_cb_func(params);
 	} else {
 		dtex_async_load_multi_textures(pkg, tex_ids, tex_ids_sz, _cb_func, params, "c3");
 	}
