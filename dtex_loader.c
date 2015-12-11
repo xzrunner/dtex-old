@@ -314,17 +314,18 @@ _new_package(struct dtex_loader* loader, const char* name) {
 
 struct dtex_package* 
 dtex_load_pkg(struct dtex_loader* loader, const char* name, const char* epe_path, float scale, int lod) {
-	struct dtex_file* file = dtex_file_open(epe_path, "rb");
-	if (!file) {
-		dtex_fault("dtexloader_preload_pkg: can't open file %s\n", epe_path);
-	}
-
 	struct dtex_package* pkg = _find_package(loader, name);
 	if (!pkg) {
 		pkg = _new_package(loader, name);
 	}
 
 	pkg->LOD = lod;
+
+	struct dtex_file* file = dtex_file_open(epe_path, "rb");
+	if (!file) {
+		dtex_warning("dtexloader_preload_pkg: can't open file %s\n", epe_path);
+		return NULL;
+	}
 
 	struct unpack_pkg_params params;
 	params.pkg = pkg;

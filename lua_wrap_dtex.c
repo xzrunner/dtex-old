@@ -52,13 +52,18 @@ lload_package(lua_State* L) {
 static int
 lunload_package(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
-	dtexf_unload_pkg(pkg);
+	if (pkg) {
+		dtexf_unload_pkg(pkg);
+	}
 	return 0;
 }
 
 static int
 lcreate_res_path(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
+	if (!pkg) {
+		return 0;
+	}
 
 	int img_count = luaL_checkinteger(L, 2);
 	int lod_count = luaL_checkinteger(L, 3);
@@ -70,6 +75,9 @@ lcreate_res_path(lua_State* L) {
 static int
 lset_res_path(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
+	if (!pkg) {
+		return 0;
+	}
 	struct dtex_res_path* rp = pkg->rp;
 
 	const char* path = luaL_checkstring(L, 2);
@@ -91,6 +99,9 @@ lset_res_path(lua_State* L) {
 static int
 lcreate_c3_stg(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
+	if (!pkg) {
+		return 0;
+	}
 
 	struct dtex_c3_stg_cfg c3_cfg;
 	struct dtex_c3_stg_cfg* c3_cfg_ptr = NULL;
@@ -111,6 +122,9 @@ lcreate_c3_stg(lua_State* L) {
 static int
 lcreate_c2_stg(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
+	if (!pkg) {
+		return 0;
+	}
 
 	struct dtex_c2_stg_cfg c2_cfg;
 	struct dtex_c2_stg_cfg* c2_cfg_ptr = NULL;
@@ -138,6 +152,10 @@ static int
 lpreload_all_textures(lua_State* L) {
 	const char* path = luaL_checkstring(L, 1);
 	struct dtex_package* pkg = lua_touserdata(L, 2);
+	if (!pkg) {
+		return 0;
+	}
+
 	float scale = luaL_optnumber(L, 3, 1);
 
 	int sz = dtexf_preload_all_textures(path, pkg, scale);
@@ -149,6 +167,10 @@ lpreload_all_textures(lua_State* L) {
 static int
 lpreload_texture(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
+	if (!pkg) {
+		return 0;
+	}
+
 	int idx = lua_tointeger(L, 2);
 	float scale = luaL_optnumber(L, 3, 1);
 
@@ -160,6 +182,10 @@ lpreload_texture(lua_State* L) {
 static int
 lload_texture(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
+	if (!pkg) {
+		return 0;
+	}
+
 	int idx = (int)lua_tointeger(L, 2);
 
 	dtexf_load_texture(pkg, idx);
@@ -199,6 +225,9 @@ lclear_state(lua_State* L) {
 static int
 lc3_load(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
+	if (!pkg) {
+		return 0;
+	}
 	float scale = luaL_optnumber(L, 2, 1);
 	dtexf_c3_load(pkg, scale);
 	return 0;
