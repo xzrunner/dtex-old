@@ -83,6 +83,23 @@ dtex_async_loader_release() {
 	
 }
 
+void
+dtex_async_loader_clear() {
+	struct job* job = NULL;
+	while (true) {
+		DTEX_ASYNC_QUEUE_POP(JOB_PARSE_QUEUE, job);
+		if (!job) {
+			break;
+		}
+
+		struct parse_params* params = (struct parse_params*)job->ud;
+		free(params->data), params->data = NULL;
+		params->size = 0;
+		DTEX_ASYNC_QUEUE_PUSH(PARAMS_PARSE_QUEUE, params);
+		DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
+	}
+}
+
 static inline void
 _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 	struct parse_params* params = NULL;

@@ -13,6 +13,8 @@ struct dtex_import_stream;
 void dtex_async_loader_init();
 void dtex_async_loader_release();
 
+void dtex_async_loader_clear();
+
 void dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream* is, void* ud), void* ud, const char* desc);
 
 void dtex_async_loader_update();

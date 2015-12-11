@@ -6,6 +6,7 @@
 #include "dtex_res_path.h"
 #include "dtex_c3_strategy.h"
 #include "dtex_c2_strategy.h"
+#include "dtex_async_loader.h"
 
 #include <string.h>
 #include <assert.h>
@@ -183,6 +184,12 @@ lquery(lua_State* L) {
 	return 2;
 }
 
+static int
+lasync_loader_clear(lua_State* L) {
+	dtex_async_loader_clear();
+	return 0;
+}
+
 /************************************************************************/
 /* c3                                                                   */
 /************************************************************************/
@@ -243,6 +250,8 @@ luaopen_dtex_c(lua_State* L) {
 		{ "load_texture", lload_texture },
 
 		{ "query", lquery },
+
+		{ "async_loader_clear", lasync_loader_clear },
 
 		// C3
 		{ "c3_load", lc3_load },
