@@ -9,6 +9,7 @@ static int (*GET_TARGET)();
 static void (*DRAW_BEGIN)();
 static void (*DRAW)(const float vb[16]);
 static void (*DRAW_END)();
+static void (*DRAW_FLUSH)();
 
 void 
 dtex_shader_init(void (*program)(int n),
@@ -19,7 +20,8 @@ dtex_shader_init(void (*program)(int n),
 				 int (*get_target)(),
 				 void (*draw_begin)(),
 				 void (*draw)(const float vb[16]),
-				 void (*draw_end)()) {
+				 void (*draw_end)(),
+				 void (*draw_flush)()) {
 	PROGRAM = program;
 	BLEND = blend;
 	SET_TEXTURE = set_texture;
@@ -29,6 +31,7 @@ dtex_shader_init(void (*program)(int n),
 	DRAW_BEGIN = draw_begin;
 	DRAW = draw;
 	DRAW_END = draw_end;
+	DRAW_FLUSH = draw_flush;
 }
 
 void 
@@ -76,4 +79,9 @@ dtex_shader_draw(const float vb[16]) {
 void 
 dtex_shader_end() {
 	DRAW_END();
+}
+
+void 
+dtex_shader_flush() {
+	DRAW_FLUSH();
 }

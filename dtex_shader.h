@@ -19,7 +19,8 @@ void dtex_shader_init(void (*program)(int n),
 					  int (*get_target)(),
 					  void (*draw_begin)(),
 					  void (*draw)(const float vb[16]),
-					  void (*draw_end)());
+					  void (*draw_end)(),
+					  void (*draw_flush)());
 
 void dtex_shader_program(int n);
 void dtex_shader_blend(int mode);
@@ -34,6 +35,8 @@ void dtex_shader_begin();
 void dtex_shader_draw(const float vb[16]);
 //void dtex_shader_draw_triangle(const float* vb, int count);
 void dtex_shader_end();
+
+void dtex_shader_flush();
 
 #endif // dynamic_texture_shader_h
 
