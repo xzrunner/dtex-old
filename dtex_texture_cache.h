@@ -13,6 +13,8 @@ struct dtex_package;
 
 void dtex_texture_cache_init(int cap);
 
+void dtex_texture_cache_clear();
+
 bool dtex_texture_cache_insert(struct dtex_texture*, struct dtex_package*, int idx);
 struct dtex_texture* dtex_texture_cache_query(struct dtex_package*, int idx);
 

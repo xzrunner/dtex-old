@@ -185,8 +185,9 @@ lquery(lua_State* L) {
 }
 
 static int
-lasync_loader_clear(lua_State* L) {
+lclear_state(lua_State* L) {
 	dtex_async_loader_clear();
+	dtex_texture_cache_clear();
 	return 0;
 }
 
@@ -251,7 +252,7 @@ luaopen_dtex_c(lua_State* L) {
 
 		{ "query", lquery },
 
-		{ "async_loader_clear", lasync_loader_clear },
+		{ "clear_state", lclear_state },
 
 		// C3
 		{ "c3_load", lc3_load },

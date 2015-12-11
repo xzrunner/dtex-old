@@ -33,6 +33,7 @@ dtex_texture_cache_init(int cap) {
 	memset(&C, 0, sizeof(C));
 
 	C.cap = cap;
+	C.curr_cap = 0;
 
 	struct texture_with_key* prev = NULL;
 	for (int i = 0; i < MAX_SIZE; ++i) {
@@ -45,6 +46,18 @@ dtex_texture_cache_init(int cap) {
 		prev = &C.freelist[i];
 	}
 	C.freenode = &C.freelist[0];
+}
+
+void 
+dtex_texture_cache_clear() {
+	struct texture_with_key* curr = C.head;
+	while (curr) {
+		dtex_texture_release(curr->tex);
+		curr->pkg->textures[curr->idx] = NULL;
+		curr = curr->next;
+	}
+
+	dtex_texture_cache_init(C.cap);
 }
 
 bool 
