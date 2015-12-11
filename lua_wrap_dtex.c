@@ -7,6 +7,7 @@
 #include "dtex_c3_strategy.h"
 #include "dtex_c2_strategy.h"
 #include "dtex_async_loader.h"
+#include "dtex_texture_cache.h"
 
 #include <string.h>
 #include <assert.h>
