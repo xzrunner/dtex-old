@@ -3,7 +3,6 @@
 #include "dtex_c3.h"
 #include "dtex_c2.h"
 #include "dtex_c1.h"
-#include "dtex_c1_new.h"
 #include "dtex_rrp.h"
 #include "dtex_pts.h"
 #include "dtex_pvr.h"
@@ -401,9 +400,30 @@ dtexf_c2_clear() {
 /************************************************************************/
 
 void 
-dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
-	dtex_c1_update(C1, C2, pkg, spr);
+dtexf_c1_clear() {
+	if (C1) {
+		dtex_c1_clear(C1);
+	}
 }
+
+void 
+dtexf_c1_bind() {
+	if (C1) {
+		dtex_c1_bind(C1);
+	}
+}
+
+void 
+dtexf_c1_unbind() {
+	if (C1) {
+		dtex_c1_unbind(C1);
+	}
+}
+
+//void 
+//dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
+//	dtex_c1_update(C1, C2, pkg, spr);
+//}
 
 //void 
 //dtexf_c1_load_anim(struct ej_package* pkg, struct animation* ani, int action) {
