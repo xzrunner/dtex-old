@@ -67,6 +67,11 @@ dtex_c1_unbind(struct dtex_c1* c1) {
 //	dtex_target_unbind(ori);
 //}
 
+uint32_t 
+dtex_c1_get_texture_id(struct dtex_c1* c1) {
+	return c1->texture->id;
+}
+
 void 
 dtex_c1_debug_draw(struct dtex_c1* c1) {
 	dtex_debug_draw(c1->texture->id, 3);
