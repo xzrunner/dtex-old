@@ -214,6 +214,15 @@ dtex_cs_reload(struct dtex_cs* cs) {
 	}
 }
 
+uint32_t 
+dtex_cs_get_texture_id(struct dtex_cs* cs) {
+	if (cs->texture) {
+		return cs->texture->id;
+	} else {
+		return 0;
+	}
+}
+
 void 
 dtex_cs_debug_draw(struct dtex_cs* cs) {
 	if (cs->texture) {

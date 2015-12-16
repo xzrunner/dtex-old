@@ -7,6 +7,7 @@ extern "C"
 #define dynamic_texture_cache_screen_h
 
 #include <stdbool.h>
+#include <stdint.h>
 
 struct dtex_cs;
 
@@ -34,6 +35,8 @@ bool dtex_cs_dirty(struct dtex_cs*);
 void dtex_cs_draw_to_screen(struct dtex_cs*, void (*before_draw)(void* ud), void* ud);
 
 void dtex_cs_reload(struct dtex_cs*);
+
+uint32_t dtex_cs_get_texture_id(struct dtex_cs*);
 
 void dtex_cs_debug_draw(struct dtex_cs*);
 
