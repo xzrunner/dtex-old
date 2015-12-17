@@ -75,6 +75,7 @@ void dtexf_c1_clear();
 void dtexf_c1_bind();
 void dtexf_c1_unbind();
 uint32_t dtexf_c1_get_texture_id();
+uint32_t dtexf_c1_get_texture_size();
 //void dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr);
 //void dtexf_c1_load_anim(struct dtex_package* pkg, struct animation* ani, int action);
 //bool dtexf_c1_draw_anim(struct dtex_package* pkg, struct animation* ani, int action, 

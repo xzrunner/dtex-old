@@ -429,6 +429,15 @@ dtexf_c1_get_texture_id() {
 	}
 }
 
+uint32_t 
+dtexf_c1_get_texture_size() {
+	if (C1) {
+		return dtex_c1_get_texture_size(C1);
+	} else {
+		return 0;
+	}
+}
+
 //void 
 //dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 //	dtex_c1_update(C1, C2, pkg, spr);

@@ -72,6 +72,11 @@ dtex_c1_get_texture_id(struct dtex_c1* c1) {
 	return c1->texture->id;
 }
 
+uint32_t 
+dtex_c1_get_texture_size(struct dtex_c1* c1) {
+	return c1->texture->width;
+}
+
 void 
 dtex_c1_debug_draw(struct dtex_c1* c1) {
 	dtex_debug_draw(c1->texture->id, 3);

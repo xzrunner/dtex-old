@@ -21,6 +21,7 @@ void dtex_c1_unbind(struct dtex_c1*);
 //void dtex_c1_update(struct dtex_c1*, struct dtex_c2*, struct dtex_package*, struct ej_sprite* spr);
 
 uint32_t dtex_c1_get_texture_id(struct dtex_c1*);
+uint32_t dtex_c1_get_texture_size(struct dtex_c1*);
 
 void dtex_c1_debug_draw(struct dtex_c1*);
 
