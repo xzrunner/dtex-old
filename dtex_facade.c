@@ -35,6 +35,8 @@
 #include "dtex_cg.h"
 #include "dtex_cs.h"
 
+#include "dtex_timer_task.h"
+
 #include <cJSON.h>
 
 #include <stdlib.h>
