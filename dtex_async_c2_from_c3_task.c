@@ -108,6 +108,10 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 
 	dtex_debug("+++++++ dtex_async_load_c2_from_c3 begin, %s", pkg->name);
 
+	if (strcmp(pkg->name, "char/boss01") == 0) {
+		int zz = 0;
+	}
+
 	pkg->c2_loading = 1;
 
 	struct load_params* params = NULL;
@@ -154,8 +158,8 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 	dtex_package_change_lod(pkg, 0);
 
 	if (tex_ids_sz == 0) {
-//		_cb_func(params);
-		dtex_timer_task_init_add(30, _cb_func, params);
+		_cb_func(params);
+//		dtex_timer_task_init_add(30, _cb_func, params);
 	} else {
 		dtex_async_load_multi_textures(pkg, tex_ids, tex_ids_sz, _cb_func, params, "c2 from c3");
 	}
