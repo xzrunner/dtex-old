@@ -11,6 +11,7 @@
 #include "dtex_texture_cache.h"
 
 #include "dtex_log.h"
+#include "dtex_timer_task.h"
 
 #include <pthread.h>
 
@@ -153,7 +154,8 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 	dtex_package_change_lod(pkg, 0);
 
 	if (tex_ids_sz == 0) {
-		_cb_func(params);
+//		_cb_func(params);
+		dtex_timer_task_init_add(30, _cb_func, params);
 	} else {
 		dtex_async_load_multi_textures(pkg, tex_ids, tex_ids_sz, _cb_func, params, "c2 from c3");
 	}
