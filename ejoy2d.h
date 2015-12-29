@@ -22,8 +22,6 @@ extern "C"
 #define ej_pack_picture				pack_picture
 #define ej_pack_animation			pack_animation
 #define ej_pack_frame				pack_frame
-#define ej_pack_particle3d			pack_particle3d
-#define ej_pack_particle2d			pack_particle2d
 #define ej_sprite_trans				sprite_trans
 
 // "sprite.h"

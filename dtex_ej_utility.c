@@ -28,15 +28,15 @@ dtex_ej_spr_traverse(struct ej_sprite_pack* ej_pkg, int spr_id, void (*pic_func)
 			dtex_ej_spr_traverse(ej_pkg, cid, pic_func, ud);
 		}
 	} else if (type == TYPE_PARTICLE3D) {
-		struct ej_pack_particle3d* p3d = (struct ej_pack_particle3d*)ej_pkg->data[spr_id];
-		for (int i = 0; i < p3d->cfg.symbol_count;  ++i) {
-			uint32_t cid = (uint32_t)p3d->cfg.symbols[i].ud;
+		struct p3d_emitter_cfg* p3d_cfg = (struct p3d_emitter_cfg*)ej_pkg->data[spr_id];
+		for (int i = 0; i < p3d_cfg->symbol_count;  ++i) {
+			uint32_t cid = (uint32_t)p3d_cfg->symbols[i].ud;
 			dtex_ej_spr_traverse(ej_pkg, cid, pic_func, ud);
 		}
 	} else if (type == TYPE_PARTICLE2D) {
-		struct ej_pack_particle2d* p2d = (struct ej_pack_particle2d*)ej_pkg->data[spr_id];
-		for (int i = 0; i < p2d->cfg.symbol_count; ++i) {
-			uint32_t cid = (uint32_t)p2d->cfg.symbols[i].ud;
+		struct p2d_emitter_cfg* p2d_cfg = (struct p2d_emitter_cfg*)ej_pkg->data[spr_id];
+		for (int i = 0; i < p2d_cfg->symbol_count; ++i) {
+			uint32_t cid = (uint32_t)p2d_cfg->symbols[i].ud;
 			dtex_ej_spr_traverse(ej_pkg, cid, pic_func, ud);
 		}
 	}
