@@ -230,6 +230,9 @@ dtex_hash_insert(struct dtex_hash* hash, void* key, void* val, bool force) {
 	if (hash->rehash_weight != 0) {
 		float weight = (float)hash->c->free_next / hash->c->hash_sz;
 		if (weight > hash->rehash_weight) {
+
+			dtex_warning("dtex_hash_insert enlarge, free_next: %d, hash_sz: %d", hash->c->free_next, hash->c->hash_sz);
+
 			_enlarge_hashlist(hash);
 		}
 	}
