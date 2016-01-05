@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <assert.h>
 
 static const size_t HASH_SZ_TBL[] = {
 	11, 23, 47, 97, 197, 397, 797, 1597, 3203, 6421, 12853, 25717, 51439, 102881, 202881, 402881
@@ -18,8 +19,12 @@ struct hash_node {
 };
 
 struct changeable {
+	struct hash_node* buf;
+	size_t buf_sz;
+
 	struct hash_node* freelist;
-	size_t free_next, free_cap;
+
+	size_t node_used;
 
 	struct hash_node** hashlist;
 	size_t hash_sz;
@@ -46,20 +51,21 @@ _find_next_hash_sz(int n) {
 }
 
 static inline void
-_init_changeable(struct changeable* c, size_t free_sz, size_t hash_sz) {
-	size_t free_list_sz = sizeof(struct hash_node) * free_sz;
+_init_changeable(struct changeable* c, size_t buf_sz, size_t hash_sz) {
+	size_t free_list_sz = sizeof(struct hash_node) * buf_sz;
 	size_t hash_list_sz = sizeof(struct hash_node*) * hash_sz;
 
 	memset(c + 1, 0, free_list_sz + hash_list_sz);
 
- 	c->free_next = 0;
- 	c->free_cap = free_sz;
- 	c->freelist = (struct hash_node*)(c + 1);
- 	for (int i = 0; i < free_sz - 1; ++i) {
- 		struct hash_node* hn = &c->freelist[i];
- 		hn->next = &c->freelist[i + 1];
+ 	c->buf = (struct hash_node*)(c + 1);
+	c->buf_sz = buf_sz;
+	c->freelist = c->buf;
+	c->node_used = 0;
+ 	for (int i = 0; i < buf_sz - 1; ++i) {
+ 		struct hash_node* hn = &c->buf[i];
+ 		hn->next = &c->buf[i + 1];
  	}
- 	c->freelist[free_sz - 1].next = NULL;
+ 	c->buf[buf_sz - 1].next = NULL;
  
  	c->hash_sz = hash_sz;
  	c->hashlist = (struct hash_node**)((intptr_t)c + sizeof(struct changeable) + free_list_sz);
@@ -134,9 +140,10 @@ dtex_hash_query_all(struct dtex_hash* hash, void* key, struct dtex_array* ret) {
 static inline void
 _enlarge_freelist(struct dtex_hash* hash) {
 	struct changeable* old = hash->c;
-	dtex_info(" [hash] node resize %d -> %d", old->free_cap, old->free_cap * 2);
-	size_t new_cap = old->free_cap * 2;
-	size_t free_list_sz = sizeof(struct hash_node) * new_cap;
+
+	dtex_info(" [hash] node resize %d -> %d", old->buf_sz, old->buf_sz * 2);
+	size_t new_buf_sz = old->buf_sz * 2;
+	size_t free_list_sz = sizeof(struct hash_node) * new_buf_sz;
 	size_t hash_list_sz = sizeof(struct hash_node*) * old->hash_sz;
 	struct changeable* new = (struct changeable*)malloc(sizeof(struct changeable) + free_list_sz + hash_list_sz);
 	if (!new) {
@@ -145,18 +152,27 @@ _enlarge_freelist(struct dtex_hash* hash) {
 
 	memset(new + 1, 0, free_list_sz + hash_list_sz);
 
-	new->free_next = old->free_next;
-	new->free_cap = new_cap;
-	new->freelist = (struct hash_node*)(new + 1);
-	memcpy(new->freelist, old->freelist, sizeof(struct hash_node) * old->free_next);
-	for (int i = 0; i < new->free_next; ++i) {
-		struct hash_node* hn_old = &old->freelist[i];
-		struct hash_node* hn_new = &new->freelist[i];
-		if (hn_old->next) {
-			int ptr_idx = hn_old->next - old->freelist;
-			hn_new->next = new->freelist + ptr_idx;
-		} else {
-			hn_new->next = NULL;
+	new->buf = (struct hash_node*)(new + 1);
+	new->buf_sz = new_buf_sz;
+
+	new->freelist = &new->buf[old->buf_sz];
+	for (int i = old->buf_sz; i < new_buf_sz - 1; ++i) {
+		new->buf[i].next = &new->buf[i + 1];
+	}
+	new->buf[new_buf_sz - 1].next = NULL;
+
+	new->node_used = old->node_used;
+	memcpy(new->buf, old->buf, sizeof(struct hash_node) * old->buf_sz);
+	for (int i = 0; i < old->buf_sz; ++i) {
+	 	struct hash_node* node_old = &old->buf[i];
+	 	struct hash_node* node_new = &new->buf[i];
+		if (old) {
+			if (node_old->next) {
+	 			int ptr_idx = node_old->next - old->buf;
+	 			node_new->next = new->buf + ptr_idx;
+			} else {
+				node_new->next = NULL;
+			}
 		}
 	}
 
@@ -164,8 +180,8 @@ _enlarge_freelist(struct dtex_hash* hash) {
 	new->hashlist = (struct hash_node**)((intptr_t)(new + 1) + free_list_sz);
 	for (int i = 0; i < new->hash_sz; ++i) {
 		if (old->hashlist[i]) {
-			int ptr_idx = old->hashlist[i] - old->freelist;
-			new->hashlist[i] = new->freelist + ptr_idx;
+			int ptr_idx = old->hashlist[i] - old->buf;
+			new->hashlist[i] = new->buf + ptr_idx;
 		} else {
 			new->hashlist[i] = NULL;
 		}
@@ -177,11 +193,14 @@ _enlarge_freelist(struct dtex_hash* hash) {
 
 static inline struct hash_node*
 _new_hash_node(struct dtex_hash* hash) {
-	if (hash->c->free_next == hash->c->free_cap) {
+	if (hash->c->freelist) {
+		struct hash_node* n = hash->c->freelist;
+		hash->c->freelist = n->next;
+		++hash->c->node_used;
+		return n;
+	} else {
 		_enlarge_freelist(hash);
 		return _new_hash_node(hash);
-	} else {
-		return &hash->c->freelist[hash->c->free_next++];
 	}
 }
 
@@ -189,17 +208,28 @@ static inline void
 _enlarge_hashlist(struct dtex_hash* hash) {
 	struct changeable* old = hash->c;
 
-	size_t old_free_sz = old->free_next;
-	void* keys[old->free_next];
-	void* vals[old->free_next];
-	for (int i = 0; i < old->free_next; ++i) {
-		keys[i] = old->freelist[i].key;
-		vals[i] = old->freelist[i].val;
+	int old_buf_sz = old->buf_sz;
+	void* keys[old_buf_sz];
+	void* vals[old_buf_sz];
+	for (int i = 0; i < old_buf_sz; ++i) {
+		struct hash_node* node = &hash->c->buf[i];
+		if (node) {
+			keys[i] = node->key;
+			keys[i] = node->val;
+
+			int zz = node->key;
+			if (zz > 0 && zz < 100) {
+				int z1 = 0;
+			}
+
+		} else {
+			keys[i] = NULL;
+		}
 	}
 
 	size_t new_hash_sz = _find_next_hash_sz(old->hash_sz);
 	dtex_info(" [hash] rehash %d -> %d", old->hash_sz, new_hash_sz);
-	size_t free_list_sz = sizeof(struct hash_node) * old->free_cap;
+	size_t free_list_sz = sizeof(struct hash_node) * old->buf_sz;
 	size_t hash_list_sz = sizeof(struct hash_node*) * new_hash_sz;
 	struct changeable* new = (struct changeable*)malloc(sizeof(struct changeable) + free_list_sz + hash_list_sz);
 	if (!new) {
@@ -208,33 +238,36 @@ _enlarge_hashlist(struct dtex_hash* hash) {
 	
 	memset(new + 1, 0, free_list_sz + hash_list_sz);
 
-	new->free_next = 0;
-	new->free_cap = old->free_cap;
-	new->freelist = (struct hash_node*)(new + 1);
+	new->buf = (struct hash_node*)(new + 1);
+	new->buf_sz = old->buf_sz;
+	new->freelist = new->buf;
+	new->node_used = 0;
 
 	free(old);
 	hash->c = new;
 
 	new->hash_sz = new_hash_sz;
 	new->hashlist = (struct hash_node**)((intptr_t)(new + 1) + free_list_sz);
-	for (int i = 0; i < old_free_sz; ++i) {
+	for (int i = 0; i < old_buf_sz; ++i) {
 		if (!keys[i]) {
 			continue;
 		}
 		dtex_hash_insert(hash, keys[i], vals[i], true);
 	}
+
+	int zz = 0;
 }
 
 void 
 dtex_hash_insert(struct dtex_hash* hash, void* key, void* val, bool force) {
 	if (hash->rehash_weight != 0) {
-		float weight = (float)hash->c->free_next / hash->c->hash_sz;
-		if (weight > hash->rehash_weight) {
-
-			dtex_warning("dtex_hash_insert enlarge, free_next: %d, hash_sz: %d", hash->c->free_next, hash->c->hash_sz);
-
-			_enlarge_hashlist(hash);
-		}
+// 		float weight = (float)hash->c->node_used / hash->c->hash_sz;
+// 		if (weight > hash->rehash_weight) {
+// 
+// 			dtex_warning("dtex_hash_insert enlarge, free_used: %d, hash_sz: %d", hash->c->node_used, hash->c->hash_sz);
+// 
+// 			_enlarge_hashlist(hash);
+// 		}
 	}
 
 	if (!force) {
@@ -279,6 +312,11 @@ dtex_hash_remove(struct dtex_hash* hash, void* key) {
 		hash->c->hashlist[idx] = curr->next;
 	}
 
+	curr->next = hash->c->freelist;
+	hash->c->freelist = curr;
+	assert(hash->c->node_used > 0);
+	--hash->c->node_used;
+
 	void* val = curr->val;
 	memset(curr, 0, sizeof(struct hash_node));
 	return val;
@@ -286,7 +324,7 @@ dtex_hash_remove(struct dtex_hash* hash, void* key) {
 
 void 
 dtex_hash_clear(struct dtex_hash* hash) {
-	_init_changeable(hash->c, hash->c->free_cap, hash->c->hash_sz);
+	_init_changeable(hash->c, hash->c->buf_sz, hash->c->hash_sz);
 }
 
 unsigned int 
