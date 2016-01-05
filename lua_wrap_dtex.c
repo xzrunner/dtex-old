@@ -215,6 +215,7 @@ static int
 lclear_state(lua_State* L) {
 	dtex_async_loader_clear();
 	dtex_texture_cache_clear();
+	dtexf_c2_clear();
 	return 0;
 }
 
