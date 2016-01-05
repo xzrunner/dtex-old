@@ -212,16 +212,10 @@ _enlarge_hashlist(struct dtex_hash* hash) {
 	void* keys[old_buf_sz];
 	void* vals[old_buf_sz];
 	for (int i = 0; i < old_buf_sz; ++i) {
-		struct hash_node* node = &hash->c->buf[i];
+		struct hash_node* node = &old->buf[i];
 		if (node) {
 			keys[i] = node->key;
-			keys[i] = node->val;
-
-			int zz = node->key;
-			if (zz > 0 && zz < 100) {
-				int z1 = 0;
-			}
-
+			vals[i] = node->val;
 		} else {
 			keys[i] = NULL;
 		}
@@ -254,20 +248,15 @@ _enlarge_hashlist(struct dtex_hash* hash) {
 		}
 		dtex_hash_insert(hash, keys[i], vals[i], true);
 	}
-
-	int zz = 0;
 }
 
 void 
 dtex_hash_insert(struct dtex_hash* hash, void* key, void* val, bool force) {
 	if (hash->rehash_weight != 0) {
-// 		float weight = (float)hash->c->node_used / hash->c->hash_sz;
-// 		if (weight > hash->rehash_weight) {
-// 
-// 			dtex_warning("dtex_hash_insert enlarge, free_used: %d, hash_sz: %d", hash->c->node_used, hash->c->hash_sz);
-// 
-// 			_enlarge_hashlist(hash);
-// 		}
+		float weight = (float)hash->c->node_used / hash->c->hash_sz;
+		if (weight > hash->rehash_weight) {
+			_enlarge_hashlist(hash);
+		}
 	}
 
 	if (!force) {

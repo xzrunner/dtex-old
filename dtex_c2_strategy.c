@@ -107,13 +107,13 @@ dtex_c2_on_draw_query_fail(struct ej_sprite* spr) {
 	}
 
 	if (stg->single_max_count > stg->cfg.single_max_count * DISCOUNT) {
-		dtex_info(" c2 single_max_count > %d", (int)(stg->cfg.single_max_count * DISCOUNT));
+		dtex_debug(" c2 single_max_count > %d", (int)(stg->cfg.single_max_count * DISCOUNT));
 		_load_c2(pkg);
 	} else if (stg->diff_spr_count > stg->cfg.diff_spr_count * DISCOUNT) {
-		dtex_info(" c2 diff_spr_count > %d", (int)(stg->cfg.diff_spr_count * DISCOUNT));
+		dtex_debug(" c2 diff_spr_count > %d", (int)(stg->cfg.diff_spr_count * DISCOUNT));
 		_load_c2(pkg);
 	} else if (stg->tot_count > stg->cfg.tot_count * DISCOUNT) {
-		dtex_info(" c2 tot_count > %d", (int)(stg->cfg.tot_count * DISCOUNT));
+		dtex_debug(" c2 tot_count > %d", (int)(stg->cfg.tot_count * DISCOUNT));
 		_load_c2(pkg);
 	} 
 }
