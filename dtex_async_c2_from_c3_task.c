@@ -133,9 +133,9 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 	dtex_get_texture_id_unique_set(pkg->ej_pkg, sprite_ids, sprite_count, params->tex_ids);
 	dtex_swap_quad_src_info(pkg, params->pic_ids);
 
-	int tex_ids[128];
 	int tex_ids_sz = 0;
 	int size = dtex_array_size(params->tex_ids);
+	int tex_ids[size];
 	for (int i = 0; i < size; ++i) {
 		int idx = *(int*)dtex_array_fetch(params->tex_ids, i);
 		struct dtex_texture* tex = dtex_texture_cache_query(pkg, idx);

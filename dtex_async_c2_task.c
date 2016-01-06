@@ -88,17 +88,16 @@ dtex_async_load_c2(struct dtex_loader* loader,
 	params->c2 = c2;
 	params->pkg = pkg;
 
-	int tex_ids[128];
-	int tex_ids_sz = 0;
-	int sz = dtex_array_size(params->tex_ids);
-	for (int i = 0; i < sz; ++i) {
-		tex_ids[tex_ids_sz++] = *(int*)dtex_array_fetch(params->tex_ids, i);
+	int tex_sz = dtex_array_size(params->tex_ids);
+	int tex_ids[tex_sz];
+	for (int i = 0; i < tex_sz; ++i) {
+		tex_ids[i] = *(int*)dtex_array_fetch(params->tex_ids, i);
 	}
 
-	if (tex_ids_sz == 0) {
+	if (tex_sz == 0) {
 		_cb_func(params);
 	} else {
-		dtex_async_load_multi_textures(pkg, tex_ids, tex_ids_sz, _cb_func, params, "c2");
+		dtex_async_load_multi_textures(pkg, tex_ids, tex_sz, _cb_func, params, "c2");
 	}
 
 	return true;
