@@ -172,7 +172,7 @@ dtexf_create(const char* cfg) {
 	LOADER = dtexloader_create();
 
 	if (CFG.open_c3) {
-		C3 = dtex_c3_create(CFG.c3_tex_size, true);	
+		C3 = dtex_c3_create(CFG.c3_tex_size, false);	
 	}
  	if (CFG.open_c1) {
  		C1 = dtex_c1_create(CFG.c1_tex_size);		

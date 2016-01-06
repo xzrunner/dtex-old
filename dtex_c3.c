@@ -27,15 +27,16 @@
 #include <string.h>
 #include <assert.h>
 
-#define MAX_TEX_SIZE 128
+#define MULTI_TEX_COUNT			2
+#define MULTI_TEX_STATIC_COUNT	1
 
-#define NODE_SIZE 512
-#define PRELOAD_SIZE 512
+#define NODE_SIZE		512
+#define PRELOAD_SIZE	512
 
-#define SCALE_EVERTIME 0.9f
-#define MIN_SCALE 0.1f
+#define SCALE_EVERTIME	0.9f
+#define MIN_SCALE		0.1f
 
-#define TOT_AREA_SCALE 1.0f
+#define TOT_AREA_SCALE	1.0f
 
 struct c3_node {
 	struct dtex_package* pkg;
@@ -76,9 +77,8 @@ struct dtex_c3 {
 		} ONE;
 
 		struct {
-			struct dtex_texture* textures[MAX_TEX_SIZE];
-			int tex_size;
-			struct tp_index index;
+			struct dtex_texture* textures[MULTI_TEX_COUNT];
+			struct tp_index indices[MULTI_TEX_COUNT];
 		} MULTI;
 	} t;
 
@@ -111,12 +111,13 @@ dtex_c3_create(int texture_size, bool one_tex_mode) {
 		c3->t.ONE.d_index.hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
 		c3->t.ONE.d_index.tp = dtex_tp_create(texture_size, half_sz, PRELOAD_SIZE);
 	} else {
-		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
-		tex->t.MID.tp = dtex_tp_create(texture_size, texture_size, PRELOAD_SIZE);
-		c3->t.MULTI.textures[c3->t.MULTI.tex_size++] = tex;
-
-		c3->t.MULTI.index.hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
-		c3->t.MULTI.index.tp = NULL;
+		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
+			struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
+			c3->t.MULTI.textures[i] = tex;
+			struct tp_index* idx = &c3->t.MULTI.indices[i];
+			idx->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
+			idx->tp = dtex_tp_create(texture_size, texture_size, PRELOAD_SIZE);
+		}
 	}
 
 	c3->tmp_array = dtex_array_create(128, sizeof(struct c3_node));
@@ -136,10 +137,12 @@ void dtex_c3_release(struct dtex_c3* c3) {
 		dtex_hash_release(c3->t.ONE.d_index.hash);
 		dtex_tp_release(c3->t.ONE.d_index.tp);
 	} else {
-		for (int i = 0; i < c3->t.MULTI.tex_size; ++i) {
+		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
 			dtex_res_cache_return_mid_texture(c3->t.MULTI.textures[i]);
+			struct tp_index* idx = &c3->t.MULTI.indices[i];
+			dtex_hash_release(idx->hash);
+			dtex_tp_release(idx->tp);
 		}
-		dtex_hash_release(c3->t.MULTI.index.hash);
 	}
 
 	dtex_array_release(c3->tmp_array);
@@ -160,9 +163,19 @@ _clear_tp_index(struct tp_index* index) {
 
 void 
 dtex_c3_clear(struct dtex_c3* c3) {
-	if (c3->one_tex_mode && c3->t.ONE.d_index.node_size != 0) {
-		dtex_texture_clear_part(c3->t.ONE.texture, 0, 0, 1, 0.5f);
-		_clear_tp_index(&c3->t.ONE.d_index);
+	if (c3->one_tex_mode) {
+		if (c3->t.ONE.d_index.node_size != 0) {
+			dtex_texture_clear_part(c3->t.ONE.texture, 0, 0, 1, 0.5f);
+			_clear_tp_index(&c3->t.ONE.d_index);
+		}
+	} else {
+		for (int i = MULTI_TEX_STATIC_COUNT; i < MULTI_TEX_COUNT; ++i) {
+			if (c3->t.MULTI.indices[i].node_size == 0) {
+				continue;
+			}
+			dtex_texture_clear(c3->t.MULTI.textures[i]);
+			_clear_tp_index(&c3->t.MULTI.indices[i]);
+		}
 	}
 }
 
@@ -175,7 +188,12 @@ _is_pkg_loaded(struct dtex_c3* c3, const char* pkg_name) {
 			node = (struct c3_node*)dtex_hash_query(c3->t.ONE.d_index.hash, (void*)pkg_name);
 		}
 	} else {
-		node = (struct c3_node*)dtex_hash_query(c3->t.MULTI.index.hash, (void*)pkg_name);
+		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
+			node = (struct c3_node*)dtex_hash_query(c3->t.MULTI.indices[i].hash, (void*)pkg_name);
+			if (node) {
+				break;
+			}
+		}
 	}
 	return node != NULL;
 }
@@ -350,40 +368,60 @@ _pack_preload_list_with_scale(struct dtex_c3* c3, struct c3_prenode** pre_list, 
 		}
 		return true;
 	} else {
-		// init rect tp
-		for (int i = 0; i < c3->t.MULTI.tex_size; ++i) {
-			struct dtex_texture* tex = c3->t.MULTI.textures[i];
-			assert(tex->type == DTEX_TT_MID);
-
-			if (!tex->t.MID.tp) {
-				tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, c3->prenode_size + 100);
-			}
-
-	// 		if (tex->t.MID.tp) {
-	// 			dtex_tp_release(tex->t.MID.tp);
-	// 		}
-	// 		// tp's capacity should larger for later inserting
-	// 		tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, c3->prenode_size + 100);
-		}
-
-		// insert
-		int first_try_idx = 0;
 		for (int i = 0; i < pre_sz; ++i) {
 			struct c3_prenode* node = pre_list[i];
-			bool success = false;
-			for (int j = 0; j < c3->t.MULTI.tex_size; ++j) {
-				struct dtex_texture* tex = c3->t.MULTI.textures[(first_try_idx+ j) % c3->t.MULTI.tex_size];
-				success = _pack_preload_node(scale, node, tex, &c3->t.MULTI.index, 0);
-				if (success) {
-					first_try_idx = j;
-					break;
+			bool succ = false;
+			bool is_static = dtex_c3_is_static(node->pkg->c3_stg);
+			if (is_static) {
+				for (int i = 0; i < MULTI_TEX_STATIC_COUNT && !succ; ++i) {
+					succ = _pack_preload_node(scale, node, c3->t.MULTI.textures[i], &c3->t.MULTI.indices[i], 0);
 				}
+			} else {
+				for (int i = MULTI_TEX_STATIC_COUNT; i < MULTI_TEX_COUNT && !succ; ++i) {
+					succ = _pack_preload_node(scale, node, c3->t.MULTI.textures[i], &c3->t.MULTI.indices[i], 0);
+				}				
 			}
-			if (!success) {
+			if (!succ) {
 				return false;
 			}
 		}
 		return true;
+
+	//	// old
+	//	// init rect tp
+	//	for (int i = 0; i < c3->t.MULTI.tex_size; ++i) {
+	//		struct dtex_texture* tex = c3->t.MULTI.textures[i];
+	//		assert(tex->type == DTEX_TT_MID);
+
+	//		if (!tex->t.MID.tp) {
+	//			tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, c3->prenode_size + 100);
+	//		}
+
+	//// 		if (tex->t.MID.tp) {
+	//// 			dtex_tp_release(tex->t.MID.tp);
+	//// 		}
+	//// 		// tp's capacity should larger for later inserting
+	//// 		tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, c3->prenode_size + 100);
+	//	}
+
+	//	// insert
+	//	int first_try_idx = 0;
+	//	for (int i = 0; i < pre_sz; ++i) {
+	//		struct c3_prenode* node = pre_list[i];
+	//		bool success = false;
+	//		for (int j = 0; j < c3->t.MULTI.tex_size; ++j) {
+	//			struct dtex_texture* tex = c3->t.MULTI.textures[(first_try_idx+ j) % c3->t.MULTI.tex_size];
+	//			success = _pack_preload_node(scale, node, tex, &c3->t.MULTI.index, 0);
+	//			if (success) {
+	//				first_try_idx = j;
+	//				break;
+	//			}
+	//		}
+	//		if (!success) {
+	//			return false;
+	//		}
+	//	}
+	//	return true;
 	}
 }
 
@@ -521,20 +559,25 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 		for (int i = 0; i < c3->t.ONE.s_index.node_size; ++i) {
 			struct c3_node* node = &c3->t.ONE.s_index.nodes[i];
 			if (!node->finish) {
+				assert(node_sz < NODE_SIZE);
 				nodes[node_sz++] = node;
 			}
 		}
 		for (int i = 0; i < c3->t.ONE.d_index.node_size; ++i) {
 			struct c3_node* node = &c3->t.ONE.d_index.nodes[i];
 			if (!node->finish) {
+				assert(node_sz < NODE_SIZE);
 				nodes[node_sz++] = node;
 			}
 		}
 	} else {
-		for (int i = 0; i < c3->t.MULTI.index.node_size; ++i) {
-			struct c3_node* node = &c3->t.MULTI.index.nodes[i];
-			if (!node->finish) {
-				nodes[node_sz++] = node;
+		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
+			for (int j = 0, m = c3->t.MULTI.indices[i].node_size; j < m; ++j) {
+				struct c3_node* node = &c3->t.MULTI.indices[i].nodes[j];
+				if (!node->finish) {
+					assert(node_sz < NODE_SIZE);
+					nodes[node_sz++] = node;
+				}
 			}
 		}
 	}
@@ -595,38 +638,41 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 
 static inline float
 _alloc_texture(struct dtex_c3* c3, struct c3_prenode** pre_list, int pre_sz) {
+	// todo
 	if (c3->one_tex_mode) {
+		return 1;
+	} else {
 		return 1;
 	}
 
-	float area = 0;
-	for (int i = 0; i < pre_sz; ++i) {
-		struct c3_prenode* n = pre_list[i];
-		struct dtex_texture* tex = n->pkg->textures[n->tex_idx];
-		int w = tex->width * n->scale,
-			h = tex->height * n->scale;
-		area += w * h;
-	}
-	area *= TOT_AREA_SCALE;	
+	//float area = 0;
+	//for (int i = 0; i < pre_sz; ++i) {
+	//	struct c3_prenode* n = pre_list[i];
+	//	struct dtex_texture* tex = n->pkg->textures[n->tex_idx];
+	//	int w = tex->width * n->scale,
+	//		h = tex->height * n->scale;
+	//	area += w * h;
+	//}
+	//area *= TOT_AREA_SCALE;	
 
- 	for (int i = 0; i < c3->t.MULTI.tex_size; ++i) {
- 		area -= dtex_tp_get_free_space(c3->t.MULTI.textures[i]->t.MID.tp);
- 	}
- 	if (area <= 0) {
- 		return 1.0f;
- 	}
+	//for (int i = 0; i < c3->t.MULTI.tex_size; ++i) {
+	//	area -= dtex_tp_get_free_space(c3->t.MULTI.textures[i]->t.MID.tp);
+	//}
+	//if (area <= 0) {
+	//	return 1.0f;
+	//}
 
-	while (area > 0) {
-		if (c3->t.MULTI.tex_size == MAX_TEX_SIZE) {
-			dtex_fault("c3 texture full.");
-		}
-		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(c3->tex_edge);
-		c3->t.MULTI.textures[c3->t.MULTI.tex_size++] = tex;
-		area -= c3->tex_edge * c3->tex_edge;
-	}
+	//while (area > 0) {
+	//	if (c3->t.MULTI.tex_size == MULTI_TEX_COUNT) {
+	//		dtex_fault("c3 texture full.");
+	//	}
+	//	struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(c3->tex_edge);
+	//	c3->t.MULTI.textures[c3->t.MULTI.tex_size++] = tex;
+	//	area -= c3->tex_edge * c3->tex_edge;
+	//}
 
-	// todo: 根据可用内存大小进行缩放
-	return 1.0f;
+	//// todo: 根据可用内存大小进行缩放
+	//return 1.0f;
 }
 
 void 
@@ -765,7 +811,9 @@ dtex_c3_query_map_info(struct dtex_c3* c3, struct dtex_package* pkg, struct dtex
 		dtex_hash_query_all(c3->t.ONE.s_index.hash, pkg->name, c3->tmp_array);
 		dtex_hash_query_all(c3->t.ONE.d_index.hash, pkg->name, c3->tmp_array);
 	} else {
-		dtex_hash_query_all(c3->t.MULTI.index.hash, pkg->name, c3->tmp_array);
+		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
+			dtex_hash_query_all(c3->t.MULTI.indices[i].hash, pkg->name, c3->tmp_array);
+		}
 	}
 
 	int sz = dtex_array_size(c3->tmp_array);
@@ -783,7 +831,7 @@ dtex_c3_debug_draw(struct dtex_c3* c3) {
 		dtex_debug_draw(c3->t.ONE.texture->id, 1);
 	} else {
 		dtex_debug_draw(c3->t.MULTI.textures[0]->id, 1);
-		if (c3->t.MULTI.tex_size > 1) {
+		if (MULTI_TEX_COUNT > 1) {
 			dtex_debug_draw(c3->t.MULTI.textures[1]->id, 2);
 		}
 	}
