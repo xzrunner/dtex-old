@@ -192,7 +192,7 @@ dtex_texture_clear_part(struct dtex_texture* tex, float xmin, float ymin, float 
 
 	dtex_res_cache_return_target(target);
 
-	dtex_gl_viewport(0, 0, scr_w, scr_h);
+	dtex_gl_viewport(0, 0, scr_w * scr_s, scr_h * scr_s);
 }
 
 //void 

@@ -50,7 +50,7 @@ _after_all_draw() {
 
 	float scr_w, scr_h, scr_s;
 	dtex_get_screen(&scr_w, &scr_h, &scr_s);
-	dtex_gl_viewport(0, 0, scr_w, scr_h);
+	dtex_gl_viewport(0, 0, scr_w * scr_s, scr_h * scr_s);
 }
 
 static inline void
