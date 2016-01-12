@@ -29,6 +29,9 @@ static struct job_queue JOB_FREE_QUEUE;
 static struct job_queue JOB_LOAD_QUEUE;
 static struct job_queue JOB_PARSE_QUEUE;
 
+static int VERSION;
+static pthread_mutex_t VERSION_LOCK;
+
 enum JOB_TYPE {
 	JOB_INVALID = 0,
 	JOB_LOAD_FILE,
@@ -36,6 +39,8 @@ enum JOB_TYPE {
 };
 
 struct load_params {
+	int version;
+
 	struct load_params* next;
 
 	char filepath[512];
@@ -53,6 +58,8 @@ struct load_params_queue {
 static struct load_params_queue PARAMS_LOAD_QUEUE;
 
 struct parse_params {
+	int version;
+
 	struct parse_params* next;
 
 	char* data;
@@ -76,37 +83,75 @@ dtex_async_loader_init() {
 	DTEX_ASYNC_QUEUE_INIT(JOB_PARSE_QUEUE);
 	DTEX_ASYNC_QUEUE_INIT(PARAMS_LOAD_QUEUE);
 	DTEX_ASYNC_QUEUE_INIT(PARAMS_PARSE_QUEUE);
+
+	VERSION = 0;
+	pthread_mutex_init(&VERSION_LOCK, 0);
 }
 
 void 
 dtex_async_loader_release() {
-	
 }
 
 void
 dtex_async_loader_clear() {
-	struct job* job = NULL;
-	while (true) {
-		DTEX_ASYNC_QUEUE_POP(JOB_PARSE_QUEUE, job);
-		if (!job) {
-			break;
-		}
+	pthread_mutex_lock(&VERSION_LOCK);
+	++VERSION;
 
-		struct parse_params* params = (struct parse_params*)job->ud;
-		free(params->data), params->data = NULL;
-		params->size = 0;
-		DTEX_ASYNC_QUEUE_PUSH(PARAMS_PARSE_QUEUE, params);
-		DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
-	}
+	struct job* job = NULL;
+
+	do {
+		DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
+		if (job) {
+			DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
+		}
+	} while (job);
+
+	do {
+		DTEX_ASYNC_QUEUE_POP(JOB_PARSE_QUEUE, job);
+		if (job) {
+			struct parse_params* params = (struct parse_params*)job->ud;
+			free(params->data), params->data = NULL;
+			params->size = 0;
+			DTEX_ASYNC_QUEUE_PUSH(PARAMS_PARSE_QUEUE, params);
+			DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
+		}
+	} while (job);
+
+	pthread_mutex_unlock(&VERSION_LOCK);
+}
+
+static inline int
+_get_version() {
+	int ret;
+	pthread_mutex_lock(&VERSION_LOCK);
+	ret = VERSION;
+	pthread_mutex_unlock(&VERSION_LOCK);
+	return ret;
+}
+
+static inline bool
+_is_valid_version(int version) {
+	bool ret;
+	pthread_mutex_lock(&VERSION_LOCK);
+	ret = version == VERSION;
+	pthread_mutex_unlock(&VERSION_LOCK);
+	return ret;
 }
 
 static inline void
 _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
+	struct load_params* prev_params = (struct load_params*)ud;
+	if (!_is_valid_version(prev_params->version)) {
+		return;
+	}
+
 	struct parse_params* params = NULL;
 	DTEX_ASYNC_QUEUE_POP(PARAMS_PARSE_QUEUE, params);
 	if (!params) {
 		params = (struct parse_params*)malloc(sizeof(*params));
 	}
+
+	params->version = _get_version();
 
 	size_t sz = is->size;
 	char* buf = (char*)malloc(sz);
@@ -115,7 +160,6 @@ _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 	params->size = sz;
 	params->data = buf;
 
-	struct load_params* prev_params = (struct load_params*)ud;
 	params->cb = prev_params->cb;
 	params->ud = prev_params->ud;
 
@@ -134,13 +178,16 @@ static inline void*
 _load_file(void* arg) {
 	struct job* job = NULL;
 	DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
+
 	if (!job) {
 		return NULL;
 	}
 
 	struct load_params* params = (struct load_params*)job->ud;
-	memcpy(params->desc, job->desc, sizeof(job->desc));
-	dtex_load_file(params->filepath, &_unpack_memory_to_job, params);
+	if (_is_valid_version(params->version)) {
+		memcpy(params->desc, job->desc, sizeof(job->desc));
+		dtex_load_file(params->filepath, &_unpack_memory_to_job, params);
+	}
 
 	DTEX_ASYNC_QUEUE_PUSH(PARAMS_LOAD_QUEUE, params);
 	DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
@@ -155,6 +202,8 @@ dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream*
 	if (!params) {
 		params = (struct load_params*)malloc(sizeof(*params));
 	}
+
+	params->version = _get_version();
 
 	strcpy(params->filepath, filepath);
 	params->filepath[strlen(filepath)] = 0;
@@ -186,7 +235,7 @@ dtex_async_loader_update() {
 	}
 
 	struct parse_params* params = (struct parse_params*)job->ud;
-	if (params->cb) {
+	if (_is_valid_version(params->version) && params->cb) {
 		struct dtex_import_stream is;
 		is.stream = params->data;
 		is.size = params->size;

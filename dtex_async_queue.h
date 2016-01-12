@@ -3,11 +3,8 @@ extern "C"
 {
 #endif
 
-#ifndef dynamic_texture_async_queue_new_h
-#define dynamic_texture_async_queue_new_h
-
-// #include <pthread.h>
-// #include <stdbool.h>
+#ifndef dynamic_texture_async_queue_h
+#define dynamic_texture_async_queue_h
 
 #define DTEX_ASYNC_QUEUE_INIT(queue) do { \
 	(queue).head = NULL; \
@@ -41,7 +38,9 @@ extern "C"
 #define DTEX_ASYNC_QUEUE_EMPTY(queue) \
 	(pthread_rwlock_rdlock(&queue.lock), queue.head == NULL)
 
-#endif // dynamic_texture_async_queue_new_h
+//#define DTEX_ASYNC_QUEUE_FOREACH(queue, e) for(e=(queue)->head.next; (e)!=&(queue)->head; (e)=(e)->next)
+
+#endif // dynamic_texture_async_queue_h
 
 #ifdef __cplusplus
 }
