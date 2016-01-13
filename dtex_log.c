@@ -15,6 +15,15 @@
     #define pf_vprint                   vprintf
 #endif
 
+static const char* DEBUG_FILENAME = "lr-debug.txt";
+
+void 
+dtex_log_init() {
+	FILE* fp = fopen(DEBUG_FILENAME, "w");
+	fprintf(fp, "\n");
+	fclose(fp);
+}
+
 void 
 dtex_fault(const char* format, ...) {
 	if (format[0] == '!') {
@@ -51,12 +60,25 @@ dtex_warning(const char* format, ...) {
 	pf_log("\n");
 }
 
-void 
-dtex_debug(const char* format, ...) {
+// void 
+// dtex_debug(const char* format, ...) {
 // 	pf_log("++++++++++++++ [DTEX] debug: ");
 // 	va_list ap;
 // 	va_start(ap, format);
 // 	pf_vprint(format+1, ap);
 // 	va_end(ap);	
 // 	pf_log("\n");
+//}
+
+void 
+dtex_debug_to_file(const char* format, ...) {
+	FILE* fp = fopen(DEBUG_FILENAME, "a");
+
+	va_list ap;
+	va_start(ap, format);
+	fprintf(fp, format+1, ap);
+ 	va_end(ap);	
+
+	fprintf(fp, "\n");
+	fclose(fp);
 }

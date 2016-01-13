@@ -146,6 +146,8 @@ dtexf_create(const char* cfg) {
 		_config(cfg);		
 	}
 
+	dtex_log_init();
+
 	dtex_hard_res_init(CFG.needed_texture * 2048 * 2048);
 
 	dtex_stat_init();
