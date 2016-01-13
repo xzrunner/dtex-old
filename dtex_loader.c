@@ -34,6 +34,8 @@ struct dtex_loader {
 	size_t buf_size;
 	// cache tex id
 	// todo
+
+	int next_pkg_version;
 };
 
 struct dtex_loader* 
@@ -41,6 +43,7 @@ dtexloader_create() {
 	size_t sz = sizeof(struct dtex_loader);
 	struct dtex_loader* loader = (struct dtex_loader*)malloc(sz);
 	memset(loader, 0, sz);
+	loader->next_pkg_version = 1;
 	return loader;
 }
 
@@ -308,6 +311,8 @@ _new_package(struct dtex_loader* loader, const char* name) {
 
 	assert(id != -1);
 	pkg->id = id;
+
+	pkg->version = loader->next_pkg_version++;
 
 	return pkg;
 }

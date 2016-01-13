@@ -58,6 +58,8 @@ struct dtex_package {
 
 	struct dtex_c3_strategy* c3_stg;
 	struct dtex_c2_strategy* c2_stg;
+
+	int version;
 };
 
 //struct dtex_package* dtex_package_create();
