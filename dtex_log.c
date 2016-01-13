@@ -20,7 +20,9 @@ static const char* DEBUG_FILENAME = "lr-debug.txt";
 void 
 dtex_log_init() {
 	FILE* fp = fopen(DEBUG_FILENAME, "w");
-	fprintf(fp, "\n");
+    if (fp) {
+        fprintf(fp, "\n");
+    }
 	fclose(fp);
 }
 
@@ -73,12 +75,13 @@ dtex_warning(const char* format, ...) {
 void 
 dtex_debug_to_file(const char* format, ...) {
 	FILE* fp = fopen(DEBUG_FILENAME, "a");
-
-	va_list ap;
-	va_start(ap, format);
-	vfprintf(fp, format+1, ap);
- 	va_end(ap);	
-
-	fprintf(fp, "\n");
+    if (fp) {
+        va_list ap;
+        va_start(ap, format);
+        vfprintf(fp, format+1, ap);
+        va_end(ap);
+        
+        fprintf(fp, "\n");
+    }
 	fclose(fp);
 }
