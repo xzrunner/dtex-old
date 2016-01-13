@@ -14,11 +14,11 @@ void dtex_info(const char* format, ...);
 
 void dtex_warning(const char* format, ...);
 
-//void dtex_debug(const char* format, ...);
+void dtex_debug(const char* format, ...);
 
 void dtex_debug_to_file(const char* format, ...);
 
-#define dtex_debug dtex_debug_to_file
+// #define dtex_debug dtex_debug_to_file
 
 #endif // dynamic_texture_log_h
 
