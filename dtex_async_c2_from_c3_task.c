@@ -107,10 +107,6 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 
 	dtex_debug("+++++++ dtex_async_load_c2_from_c3 begin, %s", pkg->name);
 
-	if (strcmp(pkg->name, "char/boss01") == 0) {
-		int zz = 0;
-	}
-
 	pkg->c2_loading = 1;
 
 	struct load_params* params = NULL;

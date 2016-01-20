@@ -92,6 +92,7 @@ dtex_async_loader_init() {
 
 void 
 dtex_async_loader_release() {
+	dtex_async_loader_clear();
 }
 
 void
