@@ -21,12 +21,12 @@
 #include <string.h>
 #include <assert.h>
 
-#define MAX_TEX_SIZE 4
+#define MAX_TEX_COUNT		4
 
-#define NODE_SIZE 4096*2
-#define PRELOAD_SIZE 4096*2
+#define MAX_NODE_COUNT		4096*2
+#define MAX_PRELOAD_COUNT	4096*2
 
-#define TEX_PKG_ID 4096
+#define TEX_PKG_ID			4096
 
 #define PADDING 0
 #define EXTRUDE 1
@@ -77,8 +77,8 @@ struct c2_prenode {
 };
 
 struct tp_index {
-	struct c2_node nodes[NODE_SIZE];
-	int node_size;
+	struct c2_node nodes[MAX_NODE_COUNT];
+	int node_count;
 
 	struct dtex_hash* hash;
 
@@ -102,7 +102,7 @@ struct dtex_c2 {
 		} ONE;
 
 		struct {
- 			struct dtex_texture* textures[MAX_TEX_SIZE];
+ 			struct dtex_texture* textures[MAX_TEX_COUNT];
  			int tex_size;
 			struct tp_index index;
 		} MULTI;
@@ -130,7 +130,7 @@ struct dtex_c2*
 dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_cg, int src_extrude) {
 	SRC_EXTRUDE = src_extrude;
 
-	size_t sz = sizeof(struct dtex_c2) + sizeof(struct c2_prenode) * PRELOAD_SIZE;
+	size_t sz = sizeof(struct dtex_c2) + sizeof(struct c2_prenode) * MAX_PRELOAD_COUNT;
 	struct dtex_c2* c2 = (struct dtex_c2*)malloc(sz);
 	if (!c2) {
 		return NULL;
@@ -145,7 +145,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 		for (int i = 0; i < 4; ++i) {
 			struct tp_index* index = &c2->t.ONE.index[i];
 			index->hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
-			index->tp = dtex_tp_create(half_sz, half_sz, PRELOAD_SIZE / 4);
+			index->tp = dtex_tp_create(half_sz, half_sz, MAX_PRELOAD_COUNT / 4);
 			index->is_static = i < static_count;
 		}
 		c2->t.ONE.cg = NULL;
@@ -154,7 +154,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 		}
 	} else {
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
-		tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, PRELOAD_SIZE);
+		tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, MAX_PRELOAD_COUNT);
 		c2->t.MULTI.textures[c2->t.MULTI.tex_size++] = tex;
 
 		c2->t.MULTI.index.hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
@@ -186,7 +186,7 @@ dtex_c2_release(struct dtex_c2* c2) {
 
 static inline void
 _clear_tp_index(struct tp_index* index) {
-	index->node_size = 0;
+	index->node_count = 0;
 
 	dtex_hash_clear(index->hash);
 
@@ -288,13 +288,13 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		return;
 	}
 
-	if (params->c2->prenode_size >= PRELOAD_SIZE - 1) {
+	if (params->c2->prenode_size >= MAX_PRELOAD_COUNT - 1) {
 		dtex_warning("c2 prenode full.");
 		return;
 	}
 
 	for (int i = 0; i < ej_pic->n; ++i) {
-		if (params->c2->prenode_size == PRELOAD_SIZE - 1) {
+		if (params->c2->prenode_size == MAX_PRELOAD_COUNT - 1) {
 			break;
 		}
 		struct ej_pack_quad* ej_q = &ej_pic->rect[i];
@@ -320,7 +320,7 @@ dtex_c2_load_spr(struct dtex_c2* c2, struct dtex_package* pkg, int spr_id) {
 		return;
 	}
 
-	if (c2->prenode_size >= PRELOAD_SIZE - 1) {
+	if (c2->prenode_size >= MAX_PRELOAD_COUNT - 1) {
 		dtex_warning("c2 prenode full.");
 		return;
 	}
@@ -336,7 +336,7 @@ dtex_c2_load_tex(struct dtex_c2* c2, int tex_id, int tex_width, int tex_height, 
 	if (tex_id <= 0 || tex_width <= 0 || tex_height <= 0) {
 		return;
 	}
-	if (c2->prenode_size == PRELOAD_SIZE - 1) {
+	if (c2->prenode_size == MAX_PRELOAD_COUNT - 1) {
 		return;
 	}
 
@@ -389,7 +389,7 @@ _get_unique_prenodes(struct dtex_c2* c2, struct c2_prenode** ret_set, int* ret_s
 	}
 	qsort((void*)ret_set, c2->prenode_size, sizeof(struct c2_prenode*), _compare_unique);
 
-	struct c2_prenode* unique[PRELOAD_SIZE];
+	struct c2_prenode* unique[MAX_PRELOAD_COUNT];
 	unique[0] = ret_set[0];
 	int unique_size = 1;
 	for (int i = 1; i < c2->prenode_size; ++i) {
@@ -938,11 +938,11 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	// save info
 
 	struct c2_node* node = NULL;
-	if (ip.index->node_size == NODE_SIZE) {
+	if (ip.index->node_count == MAX_NODE_COUNT) {
 		dtex_warning(" c2 nodes empty.");
 		return false;
 	}
-	node = &ip.index->nodes[ip.index->node_size++];
+	node = &ip.index->nodes[ip.index->node_count++];
 
 	assert(ip.tex);
 	node->dst_tex = ip.tex;
