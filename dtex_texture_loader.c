@@ -64,7 +64,7 @@ dtex_load_all_textures_desc(struct dtex_import_stream* is, struct dtex_package* 
 			dtex_fault("_unpack_memory_to_preload_all_textures dtex_texture_create_raw err.");
 		}
 
-		tex->t.RAW.format = TEXTURE8;	// todo
+		tex->t.RAW.format = DTEX_PNG8;	// todo
 
 		tex->width = floor(edge * tex->t.RAW.lod_scale + 0.5f);
 		tex->height = floor(edge * tex->t.RAW.lod_scale + 0.5f);
@@ -139,7 +139,7 @@ _scale_texture(struct dtex_texture* tex, float scale) {
 
 	dtex_gl_release_texture(tex->id);
 
-	tex->t.RAW.format = TEXTURE8;
+	tex->t.RAW.format = DTEX_PNG8;
 	tex->id = id;
 	tex->t.RAW.id_alpha = 0;
 	tex->width = new_w;
@@ -153,37 +153,62 @@ dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex) {
 	assert(tex->type == DTEX_TT_RAW);
 
 	int format = dtex_import_uint8(is);
-	int width = dtex_import_uint16(is),
-		height = dtex_import_uint16(is);
-// 	assert(tex->t.RAW.format == format 
-// 		&& tex->width == floor(width * tex->t.RAW.scale + 0.5f)
-// 		&& tex->height == floor(height * tex->t.RAW.scale + 0.5f));
+	int width, height;
+	int texid;
+	switch (format) {
+	case DTEX_PNG4:
+		{
+			width = dtex_import_uint16(is);
+			height= dtex_import_uint16(is);
+			texid = dtex_gl_create_texture(DTEX_TF_RGBA4, width, height, is->stream, 0, 0);
+		}
+		break;
+	case DTEX_PNG8:
+		{
+			width = dtex_import_uint16(is);
+			height= dtex_import_uint16(is);
+			texid = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, is->stream, 0, 0);
+		}
+		break;
+	case DTEX_PVR:
+		{
+			int pvr_fmt = dtex_import_uint8(is);
+			width = dtex_import_uint16(is);
+			height= dtex_import_uint16(is);
+#ifdef __APPLE__
+			int internal_format = 0;
+			if (pvr_fmt == 4) {
+				internal_format = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
+				texid = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, is->stream, 0, 0);
+			} else {
+				internal_format = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+				texid = dtex_gl_create_texture(DTEX_TF_PVR2, width, height, is->stream, 0, 0);
+			}
+#else
+			uint8_t* uncompressed = dtex_pvr_decode(is->stream, width, height);
+			texid = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, uncompressed, 0, 0);
+			free(uncompressed);
+#endif
+		}
+		break;
+	case DTEX_PKM:
+		{
+// 			tex->id = dtex_gl_create_texture(DTEX_TF_ETC1, width, height, is->stream, 0, 0);
+// 			// fixme
+// 			tex->t.RAW.id_alpha = dtex_gl_create_texture(DTEX_TF_ETC1, width, height, is->stream + ((width * height) >> 1), 1, 0);
+		}
+		break;
+	default:
+		dtex_fault("unknown texture type! \n");
+	}
 	tex->t.RAW.format = format;
 	tex->width = width;
-	tex->height = height;
+	tex->height= height;
 	tex->inv_width = 1.0f / width;
-	tex->inv_height = 1.0f / height;
+	tex->inv_height= 1.0f / height;
+	tex->id = texid;
 
-	switch (tex->t.RAW.format) {
-	case TEXTURE4: 
-		tex->id = dtex_gl_create_texture(DTEX_TF_RGBA4, width, height, is->stream, 0, 0);
-		break;
-	case TEXTURE8:
-		tex->id = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, is->stream, 0, 0);
-		break;
-	case PVRTC:
-		tex->id = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, is->stream, 0, 0);
-		// todo
-//		tex->id = _pvr_texture_create(buf+5, sz-5, internal_format, width, height);
-		break;
-	case PKMC:
-		tex->id = dtex_gl_create_texture(DTEX_TF_ETC1, width, height, is->stream, 0, 0);
-		// fixme
-		tex->t.RAW.id_alpha = dtex_gl_create_texture(DTEX_TF_ETC1, width, height, is->stream + ((width * height) >> 1), 1, 0);
-		break;
-	}
-
-	if (tex->t.RAW.scale != 1 && (tex->t.RAW.format == TEXTURE4 || tex->t.RAW.format == TEXTURE8)) {
+	if (tex->t.RAW.scale != 1 && (tex->t.RAW.format == DTEX_PNG4 || tex->t.RAW.format == DTEX_PNG8)) {
 		_scale_texture(tex, tex->t.RAW.scale);
 	}
 }

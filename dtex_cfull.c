@@ -60,7 +60,7 @@ dtex_cf_node_pkg_cmp(const void* arg1, const void* arg2) {
 	return node1->pkg < node2->pkg;
 }
 
-inline int
+static inline int
 _preload_name_cmp(const void* arg1, const void* arg2) {
 	struct dtex_cf_prenode *node1, *node2;
 
@@ -159,7 +159,7 @@ dtex_cf_clear_tex_info(struct dtex_cf_texture* tex) {
 	dtex_tp_clear(tex->tp);
 }
 
-inline void
+static inline void
 _relocate_pic(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	struct dtex_cf_node* dr = (struct dtex_cf_node*)ud;
 	int tex_uid = dr->pkg->textures[dr->src_tex_idx]->uid;

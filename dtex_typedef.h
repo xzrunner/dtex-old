@@ -10,17 +10,10 @@ extern "C"
 #include <stdbool.h>
 
 // todo remove
-#define TEXTURE4 0
-#define TEXTURE8 1
-//#define DETAIL 2
-#define PVRTC  3
-//#define KTX 4
-//#define PKM 5
-#define PKMC 6
-//#define RRP 11
-//#define PTS 12
-//#define RRR 13
-//#define B4R 14
+#define DTEX_PNG4	0
+#define DTEX_PNG8	1
+#define DTEX_PVR	2
+#define DTEX_PKM	3
 
 enum FILE_FORMAT {
 	FILE_INVALID = 0,

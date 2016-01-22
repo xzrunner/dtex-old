@@ -968,7 +968,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 		tex.uid = 0;
 		tex.type = DTEX_TT_RAW;
 		tex.t.RAW.id_alpha = 0;
-		tex.t.RAW.format = TEXTURE8;
+		tex.t.RAW.format = DTEX_PNG8;
 		tex.t.RAW.scale = tex.t.RAW.lod_scale = 1;
 	}
 
@@ -1058,7 +1058,7 @@ dtex_c2_reload_tex(struct dtex_c2* c2, int tex_id, int tex_width, int tex_height
 	tex.uid = 0;
 	tex.type = DTEX_TT_RAW;
 	tex.t.RAW.id_alpha = 0;
-	tex.t.RAW.format = TEXTURE8;
+	tex.t.RAW.format = DTEX_PNG8;
 	tex.t.RAW.scale = tex.t.RAW.lod_scale = 1;
 
 	dtex_draw_to_texture(&tex, node->dst_tex, node->trans_vb);

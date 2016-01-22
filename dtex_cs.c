@@ -103,7 +103,7 @@ dtex_cs_on_size(struct dtex_cs* cs, int width, int height) {
 	}
 
 	struct dtex_texture* tex = dtex_texture_create_raw(0);
-	tex->t.RAW.format = TEXTURE8;
+	tex->t.RAW.format = DTEX_PNG8;
 	tex->width = width;
 	tex->height = height;
 	tex->inv_width = 1.0f / width;
