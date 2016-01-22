@@ -1,0 +1,149 @@
+#include "dtex_cfull.h"
+#include "dtex_package.h"
+#include "dtex_texture.h"
+#include "dtex_tp.h"
+#include "dtex_hash.h"
+#include "dtex_log.h"
+
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+
+inline int
+dtex_cf_prenode_size_cmp(const void* arg1, const void* arg2) {
+	struct dtex_cf_prenode *node1, *node2;
+
+	node1 = *((struct dtex_cf_prenode**)(arg1));
+	node2 = *((struct dtex_cf_prenode**)(arg2));
+
+	int w1 = node1->pkg->textures[node1->tex_idx]->width,
+		h1 = node1->pkg->textures[node1->tex_idx]->height;
+	int w2 = node2->pkg->textures[node2->tex_idx]->width,
+		h2 = node2->pkg->textures[node2->tex_idx]->height;
+
+	int16_t long1, long2, short1, short2;
+	if (w1 > h1) {
+		long1 = w1 * node1->scale;
+		short1 = h1 * node1->scale;
+	} else {
+		long1 = h1 * node1->scale;
+		short1 = w1 * node1->scale;
+	}
+	if (w2 > h2) {
+		long2 = w2 * node2->scale;
+		short2 = h2 * node2->scale;
+	} else {
+		long2 = h2 * node2->scale;
+		short2 = w2 * node2->scale;
+	}
+
+	if (long1 > long2) {
+		return -1;
+	} else if (long1 < long2) {
+		return 1;
+	} else {
+		if (short1 > short2) return -1;
+		else if (short1 < short2) return 1;
+		else return 0;
+	}
+}
+
+inline int
+dtex_cf_node_pkg_cmp(const void* arg1, const void* arg2) {
+	struct dtex_cf_node *node1, *node2;
+
+	node1 = *((struct dtex_cf_node**)(arg1));
+	node2 = *((struct dtex_cf_node**)(arg2));
+
+	return node1->pkg < node2->pkg;
+}
+
+inline int
+_preload_name_cmp(const void* arg1, const void* arg2) {
+	struct dtex_cf_prenode *node1, *node2;
+
+	node1 = *((struct dtex_cf_prenode**)(arg1));
+	node2 = *((struct dtex_cf_prenode**)(arg2));
+
+	int cmp = strcmp(node1->pkg->name, node2->pkg->name);
+	if (cmp != 0) {
+		return cmp;
+	}
+
+	if (node1->pkg->textures[node1->tex_idx]->uid < node2->pkg->textures[node2->tex_idx]->uid) {
+		return -1;
+	} else if (node1->pkg->textures[node1->tex_idx]->uid > node2->pkg->textures[node2->tex_idx]->uid) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+void 
+dtex_cf_unique_prenodes(struct dtex_cf_prenode* src_list, int src_sz,
+                        struct dtex_cf_prenode** dst_list, int* dst_sz) {
+	for (int i = 0; i < src_sz; ++i) {
+		dst_list[i] = &src_list[i];
+	}
+	qsort((void*)dst_list, src_sz, sizeof(struct dtex_cf_prenode*), _preload_name_cmp);
+
+	struct dtex_cf_prenode* unique[src_sz];
+	unique[0] = dst_list[0];
+	int unique_size = 1;
+	for (int i = 1; i < src_sz; ++i) {
+		struct dtex_cf_prenode* last = unique[unique_size-1];
+		struct dtex_cf_prenode* curr = dst_list[i];
+		if (_preload_name_cmp(&curr, &last) == 0) {
+			;
+		} else {
+			unique[unique_size++] = curr;
+		}
+	}
+	memcpy(dst_sz, unique, sizeof(struct dtex_cf_prenode*) * unique_size);
+	*dst_sz = unique_size;		
+}
+
+bool 
+dtex_cf_pack_prenodes(struct dtex_cf_prenode* prenode, struct dtex_cf_texture* cf_tex, float scale) {
+	assert(cf_tex->texture->type == DTEX_TT_MID);
+
+	struct dtex_texture* tex = prenode->pkg->textures[prenode->tex_idx];
+	int w = tex->width * prenode->scale * scale,
+		h = tex->height * prenode->scale * scale;
+	struct dtex_tp_pos* pos = NULL;
+	// todo padding
+	if (w >= h) {
+		pos = dtex_tp_add(cf_tex->tp, w, h, true);
+	} else {
+		pos = dtex_tp_add(cf_tex->tp, h, w, false);
+	}
+	if (!pos) {
+		dtex_warning("+++++++++++++++++ cf insert fail.");
+		return false;
+	}
+
+	pos->r.xmin += cf_tex->region.xmin;
+	pos->r.xmax += cf_tex->region.xmin;
+	pos->r.ymin += cf_tex->region.ymin;
+	pos->r.ymax += cf_tex->region.ymin;
+
+	struct dtex_cf_node* node = NULL;
+	if (cf_tex->node_count == DTEX_CF_MAX_NODE_COUNT) {
+		dtex_warning("+++++ cf nodes full.");
+		return false;
+	}
+	node = &cf_tex->nodes[cf_tex->node_count++];
+
+	node->pkg = prenode->pkg;
+	node->src_tex_idx = prenode->tex_idx;
+	node->dst_tex = cf_tex->texture;
+	node->dst_rect = pos->r;
+	node->dst_rotated = (pos->is_rotated && w >= h) || (!pos->is_rotated && h >= w);
+	node->finish = false;
+
+	pos->ud = node;
+
+	dtex_hash_insert(cf_tex->hash, prenode->pkg->name, node, true);
+
+	return true;	
+}
