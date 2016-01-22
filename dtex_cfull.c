@@ -107,7 +107,7 @@ dtex_cf_unique_prenodes(struct dtex_cf_prenode* src_list, int src_sz,
 
 bool 
 dtex_cf_pack_prenodes(struct dtex_cf_prenode* prenode, struct dtex_cf_texture* cf_tex, float scale) {
-	assert(cf_tex->texture->type == DTEX_TT_MID);
+	assert(cf_tex->tex->type == DTEX_TT_MID);
 
 	struct dtex_texture* tex = prenode->pkg->textures[prenode->tex_idx];
 	int w = tex->width * prenode->scale * scale,
@@ -138,7 +138,7 @@ dtex_cf_pack_prenodes(struct dtex_cf_prenode* prenode, struct dtex_cf_texture* c
 
 	node->pkg = prenode->pkg;
 	node->src_tex_idx = prenode->tex_idx;
-	node->dst_tex = cf_tex->texture;
+	node->dst_tex = cf_tex->tex;
 	node->dst_rect = pos->r;
 	node->dst_rotated = (pos->is_rotated && w >= h) || (!pos->is_rotated && h >= w);
 	node->finish = false;

@@ -41,6 +41,13 @@ void dtexf_load_texture(struct dtex_package*, int idx);
 //struct ej_sprite* dtexf_create_sprite(const char* path);
 
 /************************************************************************/
+/* C4                                                                   */
+/************************************************************************/
+void dtexf_c4_load(struct dtex_package* pkg);
+void dtexf_c4_load_end(bool async);
+void dtexf_c4_clear();
+
+/************************************************************************/
 /* C3                                                                   */
 /************************************************************************/
 void dtexf_c3_load(struct dtex_package* pkg, float scale);
@@ -126,7 +133,7 @@ void dtexf_update();
 void dtexf_debug_draw();
 //
 //// for test
-//void dtexf_test_pvr(const char* path);
+void dtexf_test_pvr(const char* path);
 //void dtexf_test_etc1(const char* path);
 
 #endif // dynamic_texture_facade_h

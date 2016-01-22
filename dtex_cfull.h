@@ -36,7 +36,7 @@ struct dtex_cf_prenode {
 };
 
 struct dtex_cf_texture {
-	struct dtex_texture* texture;
+	struct dtex_texture* tex;
 	struct dtex_rect region;
 
 	struct dtex_cf_node nodes[DTEX_CF_MAX_NODE_COUNT];
@@ -44,6 +44,8 @@ struct dtex_cf_texture {
 
 	struct dtex_hash* hash;
 	struct dtex_tp* tp;
+
+	void* ud;
 };
 
 extern inline int

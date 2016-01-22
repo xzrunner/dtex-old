@@ -1,5 +1,6 @@
 #include "dtex_facade.h"
 #include "dtex_loader.h"
+#include "dtex_c4.h"
 #include "dtex_c3.h"
 #include "dtex_c2.h"
 #include "dtex_c1.h"
@@ -45,6 +46,7 @@
 #define MAX_PACKAGE 512
 
 static struct dtex_loader* LOADER = NULL;
+static struct dtex_c4* C4 = NULL;
 static struct dtex_c3* C3 = NULL;
 static struct dtex_c2* C2 = NULL;
 static struct dtex_c1* C1 = NULL;
@@ -60,11 +62,13 @@ struct dtex_config {
 	bool open_c1;
 	bool open_c2;
 	bool open_c3;
+	bool open_c4;
 	bool open_cg;
 
 	int c1_tex_size;
 	int c2_tex_size;
 	int c3_tex_size;
+	int c4_tex_size;
 
 	int src_extrude;
 
@@ -88,6 +92,7 @@ _config(const char* str) {
 	CFG.open_c1 = cJSON_GetObjectItem(root, "open_c1")->valueint;
 	CFG.open_c2 = cJSON_GetObjectItem(root, "open_c2")->valueint;
 	CFG.open_c3 = cJSON_GetObjectItem(root, "open_c3")->valueint;
+	CFG.open_c4 = cJSON_GetObjectItem(root, "open_c4")->valueint;
 	if (cJSON_GetObjectItem(root, "open_cg")) {
 		CFG.open_cg = cJSON_GetObjectItem(root, "open_cg")->valueint;
 	}
@@ -100,6 +105,9 @@ _config(const char* str) {
 	}
 	if (cJSON_GetObjectItem(root, "c3_tex_size")) {
 		CFG.c3_tex_size = cJSON_GetObjectItem(root, "c3_tex_size")->valueint;
+	}
+	if (cJSON_GetObjectItem(root, "c4_tex_size")) {
+		CFG.c4_tex_size = cJSON_GetObjectItem(root, "c4_tex_size")->valueint;
 	}
 
 	if (cJSON_GetObjectItem(root, "src_extrude")) {
@@ -128,11 +136,13 @@ dtexf_create(const char* cfg) {
 	CFG.open_c1 = true;
 	CFG.open_c2 = true;
 	CFG.open_c3 = true;
+	CFG.open_c4 = true;
 	CFG.open_cg = false;
 
 	CFG.c1_tex_size = 1024;
 	CFG.c2_tex_size = 4096;
 	CFG.c3_tex_size = 2048;
+	CFG.c4_tex_size = 2048;
 
 	CFG.src_extrude = 0;
 
@@ -173,6 +183,9 @@ dtexf_create(const char* cfg) {
 
 	LOADER = dtexloader_create();
 
+	if (CFG.open_c4) {
+		C4 = dtex_c4_create(CFG.c4_tex_size, 1);
+	}
 	if (CFG.open_c3) {
 		C3 = dtex_c3_create(CFG.c3_tex_size, false);	
 	}
@@ -263,6 +276,31 @@ dtexf_load_texture(struct dtex_package* pkg, int idx) {
 //
 //	return dtex_sprite_create(dst_tex, pos);
 //}
+
+/************************************************************************/
+/* C4                                                                   */
+/************************************************************************/
+
+void
+dtexf_c4_load(struct dtex_package* pkg) {
+	if (C4) {
+		dtex_c4_load(C4, pkg);
+	}
+}
+
+void 
+dtexf_c4_load_end(bool async) {
+	if (C4) {
+		dtex_c4_load_end(C4, LOADER, async);
+	}
+}
+
+void 
+dtexf_c4_clear() {
+	if (C4) {
+		dtex_c4_clear(C4);
+	}
+}
 
 /************************************************************************/
 /* C3                                                                   */
@@ -596,37 +634,37 @@ dtexf_debug_draw() {
 	}
 }
 
-//void 
-//dtexf_test_pvr(const char* path) {
-//	uint32_t width, height;
-//	uint8_t* buf_compressed = dtex_pvr_read_file(path, &width, &height);
-//	assert(buf_compressed);
-//
-//	uint8_t* buf_uncompressed = dtex_pvr_decode(buf_compressed, width, height);
-//	free(buf_compressed);
-//
-//	unsigned int tex;
-//#ifdef __APPLE__
-//	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
-//	tex = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, new_compressed, 0);
-//	free(new_compressed);
-//#else
-//	tex = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, buf_uncompressed, 0);
-//#endif
-//	free(buf_uncompressed);
-//
-//	struct dtex_texture src_tex;
-//	src_tex.id = tex;
-//	src_tex.width = width;
-//	src_tex.height = height;
-//	src_tex.type = DTEX_TT_RAW;
-//	src_tex.t.RAW.format = TEXTURE8;
-//	src_tex.t.RAW.id_alpha = 0;
-//
-//	struct dtex_texture* dst_tex = NULL;
-//	dtex_c3_load_tex(C3, &src_tex, &dst_tex);
-//}
-//
+void 
+dtexf_test_pvr(const char* path) {
+	uint32_t width, height;
+	uint8_t* buf_compressed = dtex_pvr_read_file(path, &width, &height);
+	assert(buf_compressed);
+
+	uint8_t* buf_uncompressed = dtex_pvr_decode(buf_compressed, width, height);
+	free(buf_compressed);
+
+	unsigned int tex;
+#ifdef __APPLE__
+	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
+	tex = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, new_compressed, 0);
+	free(new_compressed);
+#else
+	tex = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, buf_uncompressed, 0, 0);
+#endif
+	free(buf_uncompressed);
+
+// 	struct dtex_texture src_tex;
+// 	src_tex.id = tex;
+// 	src_tex.width = width;
+// 	src_tex.height = height;
+// 	src_tex.type = DTEX_TT_RAW;
+// 	src_tex.t.RAW.format = TEXTURE8;
+// 	src_tex.t.RAW.id_alpha = 0;
+// 
+// 	struct dtex_texture* dst_tex = NULL;
+// 	dtex_c3_load_tex(C3, &src_tex, &dst_tex);
+}
+
 //#ifndef __ANDROID__
 //
 //void 

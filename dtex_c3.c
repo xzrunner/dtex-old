@@ -16,6 +16,8 @@
 #include "dtex_render.h"
 #include "dtex_c3_strategy.h"
 
+#include "dtex_facade.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -71,13 +73,13 @@ dtex_c3_create(int texture_size, bool one_tex_mode) {
 
 		int half_sz = texture_size >> 1;
 
-		up->texture = tex;
+		up->tex = tex;
 		up->region.xmin = 0; up->region.xmax = texture_size;
 		up->region.ymin = half_sz; up->region.ymax = texture_size;
 		up->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
 		up->tp = dtex_tp_create(texture_size, half_sz, MAX_PRELOAD_COUNT);
 
-		down->texture = tex;
+		down->tex = tex;
 		down->region.xmin = 0; down->region.xmax = texture_size;
 		down->region.ymin = 0; down->region.ymax = half_sz;		
 		down->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
@@ -85,7 +87,7 @@ dtex_c3_create(int texture_size, bool one_tex_mode) {
 	} else {
 		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
 			struct dtex_cf_texture* tex = &c3->t.MULTI.textures[i];
-			tex->texture = dtex_res_cache_fetch_mid_texture(texture_size);
+			tex->tex = dtex_res_cache_fetch_mid_texture(texture_size);
 			tex->region.xmin = tex->region.ymin = 0;
 			tex->region.xmax = tex->region.ymax = texture_size;
 			tex->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
@@ -102,7 +104,7 @@ dtex_c3_create(int texture_size, bool one_tex_mode) {
 
 void dtex_c3_release(struct dtex_c3* c3) {
 	if (c3->one_tex_mode) {
-		dtex_res_cache_return_mid_texture(c3->t.ONE.s_up_tex.texture);
+		dtex_res_cache_return_mid_texture(c3->t.ONE.s_up_tex.tex);
 
 		dtex_hash_release(c3->t.ONE.s_up_tex.hash);
 		dtex_tp_release(c3->t.ONE.s_up_tex.tp);
@@ -112,7 +114,7 @@ void dtex_c3_release(struct dtex_c3* c3) {
 	} else {
 		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
 			struct dtex_cf_texture* tex = &c3->t.MULTI.textures[i];
-			dtex_res_cache_return_mid_texture(tex->texture);
+			dtex_res_cache_return_mid_texture(tex->tex);
 			dtex_hash_release(tex->hash);
 			dtex_tp_release(tex->tp);
 		}
@@ -130,7 +132,7 @@ void
 dtex_c3_clear(struct dtex_c3* c3) {
 	if (c3->one_tex_mode) {
 		if (c3->t.ONE.d_down_tex.node_count != 0) {
-			dtex_texture_clear_part(c3->t.ONE.d_down_tex.texture, 0, 0, 1, 0.5f);
+			dtex_texture_clear_part(c3->t.ONE.d_down_tex.tex, 0, 0, 1, 0.5f);
 			dtex_cf_clear_tex_info(&c3->t.ONE.d_down_tex);
 		}
 	} else {
@@ -139,7 +141,7 @@ dtex_c3_clear(struct dtex_c3* c3) {
 			if (tex->node_count == 0) {
 				continue;
 			}
-			dtex_texture_clear(tex->texture);
+			dtex_texture_clear(tex->tex);
 			dtex_cf_clear_tex_info(tex);
 		}
 	}
@@ -598,11 +600,11 @@ dtex_c3_query_map_info(struct dtex_c3* c3, struct dtex_package* pkg, struct dtex
 void 
 dtex_c3_debug_draw(struct dtex_c3* c3) {
 	if (c3->one_tex_mode) {
-		dtex_debug_draw(c3->t.ONE.s_up_tex.texture->id, 1);
+		dtex_debug_draw(c3->t.ONE.s_up_tex.tex->id, 1);
 	} else {
-		dtex_debug_draw(c3->t.MULTI.textures[0].texture->id, 1);
+		dtex_debug_draw(c3->t.MULTI.textures[0].tex->id, 1);
 		if (MULTI_TEX_COUNT > 1) {
-			dtex_debug_draw(c3->t.MULTI.textures[1].texture->id, 2);
+			dtex_debug_draw(c3->t.MULTI.textures[1].tex->id, 2);
 		}
 	}
 }

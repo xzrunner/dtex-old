@@ -248,6 +248,32 @@ lc3_clear(lua_State* L) {
 }
 
 /************************************************************************/
+/* c4                                                                   */
+/************************************************************************/
+
+static int
+lc4_load(lua_State* L) {
+	struct dtex_package* pkg = lua_touserdata(L, 1);
+	if (pkg) {
+		dtexf_c4_load(pkg);
+	}
+	return 0;
+}
+
+static int
+lc4_load_end(lua_State* L) {
+	bool async = lua_toboolean(L, 1);
+	dtexf_c4_load_end(async);
+	return 0;
+}
+
+static int
+lc4_clear(lua_State* L) {
+	dtexf_c4_clear();
+	return 0;
+}
+
+/************************************************************************/
 /* cs                                                                   */
 /************************************************************************/
 
@@ -290,7 +316,12 @@ luaopen_dtex_c(lua_State* L) {
 		{ "c3_load_end", lc3_load_end },
 		{ "c3_clear", lc3_clear },
 
-		// CS
+		// C4
+		{ "c4_load", lc4_load },
+		{ "c4_load_end", lc4_load_end },
+		{ "c4_clear", lc4_clear },
+
+ 		// CS
 		{ "cs_create", lcs_create },
 
 		{ NULL, NULL },		

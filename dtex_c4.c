@@ -10,6 +10,7 @@
 #include "dtex_loader.h"
 #include "dtex_res_path.h"
 #include "dtex_async_loader.h"
+#include "dtex_debug.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -44,6 +45,15 @@ dtex_c4_create(int tex_size, int tex_count) {
 
 	c4->max_tex_count = tex_count;
 	c4->textures = (struct dtex_cf_texture*)(c4 + 1);
+	for (int i = 0; i < tex_count; ++i) {
+		struct dtex_cf_texture* tex = &c4->textures[i];
+		tex->tex = NULL;
+		tex->ud = malloc(tex_size * tex_size * 4);
+		tex->region.xmin = tex->region.ymin = 0;
+		tex->region.xmax = tex->region.ymax = tex_size;
+		tex->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
+		tex->tp = dtex_tp_create(tex_size, tex_size, MAX_PRELOAD_COUNT);
+	}
 	
 	c4->prenodes = (struct dtex_cf_prenode*)((intptr_t)(c4 + 1) + textures_sz);
 
@@ -54,10 +64,8 @@ void
 dtex_c4_release(struct dtex_c4* c4) {
 	for (int i = 0; i < c4->tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
-
-		// todo release tex
-//		dtex_res_cache_return_mid_texture(tex->texture);
-
+		free(tex->ud);
+		dtex_res_cache_return_mid_texture(tex->tex);
 		dtex_hash_release(tex->hash);
 		dtex_tp_release(tex->tp);
 	}
@@ -73,10 +81,10 @@ void
 dtex_c4_clear(struct dtex_c4* c4) {
 	for (int i = 0; i < c4->tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
-
-		// todo clear tex
-		// dtex_res_cache_return_mid_texture(tex->texture);
-
+		if (tex->node_count == 0) {
+			continue;
+		}
+		dtex_texture_clear(tex->tex);
 		dtex_cf_clear_tex_info(tex);
 	}
 }
@@ -109,7 +117,7 @@ _pack_nodes(struct dtex_c4* c4, struct dtex_cf_prenode** pre_list, int pre_sz) {
 	for (int i = 0; i < pre_sz; ++i) {
 		struct dtex_cf_prenode* node = pre_list[i];
 		bool succ = false;
-		for (int j = tex_begin; j < tex_end && !succ; ++j) {
+		for (int j = tex_begin; j <= tex_end && !succ; ++j) {
 			if (dtex_cf_pack_prenodes(node, &c4->textures[j], 1)) {
 				if (j > tex_max) {
 					tex_max = j;
@@ -131,7 +139,7 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 static void
 _relocate_nodes(struct dtex_c4* c4, struct dtex_loader* loader, bool async, int count) {
 	// sort all nodes by their texture
-	int node_sz;
+	int node_sz = 0;
 	struct dtex_cf_node* nodes[MAX_NODE_COUNT];
 	for (int i = c4->tex_count, n = c4->tex_count + count; i < n; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
@@ -196,4 +204,9 @@ dtex_c4_load_end(struct dtex_c4* c4, struct dtex_loader* loader, bool async) {
 	_relocate_nodes(c4, loader, async, used_count);
 	
 	c4->prenode_size = 0;
+}
+
+void 
+dtex_c4_debug_draw(struct dtex_c4* c4) {
+	dtex_debug_draw(c4->textures[0].tex->id, 3);
 }

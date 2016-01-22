@@ -22,6 +22,8 @@ void dtex_c4_clear(struct dtex_c4*);
 void dtex_c4_load(struct dtex_c4*, struct dtex_package*);
 void dtex_c4_load_end(struct dtex_c4*, struct dtex_loader*, bool async);
 
+void dtex_c4_debug_draw(struct dtex_c4*);
+
 #endif // dynamic_texture_cache4_h
 
 #ifdef __cplusplus

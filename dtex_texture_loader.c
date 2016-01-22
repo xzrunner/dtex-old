@@ -175,6 +175,7 @@ dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex) {
 			int pvr_fmt = dtex_import_uint8(is);
 			width = dtex_import_uint16(is);
 			height= dtex_import_uint16(is);
+			int size = dtex_import_uint32(is);
 #ifdef __APPLE__
 			int internal_format = 0;
 			if (pvr_fmt == 4) {
