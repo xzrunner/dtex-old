@@ -7,6 +7,9 @@
 #include "dtex_package.h"
 #include "dtex_log.h"
 #include "dtex_texture.h"
+#include "dtex_loader.h"
+#include "dtex_res_path.h"
+#include "dtex_async_loader.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -15,20 +18,10 @@
 #define MAX_NODE_COUNT		128
 #define MAX_PRELOAD_COUNT	128
 
-struct c4_texture {
-	struct dtex_texture* texture;
-
-	struct dtex_cf_node nodes[MAX_NODE_COUNT];
-	int node_count;
-
-	struct dtex_hash* hash;
-	struct dtex_tp* tp;
-};
-
 struct dtex_c4 {
 	int tex_edge;
 
-	struct c4_texture* textures;
+	struct dtex_cf_texture* textures;
 	int max_tex_count;
 	int tex_count;
 
@@ -38,7 +31,7 @@ struct dtex_c4 {
 
 struct dtex_c4* 
 dtex_c4_create(int tex_size, int tex_count) {
-	size_t textures_sz = sizeof(struct c4_texture) * tex_count;
+	size_t textures_sz = sizeof(struct dtex_cf_texture) * tex_count;
 	size_t prenodes_sz = sizeof(struct dtex_cf_prenode) * MAX_PRELOAD_COUNT;
 	size_t sz = sizeof(struct dtex_c4) + textures_sz + prenodes_sz;
 	struct dtex_c4* c4 = (struct dtex_c4*)malloc(sz);
@@ -50,7 +43,7 @@ dtex_c4_create(int tex_size, int tex_count) {
 	c4->tex_edge = tex_size;
 
 	c4->max_tex_count = tex_count;
-	c4->textures = (struct c4_texture*)(c4 + 1);
+	c4->textures = (struct dtex_cf_texture*)(c4 + 1);
 	
 	c4->prenodes = (struct dtex_cf_prenode*)((intptr_t)(c4 + 1) + textures_sz);
 
@@ -60,7 +53,7 @@ dtex_c4_create(int tex_size, int tex_count) {
 void 
 dtex_c4_release(struct dtex_c4* c4) {
 	for (int i = 0; i < c4->tex_count; ++i) {
-		struct c4_texture* tex = &c4->textures[i];
+		struct dtex_cf_texture* tex = &c4->textures[i];
 
 		// todo release tex
 //		dtex_res_cache_return_mid_texture(tex->texture);
@@ -70,7 +63,7 @@ dtex_c4_release(struct dtex_c4* c4) {
 	}
 	free(c4);
 
-	size_t textures_sz = sizeof(struct c4_texture) * c4->max_tex_count;
+	size_t textures_sz = sizeof(struct dtex_cf_texture) * c4->max_tex_count;
 	size_t prenodes_sz = sizeof(struct dtex_cf_prenode) * MAX_PRELOAD_COUNT;
 	size_t sz = sizeof(struct dtex_c4) + textures_sz + prenodes_sz;
 	memset(c4, 0, sz);
@@ -79,13 +72,12 @@ dtex_c4_release(struct dtex_c4* c4) {
 void 
 dtex_c4_clear(struct dtex_c4* c4) {
 	for (int i = 0; i < c4->tex_count; ++i) {
-		struct c4_texture* tex = &c4->textures[i];
+		struct dtex_cf_texture* tex = &c4->textures[i];
 
 		// todo clear tex
 		// dtex_res_cache_return_mid_texture(tex->texture);
 
-		dtex_hash_clear(tex->hash);
-		dtex_tp_clear(tex->tp);
+		dtex_cf_clear_tex_info(tex);
 	}
 }
 
@@ -105,6 +97,7 @@ dtex_c4_load(struct dtex_c4* c4, struct dtex_package* pkg) {
 		struct dtex_cf_prenode* n = &c4->prenodes[c4->prenode_size++];
 		n->pkg = pkg;
 		n->tex_idx = i;
+		n->scale = 1;
 	}
 }
 
@@ -117,7 +110,7 @@ _pack_nodes(struct dtex_c4* c4, struct dtex_cf_prenode** pre_list, int pre_sz) {
 		struct dtex_cf_prenode* node = pre_list[i];
 		bool succ = false;
 		for (int j = tex_begin; j < tex_end && !succ; ++j) {
-			if (dtex_cf_pack_prenodes(node, &c4->textures[j])) {
+			if (dtex_cf_pack_prenodes(node, &c4->textures[j], 1)) {
 				if (j > tex_max) {
 					tex_max = j;
 				}
@@ -132,22 +125,7 @@ _pack_nodes(struct dtex_c4* c4, struct dtex_cf_prenode** pre_list, int pre_sz) {
 }
 
 static inline void
-_relocate_node(struct dtex_texture* src, struct c4_node* dst) {
-	// draw old tex to new 
-	float tx_min = 0, tx_max = 1,
-		ty_min = 0, ty_max = 1;
-	float vx_min = (float)dst->dst_rect.xmin * dst->dst_tex->inv_width  * 2 - 1,
-		vx_max = (float)dst->dst_rect.xmax * dst->dst_tex->inv_width  * 2 - 1,
-		vy_min = (float)dst->dst_rect.ymin * dst->dst_tex->inv_height * 2 - 1,
-		vy_max = (float)dst->dst_rect.ymax * dst->dst_tex->inv_height * 2 - 1;
-	float vb[16];
-	vb[0] = vx_min; vb[1] = vy_min; vb[2] = tx_min; vb[3] = ty_min;
-	vb[4] = vx_min; vb[5] = vy_max; vb[6] = tx_min; vb[7] = ty_max;
-	vb[8] = vx_max; vb[9] = vy_max; vb[10] = tx_max; vb[11] = ty_max;
-	vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
-	dtex_draw_to_texture(src, dst->dst_tex, vb);
-
-	dtex_ej_pkg_traverse(dst->pkg->ej_pkg, _relocate_pic, dst);
+_relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 }
 
 static void
@@ -156,7 +134,7 @@ _relocate_nodes(struct dtex_c4* c4, struct dtex_loader* loader, bool async, int 
 	int node_sz;
 	struct dtex_cf_node* nodes[MAX_NODE_COUNT];
 	for (int i = c4->tex_count, n = c4->tex_count + count; i < n; ++i) {
-		struct c4_texture* tex = &c4->textures[i];
+		struct dtex_cf_texture* tex = &c4->textures[i];
 		for (int j = 0; j < tex->node_count; ++j) {
 			struct dtex_cf_node* node = &tex->nodes[j];
 			if (!node->finish) {
@@ -187,13 +165,14 @@ _relocate_nodes(struct dtex_c4* c4, struct dtex_loader* loader, bool async, int 
 				tex_loaded = true;
 			}
 		} else {
-			++pkg->c4_loading;
+			// todo
+//			++pkg->c4_loading;
 			const char* path = dtex_get_img_filepath(pkg->rp, pkg_idx, pkg->LOD);
 			dtex_async_load_file(path, _relocate_nodes_cb, node, "c4");
 		}
 
 		if (!async) {
-			_relocate_node(ori_tex, node);
+			dtex_cf_relocate_node(ori_tex, node);
 			if (!tex_loaded) {
 				dtex_package_remove_texture_ref(pkg, ori_tex);
 				dtex_texture_release(ori_tex);

@@ -4,6 +4,8 @@
 #include "dtex_tp.h"
 #include "dtex_hash.h"
 #include "dtex_log.h"
+#include "dtex_render.h"
+#include "dtex_ej_utility.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -99,7 +101,7 @@ dtex_cf_unique_prenodes(struct dtex_cf_prenode* src_list, int src_sz,
 			unique[unique_size++] = curr;
 		}
 	}
-	memcpy(dst_sz, unique, sizeof(struct dtex_cf_prenode*) * unique_size);
+	memcpy(dst_list, unique, sizeof(struct dtex_cf_prenode*) * unique_size);
 	*dst_sz = unique_size;		
 }
 
@@ -146,4 +148,68 @@ dtex_cf_pack_prenodes(struct dtex_cf_prenode* prenode, struct dtex_cf_texture* c
 	dtex_hash_insert(cf_tex->hash, prenode->pkg->name, node, true);
 
 	return true;	
+}
+
+inline void
+dtex_cf_clear_tex_info(struct dtex_cf_texture* tex) {
+	tex->node_count = 0;
+	assert(tex->hash);
+	dtex_hash_clear(tex->hash);
+	assert(tex->tp);
+	dtex_tp_clear(tex->tp);
+}
+
+inline void
+_relocate_pic(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
+	struct dtex_cf_node* dr = (struct dtex_cf_node*)ud;
+	int tex_uid = dr->pkg->textures[dr->src_tex_idx]->uid;
+	struct dtex_texture* src = dtex_texture_fetch(tex_uid);
+	for (int i = 0; i < ej_pic->n; ++i) {
+		struct pack_quad* ej_q = &ej_pic->rect[i];
+		if (ej_q->texid != tex_uid) {
+			continue;
+		}
+
+		ej_q->texid = dr->dst_tex->uid;
+		for (int j = 0; j < 4; ++j) {
+			float x = (float)ej_q->texture_coord[j*2]   * src->inv_width;
+			float y = (float)ej_q->texture_coord[j*2+1] * src->inv_height;
+			if (src->type == DTEX_TT_RAW && src->t.RAW.lod_scale != 1) {
+				x *= src->t.RAW.lod_scale;
+				y *= src->t.RAW.lod_scale;
+			}
+			ej_q->texture_coord[j*2]   = dr->dst_rect.xmin + (dr->dst_rect.xmax - dr->dst_rect.xmin) * x;
+			ej_q->texture_coord[j*2+1] = dr->dst_rect.ymin + (dr->dst_rect.ymax - dr->dst_rect.ymin) * y;
+		}
+	}
+}
+
+inline void
+dtex_cf_relocate_node(struct dtex_texture* src, struct dtex_cf_node* dst) {
+	// draw old tex to new 
+	float tx_min = 0, tx_max = 1,
+		  ty_min = 0, ty_max = 1;
+	float vx_min = (float)dst->dst_rect.xmin * dst->dst_tex->inv_width  * 2 - 1,
+		  vx_max = (float)dst->dst_rect.xmax * dst->dst_tex->inv_width  * 2 - 1,
+		  vy_min = (float)dst->dst_rect.ymin * dst->dst_tex->inv_height * 2 - 1,
+		  vy_max = (float)dst->dst_rect.ymax * dst->dst_tex->inv_height * 2 - 1;
+	float vb[16];
+	vb[0] = vx_min; vb[1] = vy_min; vb[2] = tx_min; vb[3] = ty_min;
+	vb[4] = vx_min; vb[5] = vy_max; vb[6] = tx_min; vb[7] = ty_max;
+	vb[8] = vx_max; vb[9] = vy_max; vb[10] = tx_max; vb[11] = ty_max;
+	vb[12] = vx_max; vb[13] = vy_min; vb[14] = tx_max; vb[15] = ty_min;
+	// todo for c4 ...
+	dtex_draw_to_texture(src, dst->dst_tex, vb);
+
+	dtex_ej_pkg_traverse(dst->pkg->ej_pkg, _relocate_pic, dst);
+
+	// todo: relocate rrr, b4r
+	// 	if (pkg->rrr_pkg) {
+	// 		dtex_rrr_relocate(pkg->rrr_pkg, pkg);
+	// 	} else if (pkg->b4r_pkg) {
+	// 		dtex_b4r_relocate(pkg->b4r_pkg, pkg);
+	// 	}
+	// 	if (pkg->rrp_pkg) {
+	// 		_relocate_rrp(c3, pkg);
+	// 	}	
 }

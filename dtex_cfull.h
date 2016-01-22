@@ -8,6 +8,8 @@ extern "C"
 
 #include "dtex_typedef.h"
 
+#include "ejoy2d.h"
+
 struct dtex_package;
 struct dtex_texture;
 struct dtex_hash;
@@ -54,6 +56,13 @@ void dtex_cf_unique_prenodes(struct dtex_cf_prenode* src_list, int src_sz,
 							 struct dtex_cf_prenode** dst_list, int* dst_sz);
 
 bool dtex_cf_pack_prenodes(struct dtex_cf_prenode*, struct dtex_cf_texture*, float scale);
+
+extern inline void
+dtex_cf_clear_tex_info(struct dtex_cf_texture*);
+
+// todo other format: rrr, b4r
+extern inline void
+dtex_cf_relocate_node(struct dtex_texture* src, struct dtex_cf_node* dst);
 
 #endif // dynamic_texture_cache_full_h
 
