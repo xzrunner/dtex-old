@@ -205,12 +205,12 @@ inline int
 dtex_load_pvr_tex(const uint8_t* data, int width, int height, int format) {
 	int texid;
 #ifdef __APPLE__
-	int internal_format = 0;
+//	int internal_format = 0;
 	if (format == 4) {
-		internal_format = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
+//		internal_format = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
 		texid = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, data, 0, 0);
 	} else {
-		internal_format = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+//		internal_format = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
 		texid = dtex_gl_create_texture(DTEX_TF_PVR2, width, height, data, 0, 0);
 	}
 #else
