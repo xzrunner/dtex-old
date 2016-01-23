@@ -175,21 +175,12 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 		grid_y = dst_pos->ymin >> 2;
 	int grid_w = width >> 2,
 		grid_h = height >> 2;
-	// int dst_grid_h = node->dst_tex->tex->height >> 2;
-	// grid_y = dst_grid_h - grid_y - grid_h;
 	const uint8_t* src_data = is->stream;
 	uint8_t* dst_data = (uint8_t*)node->dst_tex->ud;
 	for (int y = 0; y < grid_h; ++y) {
 		for (int x = 0; x < grid_w; ++x) {
-// #ifdef __APPLE__
-// 			int src_y = y;
-// 			int idx_src = dtex_pvr_get_morton_number(x, src_y);
-// 			int dst_y = dst_grid_h - 1 - (grid_y + y);
-// 			int idx_dst = dtex_pvr_get_morton_number(grid_x + x, dst_y);
-// #else
 			int idx_src = dtex_pvr_get_morton_number(x, y);
 			int idx_dst = dtex_pvr_get_morton_number(grid_x + x, grid_y + y);
-// #endif
 			assert(idx_dst < node->dst_tex->tex->width * node->dst_tex->tex->height / 16);
 			int64_t* src = (int64_t*)src_data + idx_src;
 			int64_t* dst = (int64_t*)dst_data + idx_dst;

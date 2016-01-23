@@ -201,6 +201,20 @@ dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex) {
 	}
 }
 
+static void
+_reverse_y(uint32_t* data, int width, int height) {
+	uint32_t buf[width];
+	int line_sz = width * sizeof(uint32_t);
+	int bpos = 0, epos = width * (height - 1);
+	for (int i = 0, n = floor(height / 2); i < n; ++i) {
+		memcpy(buf, &data[bpos], line_sz);
+		memcpy(&data[bpos], &data[epos], line_sz);
+		memcpy(&data[epos], buf, line_sz);
+		bpos += width;
+		epos -= width;
+	}
+}
+
 inline int 
 dtex_load_pvr_tex(const uint8_t* data, int width, int height, int format) {
 	int texid;
@@ -215,6 +229,7 @@ dtex_load_pvr_tex(const uint8_t* data, int width, int height, int format) {
 	}
 #else
 	uint8_t* uncompressed = dtex_pvr_decode(data, width, height);
+	_reverse_y((uint32_t*)uncompressed, width, height);
 	texid = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, uncompressed, 0, 0);
 	free(uncompressed);
 #endif
