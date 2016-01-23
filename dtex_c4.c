@@ -11,6 +11,12 @@
 #include "dtex_res_path.h"
 #include "dtex_async_loader.h"
 #include "dtex_debug.h"
+#include "dtex_math.h"
+#include "dtex_stream_import.h"
+#include "dtex_pvr.h"
+#include "dtex_texture_loader.h"
+#include "dtex_ej_utility.h"
+#include "dtex_gl.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -24,10 +30,12 @@ struct dtex_c4 {
 
 	struct dtex_cf_texture* textures;
 	int max_tex_count;
-	int tex_count;
+	int tex_count, used_count;
 
 	struct dtex_cf_prenode* prenodes;
 	int prenode_size;
+
+	int process_count;
 };
 
 struct dtex_c4* 
@@ -47,8 +55,8 @@ dtex_c4_create(int tex_size, int tex_count) {
 	c4->textures = (struct dtex_cf_texture*)(c4 + 1);
 	for (int i = 0; i < tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
-		tex->tex = NULL;
-		tex->ud = malloc(tex_size * tex_size * 4);
+		tex->tex = dtex_texture_create_mid_ref(tex_size);
+		tex->ud = dtex_pvr_init_blank(tex_size);
 		tex->region.xmin = tex->region.ymin = 0;
 		tex->region.xmax = tex->region.ymax = tex_size;
 		tex->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
@@ -65,6 +73,9 @@ dtex_c4_release(struct dtex_c4* c4) {
 	for (int i = 0; i < c4->tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
 		free(tex->ud);
+		if (tex->tex->id != 0) {
+			dtex_gl_release_texture(tex->tex->id);
+		}
 		dtex_res_cache_return_mid_texture(tex->tex);
 		dtex_hash_release(tex->hash);
 		dtex_tp_release(tex->tp);
@@ -132,8 +143,58 @@ _pack_nodes(struct dtex_c4* c4, struct dtex_cf_prenode** pre_list, int pre_sz) {
 	return tex_max - tex_begin + 1;
 }
 
-static inline void
+static void
+_on_load_finished(struct dtex_c4* c4) {
+	for (int i = c4->tex_count, n = i + c4->used_count; i < n; ++i) {
+		struct dtex_cf_texture* tex = &c4->textures[i];
+		tex->tex->id = dtex_load_pvr_tex(tex->ud, tex->tex->width, tex->tex->height, 4);
+	}
+	c4->tex_count += c4->used_count;	
+}
+
+static void
 _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
+	// todo: check file type: rrr, b4r
+	struct dtex_cf_node* node = (struct dtex_cf_node*)ud;
+
+	struct dtex_rect* dst_pos = &node->dst_rect;
+	assert(IS_4TIMES(dst_pos->xmin) && IS_4TIMES(dst_pos->ymin));
+
+	int format = dtex_import_uint8(is);
+	assert(format == DTEX_PVR);
+	dtex_import_uint8(is); // pvr_fmt
+	int width = dtex_import_uint16(is),
+		height = dtex_import_uint16(is);
+	dtex_import_uint32(is); // size
+
+	assert(IS_POT(width) && IS_POT(height)
+		&& width == dst_pos->xmax - dst_pos->xmin
+		&& height == dst_pos->ymax - dst_pos->ymin);
+
+	int grid_x = dst_pos->xmin >> 2,
+		grid_y = dst_pos->ymin >> 2;
+	int grid_w = width >> 2,
+		grid_h = height >> 2;
+	grid_y = (node->dst_tex->tex->height >> 2) - grid_y - grid_h;
+	const uint8_t* src_data = is->stream;
+	uint8_t* dst_data = (uint8_t*)node->dst_tex->ud;
+	for (int y = 0; y < grid_h; ++y) {
+		for (int x = 0; x < grid_w; ++x) {
+			int idx_src = dtex_pvr_get_morton_number(x, y);
+			int idx_dst = dtex_pvr_get_morton_number(grid_x + x, grid_y + y);
+			assert(idx_dst < node->dst_tex->tex->width * node->dst_tex->tex->height / 16);
+			int64_t* src = (int64_t*)src_data + idx_src;
+			int64_t* dst = (int64_t*)dst_data + idx_dst;
+			memcpy(dst, src, sizeof(int64_t));
+		}
+	}
+
+	dtex_ej_pkg_traverse(node->pkg->ej_pkg, dtex_cf_relocate_pic, node);
+
+	struct dtex_c4* c4 = (struct dtex_c4*)node->ud;
+	if (--c4->process_count == 0) {
+		_on_load_finished(c4);
+	}
 }
 
 static void
@@ -154,10 +215,11 @@ _relocate_nodes(struct dtex_c4* c4, struct dtex_loader* loader, bool async, int 
 	qsort((void*)nodes, node_sz, sizeof(struct dtex_cf_node*), dtex_cf_node_pkg_cmp);
 
 	// draw
-	bool tex_loaded = false;
+	c4->process_count = node_sz;
 	struct dtex_texture* ori_tex = NULL;
 	for (int i = 0; i < node_sz; ++i) {
 		struct dtex_cf_node* node = nodes[i];
+		node->ud = c4;
 		node->finish = true;
 		struct dtex_package* pkg = node->pkg;
 		ori_tex = pkg->textures[node->src_tex_idx];
@@ -165,26 +227,12 @@ _relocate_nodes(struct dtex_c4* c4, struct dtex_loader* loader, bool async, int 
 
 		int pkg_idx = dtex_package_texture_idx(pkg, ori_tex);
 		assert(pkg_idx != -1);
-		if (!async) {
-			if (ori_tex->id == 0) {
-				tex_loaded = false;
-				dtex_load_texture(loader, pkg, pkg_idx);
-			} else {
-				tex_loaded = true;
-			}
-		} else {
-			// todo
-//			++pkg->c4_loading;
-			const char* path = dtex_get_img_filepath(pkg->rp, pkg_idx, pkg->LOD);
+		const char* path = dtex_get_img_filepath(pkg->rp, pkg_idx, pkg->LOD);
+		assert(ori_tex->id == 0);
+		if (async) {
 			dtex_async_load_file(path, _relocate_nodes_cb, node, "c4");
-		}
-
-		if (!async) {
-			dtex_cf_relocate_node(ori_tex, node);
-			if (!tex_loaded) {
-				dtex_package_remove_texture_ref(pkg, ori_tex);
-				dtex_texture_release(ori_tex);
-			}
+		} else {
+			dtex_load_file(path, _relocate_nodes_cb, node);
 		}
 	}
 }
@@ -200,8 +248,8 @@ dtex_c4_load_end(struct dtex_c4* c4, struct dtex_loader* loader, bool async) {
 	int unique_sz = 0;
 	dtex_cf_unique_prenodes(c4->prenodes, c4->prenode_size, unique_set, &unique_sz);
 
-	int used_count = _pack_nodes(c4, unique_set, unique_sz);
-	_relocate_nodes(c4, loader, async, used_count);
+	c4->used_count = _pack_nodes(c4, unique_set, unique_sz);
+	_relocate_nodes(c4, loader, async, c4->used_count);
 	
 	c4->prenode_size = 0;
 }

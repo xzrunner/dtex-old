@@ -632,6 +632,9 @@ dtexf_debug_draw() {
 	if (C3) {
 		dtex_c3_debug_draw(C3);
 	}
+	if (C4) {
+		dtex_c4_debug_draw(C4);
+	}
 }
 
 void 

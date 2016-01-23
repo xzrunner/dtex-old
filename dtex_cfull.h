@@ -17,16 +17,19 @@ struct dtex_tp;
 
 #define DTEX_CF_MAX_NODE_COUNT	128
 
+struct dtex_cf_texture;
 struct dtex_cf_node {
 	struct dtex_package* pkg;
 	// src
 	int src_tex_idx;
 	// dst
-	struct dtex_texture* dst_tex;
+	struct dtex_cf_texture* dst_tex;
 	struct dtex_rect dst_rect;
 	bool dst_rotated;
 
 	bool finish;	// relocated
+
+	void* ud;
 };
 
 struct dtex_cf_prenode {
@@ -61,6 +64,9 @@ bool dtex_cf_pack_prenodes(struct dtex_cf_prenode*, struct dtex_cf_texture*, flo
 
 extern inline void
 dtex_cf_clear_tex_info(struct dtex_cf_texture*);
+
+extern inline void
+dtex_cf_relocate_pic(int pic_id, struct ej_pack_picture* ej_pic, void* ud);
 
 // todo other format: rrr, b4r
 extern inline void

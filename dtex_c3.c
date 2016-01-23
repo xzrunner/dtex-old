@@ -22,8 +22,8 @@
 #include <string.h>
 #include <assert.h>
 
-#define MULTI_TEX_COUNT			2
-#define MULTI_TEX_STATIC_COUNT	1
+#define MULTI_TEX_COUNT			1
+#define MULTI_TEX_STATIC_COUNT	0
 
 #define MAX_NODE_COUNT			512
 #define MAX_PRELOAD_COUNT		512
@@ -591,8 +591,8 @@ dtex_c3_query_map_info(struct dtex_c3* c3, struct dtex_package* pkg, struct dtex
 	int sz = dtex_array_size(c3->tmp_array);
 	for (int i = 0; i < sz; ++i) {
 		struct dtex_cf_node* node = *(struct dtex_cf_node**)dtex_array_fetch(c3->tmp_array, i);
-		textures[node->src_tex_idx] = node->dst_tex;
-		regions[node->src_tex_idx]  = &node->dst_rect;		
+		textures[node->src_tex_idx] = node->dst_tex->tex;
+		regions[node->src_tex_idx]  = &node->dst_rect;
 	}
 	dtex_array_clear(c3->tmp_array);
 }

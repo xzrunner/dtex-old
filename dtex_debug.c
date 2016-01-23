@@ -4,7 +4,10 @@
 void 
 dtex_debug_draw(int id, int pos) {
 	float xmin, xmax, ymin, ymax;
-	if (pos == 1) {
+	if (pos == 0) {
+		xmin = ymin = -1;
+		xmax = ymax = 1;
+	} else if (pos == 1) {
 		xmin = 0.1f;
 		xmax = 0.9f;
 		ymin = 0.1f;

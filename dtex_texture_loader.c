@@ -175,21 +175,8 @@ dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex) {
 			int pvr_fmt = dtex_import_uint8(is);
 			width = dtex_import_uint16(is);
 			height= dtex_import_uint16(is);
-			int size = dtex_import_uint32(is);
-#ifdef __APPLE__
-			int internal_format = 0;
-			if (pvr_fmt == 4) {
-				internal_format = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
-				texid = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, is->stream, 0, 0);
-			} else {
-				internal_format = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
-				texid = dtex_gl_create_texture(DTEX_TF_PVR2, width, height, is->stream, 0, 0);
-			}
-#else
-			uint8_t* uncompressed = dtex_pvr_decode(is->stream, width, height);
-			texid = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, uncompressed, 0, 0);
-			free(uncompressed);
-#endif
+			dtex_import_uint32(is); // size
+			texid = dtex_load_pvr_tex(is->stream, width, height, pvr_fmt);
 		}
 		break;
 	case DTEX_PKM:
@@ -212,4 +199,24 @@ dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex) {
 	if (tex->t.RAW.scale != 1 && (tex->t.RAW.format == DTEX_PNG4 || tex->t.RAW.format == DTEX_PNG8)) {
 		_scale_texture(tex, tex->t.RAW.scale);
 	}
+}
+
+inline int 
+dtex_load_pvr_tex(const uint8_t* data, int width, int height, int format) {
+	int texid;
+#ifdef __APPLE__
+	int internal_format = 0;
+	if (format == 4) {
+		internal_format = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
+		texid = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, data, 0, 0);
+	} else {
+		internal_format = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+		texid = dtex_gl_create_texture(DTEX_TF_PVR2, width, height, data, 0, 0);
+	}
+#else
+	uint8_t* uncompressed = dtex_pvr_decode(data, width, height);
+	texid = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, uncompressed, 0, 0);
+	free(uncompressed);
+#endif
+	return texid;
 }

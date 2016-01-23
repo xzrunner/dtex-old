@@ -102,6 +102,27 @@ dtex_texture_create_mid(int edge) {
 	return tex;
 }
 
+struct dtex_texture* 
+dtex_texture_create_mid_ref(int edge) {
+	struct dtex_texture* tex = _get_free_texture();
+	if (!tex) {
+		dtex_fault("dtex_texture_create_mid _get_free_texture fail.");
+		return NULL;
+	}
+
+	if (edge > dtex_max_texture_size()) {
+		edge = dtex_max_texture_size();
+	}
+
+	tex->type = DTEX_TT_MID;
+	tex->id = 0;
+	tex->width = tex->height = edge;
+	tex->inv_width = tex->inv_height = 1.0f / edge;
+	tex->t.MID.tp = NULL;
+
+	return tex;
+}
+
 void
 dtex_texture_release(struct dtex_texture* tex) {
 	if (!tex) { return; }
