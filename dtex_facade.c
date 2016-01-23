@@ -637,36 +637,36 @@ dtexf_debug_draw() {
 	}
 }
 
-void 
-dtexf_test_pvr(const char* path) {
-	uint32_t width, height;
-	uint8_t* buf_compressed = dtex_pvr_read_file(path, &width, &height);
-	assert(buf_compressed);
-
-	uint8_t* buf_uncompressed = dtex_pvr_decode(buf_compressed, width, height);
-	free(buf_compressed);
-
-	unsigned int tex;
-#ifdef __APPLE__
-	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
-	tex = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, new_compressed, 0);
-	free(new_compressed);
-#else
-	tex = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, buf_uncompressed, 0, 0);
-#endif
-	free(buf_uncompressed);
-
-// 	struct dtex_texture src_tex;
-// 	src_tex.id = tex;
-// 	src_tex.width = width;
-// 	src_tex.height = height;
-// 	src_tex.type = DTEX_TT_RAW;
-// 	src_tex.t.RAW.format = TEXTURE8;
-// 	src_tex.t.RAW.id_alpha = 0;
-// 
-// 	struct dtex_texture* dst_tex = NULL;
-// 	dtex_c3_load_tex(C3, &src_tex, &dst_tex);
-}
+//void
+//dtexf_test_pvr(const char* path) {
+//	uint32_t width, height;
+//	uint8_t* buf_compressed = dtex_pvr_read_file(path, &width, &height);
+//	assert(buf_compressed);
+//
+//	uint8_t* buf_uncompressed = dtex_pvr_decode(buf_compressed, width, height);
+//	free(buf_compressed);
+//
+//	unsigned int tex;
+//#ifdef __APPLE__
+//	uint8_t* new_compressed = dtex_pvr_encode(buf_uncompressed, width, height);
+//	tex = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, new_compressed, 0);
+//	free(new_compressed);
+//#else
+//	tex = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, buf_uncompressed, 0, 0);
+//#endifø
+//	free(buf_uncompressed);
+//
+//// 	struct dtex_texture src_tex;
+//// 	src_tex.id = tex;
+//// 	src_tex.width = width;
+//// 	src_tex.height = height;
+//// 	src_tex.type = DTEX_TT_RAW;
+//// 	src_tex.t.RAW.format = TEXTURE8;
+//// 	src_tex.t.RAW.id_alpha = 0;
+//// 
+//// 	struct dtex_texture* dst_tex = NULL;
+//// 	dtex_c3_load_tex(C3, &src_tex, &dst_tex);
+//}
 
 //#ifndef __ANDROID__
 //
