@@ -199,15 +199,18 @@ dtexf_create(const char* cfg) {
 
 void 
 dtexf_release() {
- 	if (C2) {
- 		dtex_c2_release(C2);		
- 	}
 	if (C1) {
 		dtex_c1_release(C1);		
 	}
+ 	if (C2) {
+ 		dtex_c2_release(C2);		
+ 	}
 	if (C3) {
 		dtex_c3_release(C3);		
 	}
+ 	if (C4) {
+ 		dtex_c4_release(C4);
+ 	}
 	if (LOADER) {
 		dtexloader_release(LOADER);		
 	}

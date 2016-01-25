@@ -75,9 +75,7 @@ dtex_tp_create(int width, int height, int size) {
 
 void 
 dtex_tp_release(struct dtex_tp* tp) {
-	if (tp) {
-		free(tp);
-	}
+	free(tp);
 }
 
 void 

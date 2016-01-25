@@ -109,6 +109,7 @@ dtex_hash_create(int capacity, int hash_size, float rehash_weight,
 
 void 
 dtex_hash_release(struct dtex_hash* hash) {
+	free(hash->c);
 	free(hash);
 }
 
