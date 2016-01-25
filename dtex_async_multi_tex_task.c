@@ -48,9 +48,15 @@ struct params_queue {
 static struct params_queue PARAMS_QUEUE;
 
 void 
-dtex_async_load_multi_textures_init() {
+dtex_async_load_multi_textures_create() {
 	DTEX_ASYNC_QUEUE_INIT(PARAMS_SHEAR_QUEUE);
 	DTEX_ASYNC_QUEUE_INIT(PARAMS_QUEUE);
+}
+
+void 
+dtex_async_load_multi_textures_release() {
+	DTEX_ASYNC_QUEUE_CLEAR(PARAMS_SHEAR_QUEUE, struct share_params);
+	DTEX_ASYNC_QUEUE_CLEAR(PARAMS_QUEUE, struct params);
 }
 
 static inline void

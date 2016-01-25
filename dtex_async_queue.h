@@ -38,6 +38,35 @@ extern "C"
 #define DTEX_ASYNC_QUEUE_EMPTY(queue) \
 	(pthread_rwlock_rdlock(&queue.lock), queue.head == NULL)
 
+#define DTEX_ASYNC_QUEUE_CLEAR(queue, type) do { \
+	pthread_rwlock_wrlock(&(queue).lock); \
+ 	type* curr = (queue).head; \
+	while (curr) { \
+		type* next = curr->next; \
+		free(curr); \
+		curr = next; \
+	} \
+ 	(queue).head = NULL; \
+ 	(queue).tail = NULL; \
+	pthread_rwlock_unlock(&(queue).lock); \
+} while (0)
+
+#define DTEX_ASYNC_QUEUE_CLEAR2(queue, type, release_cb) do { \
+	pthread_rwlock_wrlock(&(queue).lock); \
+	type* curr = (queue).head; \
+	while (curr) { \
+		type* next = curr->next; \
+		if (release_cb) { \
+			release_cb(curr); \
+		} \
+		free(curr); \
+		curr = next; \
+	} \
+	(queue).head = NULL; \
+	(queue).tail = NULL; \
+	pthread_rwlock_unlock(&(queue).lock); \
+} while (0)
+
 //#define DTEX_ASYNC_QUEUE_FOREACH(queue, e) for(e=(queue)->head.next; (e)!=&(queue)->head; (e)=(e)->next)
 
 #endif // dynamic_texture_async_queue_h

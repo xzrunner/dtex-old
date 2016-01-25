@@ -13,7 +13,8 @@ struct dtex_c2;
 struct dtex_c3;
 struct dtex_package;
 
-void dtex_async_load_c2_from_c3_init();
+void dtex_async_load_c2_from_c3_create();
+void dtex_async_load_c2_from_c3_release();
 
 bool dtex_async_load_c2_from_c3(struct dtex_loader*,
                                 struct dtex_c2*,

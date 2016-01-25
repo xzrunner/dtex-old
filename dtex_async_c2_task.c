@@ -32,8 +32,21 @@ struct load_params_queue {
 static struct load_params_queue PARAMS_QUEUE;
 
 void 
-dtex_async_load_c2_init() {
+dtex_async_load_c2_create() {
 	DTEX_ASYNC_QUEUE_INIT(PARAMS_QUEUE);
+}
+
+static void
+_release_params(void* data) {
+	struct load_params* params = (struct load_params*)data;
+	dtex_array_release(params->spr_ids);
+	dtex_array_release(params->tex_ids);
+
+}
+
+void
+dtex_async_load_c2_release() {
+	DTEX_ASYNC_QUEUE_CLEAR2(PARAMS_QUEUE, struct load_params, _release_params);
 }
 
 static inline void

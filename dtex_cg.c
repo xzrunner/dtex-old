@@ -101,6 +101,7 @@ dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex) {
 
 void 
 dtex_cg_release(struct dtex_cg* cg) {
+	free(cg->buf);
 	free(cg);
 }
 

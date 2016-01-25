@@ -119,10 +119,7 @@ void dtex_c3_release(struct dtex_c3* c3) {
 			dtex_tp_release(tex->tp);
 		}
 	}
-
 	dtex_array_release(c3->tmp_array);
-
-	size_t sz = sizeof(struct dtex_c3) + sizeof(struct dtex_cf_prenode) * MAX_PRELOAD_COUNT;
 	free(c3);
 }
 

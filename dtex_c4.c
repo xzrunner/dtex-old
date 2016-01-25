@@ -79,10 +79,6 @@ dtex_c4_release(struct dtex_c4* c4) {
 		dtex_hash_release(tex->hash);
 		dtex_tp_release(tex->tp);
 	}
-
-	size_t textures_sz = sizeof(struct dtex_cf_texture) * c4->max_tex_count;
-	size_t prenodes_sz = sizeof(struct dtex_cf_prenode) * MAX_PRELOAD_COUNT;
-	size_t sz = sizeof(struct dtex_c4) + textures_sz + prenodes_sz;
 	free(c4);
 }
 

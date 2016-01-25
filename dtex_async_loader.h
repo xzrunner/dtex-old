@@ -10,7 +10,7 @@ extern "C"
 
 struct dtex_import_stream;
 
-void dtex_async_loader_init();
+void dtex_async_loader_create();
 void dtex_async_loader_release();
 
 void dtex_async_loader_clear();

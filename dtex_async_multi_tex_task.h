@@ -10,7 +10,8 @@ extern "C"
 
 struct dtex_package;
 
-void dtex_async_load_multi_textures_init();
+void dtex_async_load_multi_textures_create();
+void dtex_async_load_multi_textures_release();
 
 void dtex_async_load_multi_textures(struct dtex_package* pkg, 
 									int* texture_idx_list,

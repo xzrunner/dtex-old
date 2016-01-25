@@ -174,13 +174,15 @@ dtex_c2_release(struct dtex_c2* c2) {
 			dtex_hash_release(c2->t.ONE.index[i].hash);
 			dtex_tp_release(c2->t.ONE.index[i].tp);
 		}
+		if (c2->t.ONE.cg) {
+			dtex_cg_release(c2->t.ONE.cg);
+		}
 	} else {
 		for (int i = 0; i < c2->t.MULTI.tex_size; ++i) {
 			dtex_res_cache_return_mid_texture(c2->t.MULTI.textures[i]);
 		}
 		dtex_hash_release(c2->t.MULTI.index.hash);
 	}
-
 	free(c2);
 }
 

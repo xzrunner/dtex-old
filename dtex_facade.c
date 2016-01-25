@@ -171,11 +171,11 @@ dtexf_create(const char* cfg) {
 	dtex_c2_strategy_init(CFG.c2_max_no_update_count);
 
 	// async load
-	dtex_async_loader_init();
-	dtex_async_load_multi_textures_init();
-	dtex_async_load_c3_init();
-	dtex_async_load_c2_init();
-	dtex_async_load_c2_from_c3_init();
+	dtex_async_loader_create();
+	dtex_async_load_multi_textures_create();
+	dtex_async_load_c3_create();
+	dtex_async_load_c2_create();
+	dtex_async_load_c2_from_c3_create();
 
 	dtex_render_init();
 
@@ -211,9 +211,20 @@ dtexf_release() {
  	if (C4) {
  		dtex_c4_release(C4);
  	}
+	if (CS) {
+		dtex_cs_release(CS);
+	}
 	if (LOADER) {
 		dtexloader_release(LOADER);		
 	}
+
+	dtex_texture_cache_clear();
+
+	dtex_async_loader_release();
+	dtex_async_load_multi_textures_release();
+	dtex_async_load_c3_release();
+	dtex_async_load_c2_release();
+	dtex_async_load_c2_from_c3_release();
 
 	dtex_async_loader_release();
 
