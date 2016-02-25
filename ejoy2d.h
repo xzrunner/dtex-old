@@ -8,7 +8,7 @@ extern "C"
 
 #include <matrix.h>
 #include <spritepack.h>
-#include <ej_sprite.h>
+#include <sprite.h>
 
 // "matrix.h"
 #define ej_srt						srt
