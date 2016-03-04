@@ -88,8 +88,7 @@ _draw(const float vb[16], struct dtex_texture* src) {
 		//		shader_draw_separate(vb, src->id, src->id_alpha);
 	} else { 
 		assert(src->id != 0);
-		dtex_shader_set_texture(src->id);
-		dtex_shader_draw(vb);
+		dtex_shader_draw(vb, src->id);
 	}
 }
 

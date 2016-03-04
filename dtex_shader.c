@@ -7,7 +7,7 @@ static int (*GET_TEXTURE)();
 static void (*SET_TARGET)(int id);
 static int (*GET_TARGET)();
 static void (*DRAW_BEGIN)();
-static void (*DRAW)(const float vb[16]);
+static void (*DRAW)(const float vb[16], int texid);
 static void (*DRAW_END)();
 static void (*DRAW_FLUSH)();
 
@@ -19,7 +19,7 @@ dtex_shader_init(void (*program)(int n),
 				 void (*set_target)(int id),
 				 int (*get_target)(),
 				 void (*draw_begin)(),
-				 void (*draw)(const float vb[16]),
+				 void (*draw)(const float vb[16], int texid),
 				 void (*draw_end)(),
 				 void (*draw_flush)()) {
 	PROGRAM = program;
@@ -70,8 +70,8 @@ dtex_shader_begin() {
 }
 
 void 
-dtex_shader_draw(const float vb[16]) {
-	DRAW(vb);
+dtex_shader_draw(const float vb[16], int texid) {
+	DRAW(vb, texid);
 }
 
 //void dtex_shader_draw_triangle(const float* vb, int count);

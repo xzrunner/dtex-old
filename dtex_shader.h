@@ -18,7 +18,7 @@ void dtex_shader_init(void (*program)(int n),
 					  void (*set_target)(int id),
 					  int (*get_target)(),
 					  void (*draw_begin)(),
-					  void (*draw)(const float vb[16]),
+					  void (*draw)(const float vb[16], int texid),
 					  void (*draw_end)(),
 					  void (*draw_flush)());
 
@@ -32,7 +32,7 @@ void dtex_shader_set_target(int id);
 int dtex_shader_get_target();
 
 void dtex_shader_begin();
-void dtex_shader_draw(const float vb[16]);
+void dtex_shader_draw(const float vb[16], int texid);
 //void dtex_shader_draw_triangle(const float* vb, int count);
 void dtex_shader_end();
 

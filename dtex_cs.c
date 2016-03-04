@@ -193,13 +193,12 @@ dtex_cs_draw_to_screen(struct dtex_cs* cs, void (*before_draw)(void* ud), void* 
 	dtex_shader_begin();
 
 	dtex_shader_program(DTEX_PROGRAM_NORMAL);
-	dtex_shader_set_texture(cs->texture->id);
 
 	if (before_draw) {
 		before_draw(ud);
 	}
 
-	dtex_shader_draw(vb);
+	dtex_shader_draw(vb, cs->texture->id);
 
 	dtex_shader_end();
 

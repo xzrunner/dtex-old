@@ -39,7 +39,6 @@ dtex_debug_draw(int id, int pos) {
 	dtex_shader_program(DTEX_PROGRAM_NORMAL);
 
 	dtex_shader_begin();
-	dtex_shader_set_texture(id);
-	dtex_shader_draw(vb);		
+	dtex_shader_draw(vb, id);		
 	dtex_shader_end();
 }
