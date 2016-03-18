@@ -169,7 +169,7 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 		grid_y = dst_pos->ymin >> 2;
 	int grid_w = width >> 2,
 		grid_h = height >> 2;
-	const uint8_t* src_data = is->stream;
+	const uint8_t* src_data = (const uint8_t*)(is->stream);
 	uint8_t* dst_data = (uint8_t*)node->dst_tex->ud;
 	for (int y = 0; y < grid_h; ++y) {
 		for (int x = 0; x < grid_w; ++x) {

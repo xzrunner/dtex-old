@@ -41,7 +41,7 @@ static int
 lload_package(lua_State* L) {
 	const char* name = luaL_checkstring(L, 1);
 	const char* epe_path = luaL_checkstring(L, 2);
-	int lod = luaL_optinteger(L, 3, 0);
+	int lod = (int)(luaL_optinteger(L, 3, 0));
 
 	struct dtex_package* pkg = dtexf_load_pkg(name, epe_path, 1, lod);
 	lua_pushlightuserdata(L, pkg);
@@ -65,8 +65,8 @@ lcreate_res_path(lua_State* L) {
 		return 0;
 	}
 
-	int img_count = luaL_checkinteger(L, 2);
-	int lod_count = luaL_checkinteger(L, 3);
+	int img_count = (int)(luaL_checkinteger(L, 2));
+	int lod_count = (int)(luaL_checkinteger(L, 3));
 	pkg->rp = dtex_res_path_create(img_count, lod_count);
 
 	return 0;
@@ -88,8 +88,8 @@ lset_res_path(lua_State* L) {
 	} else if (strcmp(type, "ept") == 0) {
 		dtex_set_ept_filepath(rp, path);
 	} else if (strcmp(type, "img") == 0) {
-		int idx = luaL_checkinteger(L, 4);
-		int lod = luaL_checkinteger(L, 5);
+		int idx = (int)(luaL_checkinteger(L, 4));
+		int lod = (int)(luaL_checkinteger(L, 5));
 		dtex_set_img_filepath(rp, path, idx, lod);
 	}
 
@@ -132,11 +132,11 @@ lcreate_c2_stg(lua_State* L) {
 		lua_getfield(L, 2, "clear_enable");
 		c2_cfg.clear_enable = lua_toboolean(L, -1);
 		lua_getfield(L, 2, "single_max_count");
-		c2_cfg.single_max_count = luaL_checkinteger(L, -1);
+		c2_cfg.single_max_count = (int)(luaL_checkinteger(L, -1));
 		lua_getfield(L, 2, "diff_spr_count");
-		c2_cfg.diff_spr_count = luaL_checkinteger(L, -1);
+		c2_cfg.diff_spr_count = (int)(luaL_checkinteger(L, -1));
 		lua_getfield(L, 2, "tot_count");
-		c2_cfg.tot_count = luaL_checkinteger(L, -1);
+		c2_cfg.tot_count = (int)(luaL_checkinteger(L, -1));
 		lua_pop(L, 4);
 		c2_cfg_ptr = &c2_cfg;
 	}
@@ -171,7 +171,7 @@ lpreload_texture(lua_State* L) {
 		return 0;
 	}
 
-	int idx = lua_tointeger(L, 2);
+	int idx = (int)(lua_tointeger(L, 2));
 	float scale = luaL_optnumber(L, 3, 1);
 
 	dtexf_preload_texture(pkg, idx, scale);
@@ -279,8 +279,8 @@ lc4_clear(lua_State* L) {
 
 static int
 lcs_create(lua_State* L) {
-	int w = luaL_checkinteger(L, 1);
-	int h = luaL_checkinteger(L, 2);
+	int w = (int)(luaL_checkinteger(L, 1));
+	int h = (int)(luaL_checkinteger(L, 2));
 	dtexf_cs_create();
 	dtexf_cs_on_size(w, h);
 	return 0;
