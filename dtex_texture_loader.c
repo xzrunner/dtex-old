@@ -176,7 +176,7 @@ dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex) {
 			width = dtex_import_uint16(is);
 			height= dtex_import_uint16(is);
 			dtex_import_uint32(is); // size
-			texid = dtex_load_pvr_tex(is->stream, width, height, pvr_fmt);
+			texid = dtex_load_pvr_tex((const uint8_t*)(is->stream), width, height, pvr_fmt);
 		}
 		break;
 	case DTEX_PKM:
