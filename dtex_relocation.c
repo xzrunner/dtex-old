@@ -1,17 +1,18 @@
 #include "dtex_relocation.h"
-#include "dtex_array.h"
 #include "dtex_package.h"
+
+#include <ds_array.h>
 
 #include <assert.h>
 #include <string.h>
 #include <stdint.h>
 
 void 
-dtex_swap_quad_src_info(struct dtex_package* pkg, struct dtex_array* picture_ids) {	
+dtex_swap_quad_src_info(struct dtex_package* pkg, struct ds_array* picture_ids) {	
 	struct ej_sprite_pack* ej_pkg = pkg->ej_pkg;
-	int size = dtex_array_size(picture_ids);
+	int size = ds_array_size(picture_ids);
 	for (int i = 0; i < size; ++i) {
-		int spr_id = *(int*)dtex_array_fetch(picture_ids, i);
+		int spr_id = *(int*)ds_array_fetch(picture_ids, i);
 		int type = ej_pkg->type[spr_id];
 		assert(type == TYPE_PICTURE);
 		struct ej_pack_picture* ej_pic = (struct ej_pack_picture*)ej_pkg->data[spr_id];

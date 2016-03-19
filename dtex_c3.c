@@ -9,14 +9,15 @@
 #include "dtex_texture.h"
 #include "dtex_res_cache.h"
 #include "dtex_res_path.h"
-#include "dtex_hash.h"
 #include "dtex_log.h"
-#include "dtex_array.h"
 #include "dtex_debug.h"
 #include "dtex_render.h"
 #include "dtex_c3_strategy.h"
 
 #include "dtex_facade.h"
+
+#include <ds_array.h>
+#include <ds_hash.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -48,7 +49,7 @@ struct dtex_c3 {
 	} t;
 
 	// cache for dtex_c3_query_map_info
-	struct dtex_array* tmp_array;
+	struct ds_array* tmp_array;
 
 	int prenode_size;	
 	struct dtex_cf_prenode prenodes[1];
@@ -76,13 +77,13 @@ dtex_c3_create(int texture_size, bool one_tex_mode) {
 		up->tex = tex;
 		up->region.xmin = 0; up->region.xmax = texture_size;
 		up->region.ymin = half_sz; up->region.ymax = texture_size;
-		up->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
+		up->hash = ds_hash_create(50, 50, 5, ds_string_hash_func, ds_string_equal_func);
 		up->tp = dtex_tp_create(texture_size, half_sz, MAX_PRELOAD_COUNT);
 
 		down->tex = tex;
 		down->region.xmin = 0; down->region.xmax = texture_size;
 		down->region.ymin = 0; down->region.ymax = half_sz;		
-		down->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
+		down->hash = ds_hash_create(50, 50, 5, ds_string_hash_func, ds_string_equal_func);
 		down->tp = dtex_tp_create(texture_size, half_sz, MAX_PRELOAD_COUNT);
 	} else {
 		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
@@ -90,12 +91,12 @@ dtex_c3_create(int texture_size, bool one_tex_mode) {
 			tex->tex = dtex_res_cache_fetch_mid_texture(texture_size);
 			tex->region.xmin = tex->region.ymin = 0;
 			tex->region.xmax = tex->region.ymax = texture_size;
-			tex->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
+			tex->hash = ds_hash_create(50, 50, 5, ds_string_hash_func, ds_string_equal_func);
 			tex->tp = dtex_tp_create(texture_size, texture_size, MAX_PRELOAD_COUNT);
 		}
 	}
 
-	c3->tmp_array = dtex_array_create(128, sizeof(struct dtex_cf_node));
+	c3->tmp_array = ds_array_create(128, sizeof(struct dtex_cf_node));
 
 	c3->prenode_size = 0;
 
@@ -106,20 +107,20 @@ void dtex_c3_release(struct dtex_c3* c3) {
 	if (c3->one_tex_mode) {
 		dtex_res_cache_return_mid_texture(c3->t.ONE.s_up_tex.tex);
 
-		dtex_hash_release(c3->t.ONE.s_up_tex.hash);
+		ds_hash_release(c3->t.ONE.s_up_tex.hash);
 		dtex_tp_release(c3->t.ONE.s_up_tex.tp);
 
-		dtex_hash_release(c3->t.ONE.d_down_tex.hash);
+		ds_hash_release(c3->t.ONE.d_down_tex.hash);
 		dtex_tp_release(c3->t.ONE.d_down_tex.tp);
 	} else {
 		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
 			struct dtex_cf_texture* tex = &c3->t.MULTI.textures[i];
 			dtex_res_cache_return_mid_texture(tex->tex);
-			dtex_hash_release(tex->hash);
+			ds_hash_release(tex->hash);
 			dtex_tp_release(tex->tp);
 		}
 	}
-	dtex_array_release(c3->tmp_array);
+	ds_array_release(c3->tmp_array);
 	free(c3);
 }
 
@@ -146,13 +147,13 @@ static inline bool
 _is_pkg_loaded(struct dtex_c3* c3, const char* pkg_name) {
 	struct dtex_cf_node* node = NULL;
 	if (c3->one_tex_mode) {
-		node = (struct dtex_cf_node*)dtex_hash_query(c3->t.ONE.s_up_tex.hash, (void*)pkg_name);
+		node = (struct dtex_cf_node*)ds_hash_query(c3->t.ONE.s_up_tex.hash, (void*)pkg_name);
 		if (!node) {
-			node = (struct dtex_cf_node*)dtex_hash_query(c3->t.ONE.d_down_tex.hash, (void*)pkg_name);
+			node = (struct dtex_cf_node*)ds_hash_query(c3->t.ONE.d_down_tex.hash, (void*)pkg_name);
 		}
 	} else {
 		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
-			node = (struct dtex_cf_node*)dtex_hash_query(c3->t.MULTI.textures[i].hash, (void*)pkg_name);
+			node = (struct dtex_cf_node*)ds_hash_query(c3->t.MULTI.textures[i].hash, (void*)pkg_name);
 			if (node) {
 				break;
 			}
@@ -575,21 +576,21 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 void
 dtex_c3_query_map_info(struct dtex_c3* c3, struct dtex_package* pkg, struct dtex_texture** textures, struct dtex_rect** regions) {
 	if (c3->one_tex_mode) {
-		dtex_hash_query_all(c3->t.ONE.s_up_tex.hash, pkg->name, c3->tmp_array);
-		dtex_hash_query_all(c3->t.ONE.d_down_tex.hash, pkg->name, c3->tmp_array);
+		ds_hash_query_all(c3->t.ONE.s_up_tex.hash, pkg->name, c3->tmp_array);
+		ds_hash_query_all(c3->t.ONE.d_down_tex.hash, pkg->name, c3->tmp_array);
 	} else {
 		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
-			dtex_hash_query_all(c3->t.MULTI.textures[i].hash, pkg->name, c3->tmp_array);
+			ds_hash_query_all(c3->t.MULTI.textures[i].hash, pkg->name, c3->tmp_array);
 		}
 	}
 
-	int sz = dtex_array_size(c3->tmp_array);
+	int sz = ds_array_size(c3->tmp_array);
 	for (int i = 0; i < sz; ++i) {
-		struct dtex_cf_node* node = *(struct dtex_cf_node**)dtex_array_fetch(c3->tmp_array, i);
+		struct dtex_cf_node* node = *(struct dtex_cf_node**)ds_array_fetch(c3->tmp_array, i);
 		textures[node->src_tex_idx] = node->dst_tex->tex;
 		regions[node->src_tex_idx]  = &node->dst_rect;
 	}
-	dtex_array_clear(c3->tmp_array);
+	ds_array_clear(c3->tmp_array);
 }
 
 void 

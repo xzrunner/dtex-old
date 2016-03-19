@@ -4,9 +4,10 @@
 #include "dtex_texture_loader.h"
 #include "dtex_async_loader.h"
 #include "dtex_texture.h"
-#include "dtex_array.h"
 #include "dtex_res_path.h"
 #include "dtex_log.h"
+
+#include <ds_array.h>
 
 #include <pthread.h>
 

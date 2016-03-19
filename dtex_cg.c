@@ -1,11 +1,12 @@
 #include "dtex_cg.h"
-#include "dtex_hash.h"
 #include "dtex_texture.h"
 #include "dtex_gl.h"
 #include "dtex_log.h"
 #include "dtex_tp.h"
 
 #include "dtex_facade.h"
+
+#include <ds_hash.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -31,7 +32,7 @@ struct dtex_cg {
 	struct glyph_node nodes[MAX_NODE];
 	int node_size;
 
-	struct dtex_hash* hash;
+	struct ds_hash* hash;
 
 	int buf_sz;
 	uint32_t* buf;
@@ -89,7 +90,7 @@ dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex) {
 	cg->tp = tp;
 	cg->tex = tex;
 
-	cg->hash = dtex_hash_create(MAX_NODE, MAX_NODE * 2, 0.5f, _hash_func, _equal_func);
+	cg->hash = ds_hash_create(MAX_NODE, MAX_NODE * 2, 0.5f, _hash_func, _equal_func);
 
 	cg->buf = NULL;
 	cg->buf_sz = 0;
@@ -108,7 +109,7 @@ dtex_cg_release(struct dtex_cg* cg) {
 void 
 dtex_cg_clear(struct dtex_cg* cg) {
 	cg->node_size = 0;
-	dtex_hash_clear(cg->hash);
+	ds_hash_clear(cg->hash);
 }
 
 float* 
@@ -136,7 +137,7 @@ dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dt
 	node->texcoords[2] = xmin;	node->texcoords[3] = ymin;
 	node->texcoords[6] = xmax;	node->texcoords[7] = ymax;
 	node->key = *glyph;
-	dtex_hash_insert(cg->hash, &node->key, node, true);
+	ds_hash_insert(cg->hash, &node->key, node, true);
 
 	// draw
 	size_t sz = width * height * sizeof(uint32_t);
@@ -183,7 +184,7 @@ dtex_cg_commit(struct dtex_cg* cg) {
 
 float* 
 dtex_cg_query(struct dtex_cg* cg, struct dtex_glyph* glyph, int* out_texid) {
-	struct glyph_node* node = (struct glyph_node*)dtex_hash_query(cg->hash, glyph);
+	struct glyph_node* node = (struct glyph_node*)ds_hash_query(cg->hash, glyph);
 	if (!node) {
 		return NULL;
 	}

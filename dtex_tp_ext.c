@@ -1,7 +1,8 @@
 #include "dtex_tp_ext.h"
 #include "dtex_math.h"
 #include "dtex_tp.h"
-#include "dtex_array.h"
+
+#include <ds_array.h>
 
 #include <stdlib.h>
 #include <math.h>
@@ -70,7 +71,7 @@ _cal_area(struct dtex_tp_rect** rects, int sz) {
 	return area;
 }
 
-struct dtex_array* 
+struct ds_array* 
 dtex_packer_square_multi(struct dtex_tp_rect** rects, int sz) {
 	static const float AREA_SCALE_LIMIT = 0.55f;
 	//	static const float AREA_LIMIT = 64 * 64;
@@ -85,12 +86,12 @@ dtex_packer_square_multi(struct dtex_tp_rect** rects, int sz) {
 	int area = _cal_area(curr_list, sz);
 	int edge = next_p2((int)ceil(sqrt((float)area)));
 
-	struct dtex_array* packers = dtex_array_create(8, sizeof(struct dtex_tp*));
+	struct ds_array* packers = ds_array_create(8, sizeof(struct dtex_tp*));
 	while (curr_sz != 0) {
 		int success_sz = 0, fail_sz = 0;
 		struct dtex_tp_rect *success_list[sz], *fail_list[sz];
 
-		int packer_sz = dtex_array_size(packers);
+		int packer_sz = ds_array_size(packers);
 
 		struct dtex_tp* tp = dtex_tp_create(edge, edge, sz);
 		for (int i = 0; i < curr_sz; ++i) {
@@ -121,7 +122,7 @@ dtex_packer_square_multi(struct dtex_tp_rect** rects, int sz) {
 				curr_sz = fail_sz;
 				area -= used_area;
 				edge = next_p2((int)ceil(sqrt((float)area)));
-				dtex_array_add(packers, tp);
+				ds_array_add(packers, tp);
 			} else {
 				edge /= 2;
 				dtex_tp_release(tp);

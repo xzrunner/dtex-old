@@ -17,11 +17,9 @@
 #include "dtex_statistics.h"
 #include "dtex_ej_sprite.h"
 #include "dtex_async_loader.h"
-#include "dtex_array.h"
 #include "dtex_utility.h"
 #include "dtex_relocation.h"
 #include "dtex_texture.h"
-#include "dtex_array.h"
 #include "dtex_hard_res.h"
 #include "dtex_res_cache.h"
 #include "dtex_lod.h"
@@ -35,6 +33,8 @@
 #include "dtex_c2_strategy.h"
 #include "dtex_cg.h"
 #include "dtex_cs.h"
+
+#include <ds_array.h>
 
 #include <cJSON.h>
 

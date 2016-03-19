@@ -2,10 +2,11 @@
 #include "dtex_package.h"
 #include "dtex_texture.h"
 #include "dtex_tp.h"
-#include "dtex_hash.h"
 #include "dtex_log.h"
 #include "dtex_render.h"
 #include "dtex_ej_utility.h"
+
+#include <ds_hash.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -145,7 +146,7 @@ dtex_cf_pack_prenodes(struct dtex_cf_prenode* prenode, struct dtex_cf_texture* c
 
 	pos->ud = node;
 
-	dtex_hash_insert(cf_tex->hash, prenode->pkg->name, node, true);
+	ds_hash_insert(cf_tex->hash, prenode->pkg->name, node, true);
 
 	return true;	
 }
@@ -154,7 +155,7 @@ inline void
 dtex_cf_clear_tex_info(struct dtex_cf_texture* tex) {
 	tex->node_count = 0;
 	assert(tex->hash);
-	dtex_hash_clear(tex->hash);
+	ds_hash_clear(tex->hash);
 	assert(tex->tp);
 	dtex_tp_clear(tex->tp);
 }

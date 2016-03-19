@@ -12,7 +12,7 @@ extern "C"
 
 struct dtex_package;
 struct dtex_texture;
-struct dtex_hash;
+struct ds_hash;
 struct dtex_tp;
 
 #define DTEX_CF_MAX_NODE_COUNT	128
@@ -45,7 +45,7 @@ struct dtex_cf_texture {
 	struct dtex_cf_node nodes[DTEX_CF_MAX_NODE_COUNT];
 	int node_count;
 
-	struct dtex_hash* hash;
+	struct ds_hash* hash;
 	struct dtex_tp* tp;
 
 	void* ud;

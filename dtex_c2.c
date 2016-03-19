@@ -7,7 +7,6 @@
 #include "dtex_relocation.h"
 #include "dtex_texture.h"
 #include "dtex_res_cache.h"
-#include "dtex_hash.h"
 #include "dtex_log.h"
 #include "dtex_c2_strategy.h"
 #include "dtex_debug.h"
@@ -15,6 +14,8 @@
 #include "dtex_cg.h"
 
 #include "ejoy2d.h"
+
+#include <ds_hash.h>
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -80,7 +81,7 @@ struct tp_index {
 	struct c2_node nodes[MAX_NODE_COUNT];
 	int node_count;
 
-	struct dtex_hash* hash;
+	struct ds_hash* hash;
 
 	struct dtex_tp* tp;
 
@@ -144,7 +145,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 		int half_sz = texture_size >> 1;
 		for (int i = 0; i < 4; ++i) {
 			struct tp_index* index = &c2->t.ONE.index[i];
-			index->hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
+			index->hash = ds_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
 			index->tp = dtex_tp_create(half_sz, half_sz, MAX_PRELOAD_COUNT / 4);
 			index->is_static = i < static_count;
 		}
@@ -157,7 +158,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 		tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, MAX_PRELOAD_COUNT);
 		c2->t.MULTI.textures[c2->t.MULTI.tex_size++] = tex;
 
-		c2->t.MULTI.index.hash = dtex_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
+		c2->t.MULTI.index.hash = ds_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
 		c2->t.MULTI.index.tp = NULL;
 	}
 
@@ -171,7 +172,7 @@ dtex_c2_release(struct dtex_c2* c2) {
 	if (c2->one_tex_mode) {
 		dtex_res_cache_return_mid_texture(c2->t.ONE.texture);
 		for (int i = 0; i < 4; ++i) {
-			dtex_hash_release(c2->t.ONE.index[i].hash);
+			ds_hash_release(c2->t.ONE.index[i].hash);
 			dtex_tp_release(c2->t.ONE.index[i].tp);
 		}
 		if (c2->t.ONE.cg) {
@@ -181,7 +182,7 @@ dtex_c2_release(struct dtex_c2* c2) {
 		for (int i = 0; i < c2->t.MULTI.tex_size; ++i) {
 			dtex_res_cache_return_mid_texture(c2->t.MULTI.textures[i]);
 		}
-		dtex_hash_release(c2->t.MULTI.index.hash);
+		ds_hash_release(c2->t.MULTI.index.hash);
 	}
 	free(c2);
 }
@@ -190,7 +191,7 @@ static inline void
 _clear_tp_index(struct tp_index* index) {
 	index->node_count = 0;
 
-	dtex_hash_clear(index->hash);
+	ds_hash_clear(index->hash);
 
 	if (index->tp) {
 		dtex_tp_clear(index->tp);
@@ -464,13 +465,13 @@ _query_node(struct dtex_c2* c2, int pkg_id, int spr_id) {
 	hk.spr_id = spr_id;
 	if (c2->one_tex_mode) {
 		for (int i = 0; i < 4; ++i) {
-			struct c2_node* ret = (struct c2_node*)dtex_hash_query(c2->t.ONE.index[i].hash, &hk);
+			struct c2_node* ret = (struct c2_node*)ds_hash_query(c2->t.ONE.index[i].hash, &hk);
 			if (ret) {
 				return ret;
 			}
 		}
 	} else {
-		return (struct c2_node*)dtex_hash_query(c2->t.MULTI.index.hash, &hk);
+		return (struct c2_node*)ds_hash_query(c2->t.MULTI.index.hash, &hk);
 	}
 	return NULL;
 }
@@ -974,7 +975,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 		tex.t.RAW.scale = tex.t.RAW.lod_scale = 1;
 	}
 
-	dtex_hash_insert(ip.index->hash, &node->hk, node, true);
+	ds_hash_insert(ip.index->hash, &node->hk, node, true);
 	_set_rect_vb(pn, node, ip.rotate);
 
 	ip.pos->ud = node;
@@ -1025,14 +1026,14 @@ dtex_c2_remove_tex(struct dtex_c2* c2, int key) {
 	hk.spr_id = key;
 	if (c2->one_tex_mode) {
 		for (int i = 0; i < 4; ++i) {
-			struct c2_node* ret = (struct c2_node*)dtex_hash_query(c2->t.ONE.index[i].hash, &hk);
+			struct c2_node* ret = (struct c2_node*)ds_hash_query(c2->t.ONE.index[i].hash, &hk);
 			if (ret) {
-				dtex_hash_remove(c2->t.ONE.index[i].hash, &hk);				
+				ds_hash_remove(c2->t.ONE.index[i].hash, &hk);				
 				return;
 			}
 		}
 	} else {
-		dtex_hash_remove(c2->t.MULTI.index.hash, &hk);
+		ds_hash_remove(c2->t.MULTI.index.hash, &hk);
 	}
 }
 

@@ -1,6 +1,5 @@
 #include "dtex_async_c2_from_c3_task.h"
 #include "dtex_relocation.h"
-#include "dtex_array.h"
 #include "dtex_package.h"
 #include "dtex_c2.h"
 #include "dtex_c3.h"
@@ -11,6 +10,8 @@
 #include "dtex_texture_cache.h"
 
 #include "dtex_log.h"
+
+#include <ds_array.h>
 
 #include <pthread.h>
 
@@ -27,9 +28,9 @@ struct load_params {
 
 	struct dtex_package* pkg;
 
-	struct dtex_array* spr_ids;
-	struct dtex_array* pic_ids;
-	struct dtex_array* tex_ids;
+	struct ds_array* spr_ids;
+	struct ds_array* pic_ids;
+	struct ds_array* tex_ids;
 };
 
 struct load_params_queue {
@@ -48,9 +49,9 @@ dtex_async_load_c2_from_c3_create() {
 static void
 _release_params(void* data) {
 	struct load_params* params = (struct load_params*)data;
-	dtex_array_release(params->spr_ids);
-	dtex_array_release(params->pic_ids);
-	dtex_array_release(params->tex_ids);
+	ds_array_release(params->spr_ids);
+	ds_array_release(params->pic_ids);
+	ds_array_release(params->tex_ids);
 }
 
 void 
@@ -74,9 +75,9 @@ _cb_func(void* ud) {
 
 	dtex_swap_quad_src_info(pkg, params->pic_ids);
 	dtex_c2_load_begin(params->c2);
-	int spr_sz = dtex_array_size(params->spr_ids);
+	int spr_sz = ds_array_size(params->spr_ids);
 	for (int i = 0; i < spr_sz; ++i) {
-		int spr_id = *(int*)dtex_array_fetch(params->spr_ids, i);
+		int spr_id = *(int*)ds_array_fetch(params->spr_ids, i);
 		dtex_c2_load_spr(params->c2, pkg, spr_id);
 	}
 	dtex_c2_load_end(params->c2, params->loader);
@@ -89,9 +90,9 @@ _cb_func(void* ud) {
 		}
 	}
 
-	int sz = dtex_array_size(params->tex_ids);
+	int sz = ds_array_size(params->tex_ids);
 	for (int i = 0; i < sz; ++i) {
-		int idx = *(int*)dtex_array_fetch(params->tex_ids, i);
+		int idx = *(int*)ds_array_fetch(params->tex_ids, i);
 		if (!pkg->textures[idx]) {
 			continue;
 		}
@@ -126,14 +127,14 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 	DTEX_ASYNC_QUEUE_POP(PARAMS_QUEUE, params);
 	if (!params) {
 		params = (struct load_params*)malloc(sizeof(*params));
-		params->spr_ids = dtex_array_create(100, sizeof(int));
-		params->pic_ids = dtex_array_create(10, sizeof(int));
-		params->tex_ids = dtex_array_create(10, sizeof(int));
+		params->spr_ids = ds_array_create(100, sizeof(int));
+		params->pic_ids = ds_array_create(10, sizeof(int));
+		params->tex_ids = ds_array_create(10, sizeof(int));
 	}
 
-	dtex_array_clear(params->spr_ids);
+	ds_array_clear(params->spr_ids);
 	for (int i = 0; i < sprite_count; ++i) {
-		dtex_array_add(params->spr_ids, &sprite_ids[i]);
+		ds_array_add(params->spr_ids, &sprite_ids[i]);
 	}
 
 	// swap to origin data, get texture idx info
@@ -143,10 +144,10 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 	dtex_swap_quad_src_info(pkg, params->pic_ids);
 
 	int tex_ids_sz = 0;
-	int size = dtex_array_size(params->tex_ids);
+	int size = ds_array_size(params->tex_ids);
 	int tex_ids[size];
 	for (int i = 0; i < size; ++i) {
-		int idx = *(int*)dtex_array_fetch(params->tex_ids, i);
+		int idx = *(int*)ds_array_fetch(params->tex_ids, i);
 		struct dtex_texture* tex = dtex_texture_cache_query(pkg, idx);
 		if (tex) {
 			tex->cache_locked = true;

@@ -2,9 +2,10 @@
 #include "dtex_async_queue.h"
 #include "dtex_relocation.h"
 #include "dtex_package.h"
-#include "dtex_array.h"
 #include "dtex_utility.h"
 #include "dtex_async_multi_tex_task.h"
+
+#include <ds_array.h>
 
 #include <pthread.h>
 
@@ -19,8 +20,8 @@ struct load_params {
 
 	struct dtex_package* pkg;
 
-	struct dtex_array* pic_ids;
-	struct dtex_array* tex_ids;
+	struct ds_array* pic_ids;
+	struct ds_array* tex_ids;
 };
 
 struct load_params_queue {
@@ -39,8 +40,8 @@ dtex_async_load_c3_create() {
 static void
 _release_params(void* data) {
 	struct load_params* params = (struct load_params*)data;
-	dtex_array_release(params->pic_ids);
-	dtex_array_release(params->tex_ids);
+	ds_array_release(params->pic_ids);
+	ds_array_release(params->tex_ids);
 }
 
 void 
@@ -70,8 +71,8 @@ bool dtex_async_load_c3(struct dtex_loader* loader,
 	DTEX_ASYNC_QUEUE_POP(PARAMS_QUEUE, params);
 	if (!params) {
 		params = (struct load_params*)malloc(sizeof(*params));
-		params->pic_ids = dtex_array_create(10, sizeof(int));
-		params->tex_ids = dtex_array_create(10, sizeof(int));
+		params->pic_ids = ds_array_create(10, sizeof(int));
+		params->tex_ids = ds_array_create(10, sizeof(int));
 	}
 
 	// swap to origin data, get texture idx info
@@ -82,10 +83,10 @@ bool dtex_async_load_c3(struct dtex_loader* loader,
 
 	params->pkg = pkg;
 
-	int tex_sz = dtex_array_size(params->tex_ids);
+	int tex_sz = ds_array_size(params->tex_ids);
 	int tex_ids[tex_sz];
 	for (int i = 0; i < tex_sz; ++i) {
-		tex_ids[i] = *(int*)dtex_array_fetch(params->tex_ids, i);
+		tex_ids[i] = *(int*)ds_array_fetch(params->tex_ids, i);
 	}
 
 	if (tex_sz == 0) {

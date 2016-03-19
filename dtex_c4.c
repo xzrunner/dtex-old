@@ -2,7 +2,6 @@
 #include "dtex_cfull.h"
 #include "dtex_typedef.h"
 #include "dtex_res_cache.h"
-#include "dtex_hash.h"
 #include "dtex_tp.h"
 #include "dtex_package.h"
 #include "dtex_log.h"
@@ -17,6 +16,8 @@
 #include "dtex_texture_loader.h"
 #include "dtex_ej_utility.h"
 #include "dtex_gl.h"
+
+#include <ds_hash.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -59,7 +60,7 @@ dtex_c4_create(int tex_size, int tex_count) {
 		tex->ud = dtex_pvr_init_blank(tex_size);
 		tex->region.xmin = tex->region.ymin = 0;
 		tex->region.xmax = tex->region.ymax = tex_size;
-		tex->hash = dtex_hash_create(50, 50, 5, dtex_string_hash_func, dtex_string_equal_func);
+		tex->hash = ds_hash_create(50, 50, 5, ds_string_hash_func, ds_string_equal_func);
 		tex->tp = dtex_tp_create(tex_size, tex_size, MAX_PRELOAD_COUNT);
 	}
 	
@@ -76,7 +77,7 @@ dtex_c4_release(struct dtex_c4* c4) {
 		if (tex->tex->id != 0) {
 			dtex_gl_release_texture(tex->tex->id);
 		}
-		dtex_hash_release(tex->hash);
+		ds_hash_release(tex->hash);
 		dtex_tp_release(tex->tp);
 	}
 	free(c4);
@@ -97,7 +98,7 @@ dtex_c4_clear(struct dtex_c4* c4) {
 void 
 dtex_c4_load(struct dtex_c4* c4, struct dtex_package* pkg) {
 	for (int i = 0; i < c4->max_tex_count; ++i) {
-		if (dtex_hash_query(c4->textures[i].hash, pkg->name)) {
+		if (ds_hash_query(c4->textures[i].hash, pkg->name)) {
 			return;
 		}
 	}
