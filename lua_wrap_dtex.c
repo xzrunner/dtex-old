@@ -273,19 +273,6 @@ lc4_clear(lua_State* L) {
 	return 0;
 }
 
-/************************************************************************/
-/* cs                                                                   */
-/************************************************************************/
-
-static int
-lcs_create(lua_State* L) {
-	int w = (int)(luaL_checkinteger(L, 1));
-	int h = (int)(luaL_checkinteger(L, 2));
-	dtexf_cs_create();
-	dtexf_cs_on_size(w, h);
-	return 0;
-}
-
 int
 luaopen_dtex_c(lua_State* L) {
 	luaL_Reg l[] = {
@@ -320,9 +307,6 @@ luaopen_dtex_c(lua_State* L) {
 		{ "c4_load", lc4_load },
 		{ "c4_load_end", lc4_load_end },
 		{ "c4_clear", lc4_clear },
-
- 		// CS
-		{ "cs_create", lcs_create },
 
 		{ NULL, NULL },		
 	};

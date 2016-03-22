@@ -33,6 +33,7 @@
 #include "dtex_c2_strategy.h"
 #include "dtex_cg.h"
 #include "dtex_cs.h"
+#include "dtex_screen.h"
 
 #include <ds_array.h>
 
@@ -64,6 +65,7 @@ struct dtex_config {
 	bool open_c3;
 	bool open_c4;
 	bool open_cg;
+	bool open_cs;
 
 	int c1_tex_size;
 	int c2_tex_size;
@@ -95,6 +97,9 @@ _config(const char* str) {
 	CFG.open_c4 = cJSON_GetObjectItem(root, "open_c4")->valueint;
 	if (cJSON_GetObjectItem(root, "open_cg")) {
 		CFG.open_cg = cJSON_GetObjectItem(root, "open_cg")->valueint;
+	}
+	if (cJSON_GetObjectItem(root, "open_cs")) {
+		CFG.open_cs = cJSON_GetObjectItem(root, "open_cs")->valueint;
 	}
 
 	if (cJSON_GetObjectItem(root, "c1_tex_size")) {
@@ -138,6 +143,7 @@ dtexf_create(const char* cfg) {
 	CFG.open_c3 = true;
 	CFG.open_c4 = true;
 	CFG.open_cg = false;
+	CFG.open_cs = false;
 
 	CFG.c1_tex_size = 1024;
 	CFG.c2_tex_size = 4096;
@@ -195,6 +201,12 @@ dtexf_create(const char* cfg) {
  	if (CFG.open_c2) {
  		C2 = dtex_c2_create(CFG.c2_tex_size, true, 0, CFG.open_cg, CFG.src_extrude);
  	}
+	if (CFG.open_cs) {
+		CS = dtex_cs_create();
+		float w, h, s;
+		dtex_get_screen(&w, &h, &s);
+		dtex_cs_on_size(CS, w, h);
+	}
 }
 
 void 
@@ -526,18 +538,6 @@ dtexf_get_cg() {
 /************************************************************************/
 
 void 
-dtexf_cs_create() {
-	CS = dtex_cs_create();
-}
-
-void 
-dtexf_cs_on_size(int width, int height) {
-	if (CS) {
-		dtex_cs_on_size(CS, width, height);
-	}
-}
-
-void 
 dtexf_cs_bind() {
 	if (CS) {
 		dtex_cs_bind(CS);
@@ -556,6 +556,11 @@ dtexf_cs_draw_to_screen(void (*before_draw)(void* ud), void* ud) {
 	if (CS) {
 		dtex_cs_draw_to_screen(CS, before_draw, ud);
 	}
+}
+
+int 
+dtexf_cs_get_texture_id() {
+	return CS ? dtex_cs_get_texture_id(CS) : 0;
 }
 
 /************************************************************************/
