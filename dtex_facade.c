@@ -212,22 +212,28 @@ dtexf_create(const char* cfg) {
 void 
 dtexf_release() {
 	if (C1) {
-		dtex_c1_release(C1);		
+		dtex_c1_release(C1);
+		C1 = NULL;
 	}
  	if (C2) {
- 		dtex_c2_release(C2);		
+ 		dtex_c2_release(C2);
+		C2 = NULL;
  	}
 	if (C3) {
-		dtex_c3_release(C3);		
+		dtex_c3_release(C3);
+		C3 = NULL;
 	}
  	if (C4) {
  		dtex_c4_release(C4);
+		C4 = NULL;
  	}
 	if (CS) {
 		dtex_cs_release(CS);
+		CS = NULL;
 	}
 	if (LOADER) {
-		dtexloader_release(LOADER);		
+		dtexloader_release(LOADER);
+		LOADER = NULL;
 	}
 
 	dtex_texture_cache_clear();
