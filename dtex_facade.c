@@ -205,7 +205,7 @@ dtexf_create(const char* cfg) {
 		CS = dtex_cs_create();
 		float w, h, s;
 		dtex_get_screen(&w, &h, &s);
-		dtex_cs_on_size(CS, w, h);
+		dtex_cs_on_size(CS, w * s, h * s);
 	}
 }
 
