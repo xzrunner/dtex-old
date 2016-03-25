@@ -3,6 +3,7 @@
 #include "dtex_texture.h"
 #include "dtex_res_cache.h"
 #include "dtex_debug.h"
+#include "dtex_gl.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -32,8 +33,8 @@ dtex_c1_release(struct dtex_c1* c1) {
 }
 
 void 
-dtex_c1_clear(struct dtex_c1* c1) {
-	dtex_texture_clear(c1->texture);
+dtex_c1_clear(struct dtex_c1* c1, float xmin, float ymin, float xmax, float ymax) {
+	dtex_gl_clear_color2(xmin, ymin, xmax, ymax);
 }
 
 void 

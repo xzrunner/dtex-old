@@ -8,6 +8,9 @@ extern "C"
 
 #include <stdbool.h>
 
+void dtex_gl_init(void (*clear_color)(float xmin, float ymin, float xmax, float ymax));
+void dtex_gl_clear_color2(float xmin, float ymin, float xmax, float ymax);
+
 void dtex_gl_texture_init(int (*texture_create)(int type, int width, int height, const void* data, int channel, unsigned int id),
 						  void (*texture_release)(int id),
 						  void (*texture_update)(const void* pixels, int x, int y, int w, int h, unsigned int id),

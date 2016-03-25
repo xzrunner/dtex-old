@@ -78,7 +78,7 @@ void dtexf_c2_clear();
 /************************************************************************/
 /* C1                                                                   */
 /************************************************************************/
-void dtexf_c1_clear();
+void dtexf_c1_clear(float xmin, float ymin, float xmax, float ymax);
 void dtexf_c1_bind();
 void dtexf_c1_unbind();
 uint32_t dtexf_c1_get_texture_id();

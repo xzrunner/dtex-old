@@ -470,9 +470,9 @@ dtexf_c2_clear() {
 /************************************************************************/
 
 void 
-dtexf_c1_clear() {
+dtexf_c1_clear(float xmin, float ymin, float xmax, float ymax) {
 	if (C1) {
-		dtex_c1_clear(C1);
+		dtex_c1_clear(C1, xmin, ymin, xmax, ymax);
 	}
 }
 

@@ -8,25 +8,25 @@ dtex_debug_draw(int id, int pos) {
 		xmin = ymin = -1;
 		xmax = ymax = 1;
 	} else if (pos == 1) {
-		xmin = 0.1f;
-		xmax = 0.9f;
-		ymin = 0.1f;
-		ymax = 0.9f;
+		xmin = 0;
+		xmax = 1;
+		ymin = 0;
+		ymax = 1;
 	} else if (pos == 2) {
-		xmin = -0.9f;
-		xmax = -0.1f;
-		ymin = 0.1f;
-		ymax = 0.9f;
+		xmin = -1;
+		xmax = -0;
+		ymin = 0;
+		ymax = 1;
 	} else if (pos == 3) {
-		xmin = -0.9f;
-		xmax = -0.1f;
-		ymin = -0.9f;
-		ymax = -0.1f;
+		xmin = -1;
+		xmax = -0;
+		ymin = -1;
+		ymax = -0;
 	} else if (pos == 4) {
-		xmin = 0.1f;
-		xmax = 0.9f;
-		ymin = -0.9f;
-		ymax = -0.1f;
+		xmin = 0;
+		xmax = 1;
+		ymin = -1;
+		ymax = -0;
 	}
 
 	float vb[16];

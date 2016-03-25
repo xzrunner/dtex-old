@@ -27,10 +27,22 @@
 #define COMPRESSED_RGBA_PVRTC_4BPPV1_IMG 4
 #define COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 2
 
+static void (*CLEAR_COLOR)(float xmin, float ymin, float xmax, float ymax);
+
 static int (*TEXTURE_CREATE)(int type, int width, int height, const void* data, int channel, unsigned int id);
 static void (*TEXTURE_RELEASE)(int id);
 static void (*TEXTURE_UPDATE)(const void* pixels, int x, int y, int w, int h, unsigned int id);
 static  int (*TEXTURE_ID)(int id);
+
+void 
+dtex_gl_init(void (*clear_color)(float xmin, float ymin, float xmax, float ymax)) {
+	CLEAR_COLOR = clear_color;
+}
+
+void 
+dtex_gl_clear_color2(float xmin, float ymin, float xmax, float ymax) {
+	CLEAR_COLOR(xmin, ymin, xmax, ymax);
+}
 
 void 
 dtex_gl_texture_init(int (*texture_create)(int type, int width, int height, const void* data, int channel, unsigned int id),

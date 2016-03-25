@@ -13,7 +13,7 @@ struct dtex_c1;
 struct dtex_c1* dtex_c1_create(int texture_size);
 void dtex_c1_release(struct dtex_c1*);
 
-void dtex_c1_clear(struct dtex_c1*);
+void dtex_c1_clear(struct dtex_c1*, float xmin, float ymin, float xmax, float ymax);
 
 void dtex_c1_bind(struct dtex_c1*);
 void dtex_c1_unbind(struct dtex_c1*);
