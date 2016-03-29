@@ -177,6 +177,10 @@ struct unpack_tex_params {
 	int load_tex_idx;
 };
 
+struct unpack_tex_raw_params {
+	struct dtex_texture* tex;
+};
+
 struct unpack_alltex_params {
 	struct dtex_package* pkg;
 	float scale;
@@ -238,6 +242,12 @@ _unpack_memory_to_texture(struct dtex_import_stream* is, void* ud) {
 	struct dtex_texture* tex = pkg->textures[params->load_tex_idx];
 	assert(tex);
 	dtex_load_texture_all(is, tex);
+}
+
+static inline void
+_unpack_memory_to_texture_raw(struct dtex_import_stream* is, void* ud) {
+	struct unpack_tex_raw_params* params = (struct unpack_tex_raw_params*)ud;
+	dtex_load_texture_all(is, params->tex);
 }
 
 static inline void
@@ -402,6 +412,21 @@ dtex_load_texture(struct dtex_loader* loader, struct dtex_package* pkg, int idx)
 	params.pkg = pkg;
 	params.load_tex_idx = idx;
 	_unpack_file(loader, file, &_unpack_memory_to_texture, &params);
+
+	dtex_file_close(file);
+}
+
+void 
+dtex_load_texture_raw(struct dtex_loader* loader, const char* path, struct dtex_texture* tex) {
+	struct dtex_file* file = dtex_file_open(path, "rb");
+	if (!file) {
+		dtex_fault("dtex_load_texture_raw: can't open file %s\n", path);
+	}
+
+	struct unpack_tex_raw_params params;
+	params.tex = tex;
+
+	_unpack_file(loader, file, &_unpack_memory_to_texture_raw, &params);
 
 	dtex_file_close(file);
 }

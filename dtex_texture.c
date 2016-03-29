@@ -46,7 +46,7 @@ struct dtex_texture*
 dtex_texture_create_raw(int lod) {
 	struct dtex_texture* tex = _get_free_texture();
 	if (!tex) {
-		dtex_fault("dtex_create_raw_texture fail.");
+		dtex_fault("dtex_create_texture_raw fail.");
 		return NULL;
 	}
 

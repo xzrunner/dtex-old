@@ -11,6 +11,7 @@ extern "C"
 struct dtex_loader;
 struct dtex_import_stream;
 struct dtex_package;
+struct dtex_texture;
 
 struct dtex_loader* dtexloader_create();
 void dtexloader_release(struct dtex_loader*);
@@ -21,6 +22,7 @@ void dtex_unload_pkg(struct dtex_loader*, struct dtex_package* pkg);
 int dtex_preload_all_textures(const char* filepath, struct dtex_loader*, struct dtex_package* pkg, float scale);
 void dtex_preload_texture(struct dtex_loader*, struct dtex_package* pkg, int idx, float scale);
 void dtex_load_texture(struct dtex_loader*, struct dtex_package*, int idx);
+void dtex_load_texture_raw(struct dtex_loader*, const char* path, struct dtex_texture*);
 
 void dtex_load_file(const char* filepath, void (*unpack_func)(struct dtex_import_stream* is, void* ud), void* ud);
 
