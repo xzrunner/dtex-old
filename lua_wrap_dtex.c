@@ -273,6 +273,30 @@ lc4_clear(lua_State* L) {
 	return 0;
 }
 
+static int
+lcs1_draw(lua_State* L) {
+	dtexf_cs1_draw(NULL, NULL);
+	return 0;
+}
+
+static int
+lcs2_bind(lua_State* L) {
+	dtexf_cs2_bind();
+	return 0;
+}
+
+static int
+lcs2_unbind(lua_State* L) {
+	dtexf_cs2_unbind();
+	return 0;
+}
+
+static int
+lcs2_draw(lua_State* L) {
+	dtexf_cs2_draw(NULL, NULL);
+	return 0;
+}
+
 int
 luaopen_dtex_c(lua_State* L) {
 	luaL_Reg l[] = {
@@ -307,6 +331,12 @@ luaopen_dtex_c(lua_State* L) {
 		{ "c4_load", lc4_load },
 		{ "c4_load_end", lc4_load_end },
 		{ "c4_clear", lc4_clear },
+
+		// CS
+		{ "cs1_draw", lcs1_draw },
+		{ "cs2_bind", lcs2_bind },
+		{ "cs2_unbind", lcs2_unbind },
+		{ "cs2_draw", lcs2_draw },
 
 		{ NULL, NULL },		
 	};

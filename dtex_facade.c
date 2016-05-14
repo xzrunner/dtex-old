@@ -34,6 +34,7 @@
 #include "dtex_cg.h"
 #include "dtex_cs.h"
 #include "dtex_screen.h"
+#include "dtex_shader.h"
 
 #include <ds_array.h>
 
@@ -51,7 +52,8 @@ static struct dtex_c4* C4 = NULL;
 static struct dtex_c3* C3 = NULL;
 static struct dtex_c2* C2 = NULL;
 static struct dtex_c1* C1 = NULL;
-static struct dtex_cs* CS = NULL;
+static struct dtex_cs* CS1 = NULL;
+static struct dtex_cs* CS2 = NULL;
 
 /************************************************************************/
 /* dtexf overall                                                        */
@@ -202,10 +204,14 @@ dtexf_create(const char* cfg) {
  		C2 = dtex_c2_create(CFG.c2_tex_size, true, 0, CFG.open_cg, CFG.src_extrude);
  	}
 	if (CFG.open_cs) {
-		CS = dtex_cs_create();
 		float w, h, s;
 		dtex_get_screen(&w, &h, &s);
-		dtex_cs_on_size(CS, w * s, h * s);
+
+		CS1 = dtex_cs_create();
+		dtex_cs_on_size(CS1, w * s, h * s);
+
+		CS2 = dtex_cs_create();
+		dtex_cs_on_size(CS2, w * s, h * s);
 	}
 }
 
@@ -227,9 +233,13 @@ dtexf_release() {
  		dtex_c4_release(C4);
 		C4 = NULL;
  	}
-	if (CS) {
-		dtex_cs_release(CS);
-		CS = NULL;
+	if (CS1) {
+		dtex_cs_release(CS1);
+		CS1 = NULL;
+	}
+	if (CS2) {
+		dtex_cs_release(CS2);
+		CS2 = NULL;
 	}
 	if (LOADER) {
 		dtexloader_release(LOADER);
@@ -549,29 +559,55 @@ dtexf_get_cg() {
 /************************************************************************/
 
 void 
-dtexf_cs_bind() {
-	if (CS) {
-		dtex_cs_bind(CS);
+dtexf_cs1_bind() {
+	if (CS1) {
+		dtex_cs_bind(CS1);
 	}
 }
 
 void 
-dtexf_cs_unbind() {
-	if (CS) {
-		dtex_cs_unbind(CS);
+dtexf_cs1_unbind() {
+	if (CS1) {
+		dtex_cs_unbind(CS1);
 	}
 }
 
 void 
-dtexf_cs_draw_to_screen(void (*before_draw)(void* ud), void* ud) {
-	if (CS) {
-		dtex_cs_draw_to_screen(CS, before_draw, ud);
+dtexf_cs1_draw(void (*before_draw)(void* ud), void* ud) {
+	if (CS1) {
+		dtex_cs_draw(CS1, before_draw, ud);
 	}
 }
 
 int 
-dtexf_cs_get_texture_id() {
-	return CS ? dtex_cs_get_texture_id(CS) : 0;
+dtexf_cs1_get_texture_id() {
+	return CS1 ? dtex_cs_get_texture_id(CS1) : 0;
+}
+
+void 
+dtexf_cs2_bind() {
+	if (CS2) {
+		dtex_cs_bind(CS2);
+	}
+}
+
+void 
+dtexf_cs2_unbind() {
+	if (CS2) {
+		dtex_cs_unbind(CS2);
+	}
+}
+
+void 
+dtexf_cs2_draw(void (*before_draw)(void* ud), void* ud) {
+	if (CS2) {
+		dtex_cs_draw(CS2, before_draw, ud);
+	}
+}
+
+int 
+dtexf_cs2_get_texture_id() {
+	return CS2 ? dtex_cs_get_texture_id(CS2) : 0;
 }
 
 /************************************************************************/

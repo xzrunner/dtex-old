@@ -97,10 +97,15 @@ struct dtex_cg* dtexf_get_cg();
 /************************************************************************/
 /* CS                                                                   */
 /************************************************************************/
-void dtexf_cs_bind();
-void dtexf_cs_unbind();
-void dtexf_cs_draw_to_screen(void (*before_draw)(void* ud), void* ud);
-int dtexf_cs_get_texture_id();
+void dtexf_cs1_bind();
+void dtexf_cs1_unbind();
+void dtexf_cs1_draw(void (*before_draw)(void* ud), void* ud);
+int  dtexf_cs1_get_texture_id();
+
+void dtexf_cs2_bind();
+void dtexf_cs2_unbind();
+void dtexf_cs2_draw(void (*before_draw)(void* ud), void* ud);
+int  dtexf_cs2_get_texture_id();
 
 //void dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path);
 

@@ -178,7 +178,7 @@ dtex_cs_dirty(struct dtex_cs* cs) {
 }
 
 void 
-dtex_cs_draw_to_screen(struct dtex_cs* cs, void (*before_draw)(void* ud), void* ud) {
+dtex_cs_draw(struct dtex_cs* cs, void (*before_draw)(void* ud), void* ud) {
 	float vb[16];
 
 	float vx_min = (-1 + cs->x) * cs->scale,
@@ -192,7 +192,7 @@ dtex_cs_draw_to_screen(struct dtex_cs* cs, void (*before_draw)(void* ud), void* 
 
 	dtex_shader_begin();
 
-	dtex_shader_program(DTEX_PROGRAM_NORMAL);
+//	dtex_shader_program(DTEX_PROGRAM_NORMAL);
 
 	if (before_draw) {
 		before_draw(ud);
