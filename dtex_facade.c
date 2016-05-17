@@ -217,6 +217,8 @@ dtexf_create(const char* cfg) {
 
 void 
 dtexf_release() {
+	dtex_texture_cache_clear();
+
 	if (C1) {
 		dtex_c1_release(C1);
 		C1 = NULL;
@@ -245,8 +247,6 @@ dtexf_release() {
 		dtexloader_release(LOADER);
 		LOADER = NULL;
 	}
-
-	dtex_texture_cache_clear();
 
 	dtex_async_loader_release();
 	dtex_async_load_multi_textures_release();
