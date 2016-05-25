@@ -28,7 +28,7 @@ struct dtex_glyph {
 	struct dtex_glyph_style s;
 };
 
-struct dtex_cg* dtex_cg_create(struct dtex_tp*, struct dtex_texture*);
+struct dtex_cg* dtex_cg_create(struct dtex_tp*, struct dtex_texture*, void (*c2_clear_part)(void* ud), void* ud);
 void dtex_cg_release(struct dtex_cg*);
 
 void dtex_cg_clear(struct dtex_cg*);

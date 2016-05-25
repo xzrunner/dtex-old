@@ -37,6 +37,9 @@ struct dtex_cg {
 	int buf_sz;
 	uint32_t* buf;
 //	struct dtex_tp* buf_tp;
+
+	void (*c2_clear_part)(void* ud);
+	void* ud;
 };
 
 static inline unsigned int
@@ -82,7 +85,8 @@ _equal_func(void* key0, void* key1) {
 }
 
 struct dtex_cg* 
-dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex) {
+dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex,
+			   void (*c2_clear_part)(void* ud), void* ud) {
 	size_t sz = sizeof(struct dtex_cg);
 	struct dtex_cg* cg = (struct dtex_cg*)malloc(sz);
 	memset(cg, 0, sz);
@@ -97,6 +101,9 @@ dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex) {
 
 //	cg->buf_tp = dtex_tp_create(buf_sz, buf_sz, buf_sz * buf_sz / );
 
+	cg->c2_clear_part = c2_clear_part;
+	cg->ud = ud;
+
 	return cg;
 }
 
@@ -110,6 +117,7 @@ void
 dtex_cg_clear(struct dtex_cg* cg) {
 	cg->node_size = 0;
 	ds_hash_clear(cg->hash);
+	cg->c2_clear_part(cg->ud);
 }
 
 float* 

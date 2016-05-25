@@ -127,6 +127,27 @@ _equal_func(void* key0, void* key1) {
 		&& hk0->spr_id == hk1->spr_id;
 }
 
+static inline void
+_clear_tp_index(struct tp_index* index) {
+	index->node_count = 0;
+
+	ds_hash_clear(index->hash);
+
+	if (index->tp) {
+		dtex_tp_clear(index->tp);
+	}
+}
+
+static inline void clear_part_from_cg(void* ud) {
+	struct dtex_c2* c2 = (struct dtex_c2*)ud;
+
+	int idx = 2;
+	float xmin = 0,
+		  ymin = 0;
+	dtex_texture_clear_part(c2->t.ONE.texture, xmin, ymin, xmin+0.5f, ymin+0.5f);
+	_clear_tp_index(&c2->t.ONE.index[idx]);
+}
+
 struct dtex_c2* 
 dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_cg, int src_extrude) {
 	SRC_EXTRUDE = src_extrude;
@@ -151,7 +172,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 		}
 		c2->t.ONE.cg = NULL;
 		if (open_cg) {
-			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[2].tp, c2->t.ONE.texture);
+			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[2].tp, c2->t.ONE.texture, clear_part_from_cg, c2);
 		}
 	} else {
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
@@ -185,17 +206,6 @@ dtex_c2_release(struct dtex_c2* c2) {
 		ds_hash_release(c2->t.MULTI.index.hash);
 	}
 	free(c2);
-}
-
-static inline void
-_clear_tp_index(struct tp_index* index) {
-	index->node_count = 0;
-
-	ds_hash_clear(index->hash);
-
-	if (index->tp) {
-		dtex_tp_clear(index->tp);
-	}
 }
 
 static inline void
