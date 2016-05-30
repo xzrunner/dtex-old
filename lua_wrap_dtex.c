@@ -274,6 +274,18 @@ lc4_clear(lua_State* L) {
 }
 
 static int
+lcs1_bind(lua_State* L) {
+	dtexf_cs1_bind();
+	return 0;
+}
+
+static int
+lcs1_unbind(lua_State* L) {
+	dtexf_cs1_unbind();
+	return 0;
+}
+
+static int
 lcs1_draw(lua_State* L) {
 	dtexf_cs1_draw(NULL, NULL);
 	return 0;
@@ -333,6 +345,8 @@ luaopen_dtex_c(lua_State* L) {
 		{ "c4_clear", lc4_clear },
 
 		// CS
+		{ "cs1_bind", lcs1_bind },
+		{ "cs1_unbind", lcs1_unbind },		
 		{ "cs1_draw", lcs1_draw },
 		{ "cs2_bind", lcs2_bind },
 		{ "cs2_unbind", lcs2_unbind },
