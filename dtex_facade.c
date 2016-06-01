@@ -610,6 +610,22 @@ dtexf_cs2_get_texture_id() {
 	return CS2 ? dtex_cs_get_texture_id(CS2) : 0;
 }
 
+void 
+dtexf_cs_draw_between(bool c1toc2) {
+	struct dtex_cs *from, *to;
+	if (c1toc2) {
+		from = CS1;
+		to = CS2;
+	} else {
+		from = CS2;
+		to = CS1;
+	}
+
+	dtex_cs_bind(to);
+	dtex_cs_draw(from, NULL, NULL);
+	dtex_cs_unbind(to);
+}
+
 /************************************************************************/
 /* async load texture                                                   */
 /************************************************************************/

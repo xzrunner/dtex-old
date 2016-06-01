@@ -309,6 +309,13 @@ lcs2_draw(lua_State* L) {
 	return 0;
 }
 
+static int
+lcs_draw_between(lua_State* L) {
+	bool c1toc2 = lua_toboolean(L, 1);
+	dtexf_cs_draw_between(c1toc2);
+	return 0;
+}
+
 int
 luaopen_dtex_c(lua_State* L) {
 	luaL_Reg l[] = {
@@ -351,6 +358,7 @@ luaopen_dtex_c(lua_State* L) {
 		{ "cs2_bind", lcs2_bind },
 		{ "cs2_unbind", lcs2_unbind },
 		{ "cs2_draw", lcs2_draw },
+		{ "cs_draw_between", lcs_draw_between },
 
 		{ NULL, NULL },		
 	};
