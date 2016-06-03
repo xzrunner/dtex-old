@@ -52,13 +52,10 @@
 // 	tex->id = _pvr_texture_create(buf+5, sz-5, internal_format, tex->width, tex->height);
 // }
 
-int 
-dtex_load_all_textures_desc(struct dtex_import_stream* is, struct dtex_package* pkg, float scale) {
-	int sz = dtex_import_uint32(is);
-	pkg->texture_count = sz;
-	for (int i = 0; i < sz; ++i) {
-		int edge = dtex_import_uint32(is);
-
+static int
+_load_desc_v0(struct dtex_import_stream* is, struct dtex_package* pkg, float scale, int count) {
+	pkg->texture_count = count;
+	for (int i = 0; i < count; ++i) {
 		struct dtex_texture* tex = dtex_texture_create_raw(pkg->LOD);
 		if (!tex) {
 			dtex_fault("_unpack_memory_to_preload_all_textures dtex_texture_create_raw err.");
@@ -66,6 +63,7 @@ dtex_load_all_textures_desc(struct dtex_import_stream* is, struct dtex_package* 
 
 		tex->t.RAW.format = DTEX_PNG8;	// todo
 
+		int edge = dtex_import_uint32(is);
 		tex->width = floor(edge * tex->t.RAW.lod_scale + 0.5f);
 		tex->height = floor(edge * tex->t.RAW.lod_scale + 0.5f);
 		tex->inv_width = 1.0f / tex->width;
@@ -79,7 +77,51 @@ dtex_load_all_textures_desc(struct dtex_import_stream* is, struct dtex_package* 
 		assert(!pkg->textures[i]);
 		pkg->textures[i] = tex;
 	}
-	return sz;
+	return count;
+}
+
+static int
+_load_desc_v1(struct dtex_import_stream* is, struct dtex_package* pkg, float scale) {
+	int count = dtex_import_uint32(is);
+	pkg->texture_count = count;
+	for (int i = 0; i < count; ++i) {
+		struct dtex_texture* tex = dtex_texture_create_raw(pkg->LOD);
+		if (!tex) {
+			dtex_fault("_unpack_memory_to_preload_all_textures dtex_texture_create_raw err.");
+		}
+
+		int w = dtex_import_uint16(is),
+			h = dtex_import_uint16(is);
+
+		tex->t.RAW.format = dtex_import_uint16(is);
+
+		tex->width = floor(w * tex->t.RAW.lod_scale + 0.5f);
+		tex->height = floor(h * tex->t.RAW.lod_scale + 0.5f);
+		tex->inv_width = 1.0f / tex->width;
+		tex->inv_height = 1.0f / tex->height;
+
+		tex->t.RAW.scale = scale;
+
+		tex->id = 0;
+		tex->t.RAW.id_alpha = 0;
+
+		assert(!pkg->textures[i]);
+		pkg->textures[i] = tex;
+	}
+	return count;
+}
+
+int 
+dtex_load_all_textures_desc(struct dtex_import_stream* is, struct dtex_package* pkg, float scale) {
+	int count = dtex_import_uint32(is);
+	if (count >= 0) {
+		count = _load_desc_v0(is, pkg, scale, count);
+	} else if (count == -1) {
+		count = _load_desc_v1(is, pkg, scale);
+	} else {
+		assert(0);
+	}
+	return count;
 }
 
 void 
