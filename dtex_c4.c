@@ -17,6 +17,9 @@
 #include "dtex_ej_utility.h"
 #include "dtex_gl.h"
 
+// todo
+#include "dtex_facade.h"
+
 #include <ds_hash.h>
 
 #include <stdlib.h>
@@ -104,6 +107,13 @@ dtex_c4_load(struct dtex_c4* c4, struct dtex_package* pkg) {
 	}
 	
 	for (int i = 0; i < pkg->texture_count; ++i) {
+		struct dtex_texture* tex = pkg->textures[i];
+		if (tex->t.RAW.format != DTEX_PVR) {
+			assert(tex->t.RAW.format == DTEX_PNG8);
+			dtexf_load_texture(pkg, i);
+			continue;
+		}
+
 		if (c4->prenode_size == MAX_PRELOAD_COUNT) {
 			dtex_warning("dtex_c4_load preload full");
 			return;
