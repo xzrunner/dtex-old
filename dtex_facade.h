@@ -79,15 +79,21 @@ void dtexf_c2_clear();
 /************************************************************************/
 /* C1                                                                   */
 /************************************************************************/
-void dtexf_c1_clear(float xmin, float ymin, float xmax, float ymax);
-void dtexf_c1_bind();
-void dtexf_c1_unbind();
-uint32_t dtexf_c1_get_texture_id();
-uint32_t dtexf_c1_get_texture_size();
+void dtexf_t0_clear(float xmin, float ymin, float xmax, float ymax);
+void dtexf_t0_bind();
+void dtexf_t0_unbind();
+uint32_t dtexf_t0_get_texture_id();
+uint32_t dtexf_t0_get_texture_size();
 //void dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr);
 //void dtexf_c1_load_anim(struct dtex_package* pkg, struct animation* ani, int action);
 //bool dtexf_c1_draw_anim(struct dtex_package* pkg, struct animation* ani, int action, 
 //	int frame, struct draw_params* params);
+
+void dtexf_t1_clear(float xmin, float ymin, float xmax, float ymax);
+void dtexf_t1_bind();
+void dtexf_t1_unbind();
+uint32_t dtexf_t1_get_texture_id();
+uint32_t dtexf_t1_get_texture_size();
 
 /************************************************************************/
 /* CG                                                                   */
