@@ -528,19 +528,19 @@ dtexf_t0_get_texture_size() {
 }
 
 //void 
-//dtexf_c1_update(struct dtex_package* pkg, struct ej_sprite* spr) {
+//dtexf_t0_update(struct dtex_package* pkg, struct ej_sprite* spr) {
 //	dtex_c1_update(C1, C2, pkg, spr);
 //}
 
 //void 
-//dtexf_c1_load_anim(struct ej_package* pkg, struct animation* ani, int action) {
+//dtexf_t0_load_anim(struct ej_package* pkg, struct animation* ani, int action) {
 //	if (C1) {
 //		dtex_c1_load_anim(C1, pkg, ani, action);		
 //	}
 //}
 //
 //bool 
-//dtexf_c1_draw_anim(struct ej_package* pkg, struct animation* ani, int action, 
+//dtexf_t0_draw_anim(struct ej_package* pkg, struct animation* ani, int action, 
 //	int frame, struct draw_params* params) {
 //   if (C1 == NULL) {
 //       return false;
