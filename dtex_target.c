@@ -1,9 +1,9 @@
 #include "dtex_target.h"
-#include "dtex_file.h"
 #include "dtex_log.h"
 #include "dtex_shader.h"
 #include "dtex_gl.h"
 
+#include <fs_file.h>
 #include <opengl.h>
 
 #include <stdlib.h>

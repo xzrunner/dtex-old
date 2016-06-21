@@ -1,9 +1,10 @@
 #include "dtex_pvr.h"
 #include "dtex_math.h"
 #include "dtex_gl.h"
-#include "dtex_file.h"
 #include "dtex_log.h"
 #include "dtex_statistics.h"
+
+#include <fs_file.h>
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -639,46 +640,46 @@ const PVRTuint32 PVRTEX3_IDENT      = 0x03525650; // 'P''V''R'3
 
 uint8_t* 
 dtex_pvr_read_file(const char* filepath, uint32_t* width, uint32_t* height) {
-	struct dtex_file* file = dtex_file_open(filepath, "rb");
+	struct fs_file* file = fs_open(filepath, "rb");
 	if (file == NULL) {
 		assert(0);
 		dtex_fault("Can't open pvr file: %s\n", filepath);
 	}
 
 	uint32_t type;
-	dtex_file_read(file, &type, sizeof(uint32_t));
-	dtex_file_seek_from_head(file, 0);
+	fs_read(file, &type, sizeof(uint32_t));
+	fs_seek_from_head(file, 0);
 
 	// test
 	struct PVRTexHeader header;
-	dtex_file_read(file, &header, PVRTEX3_HEADERSIZE);
+	fs_read(file, &header, PVRTEX3_HEADERSIZE);
 
 	if (type != PVRTEX3_IDENT) {
-		dtex_file_seek_from_head(file, sizeof(uint32_t));
+		fs_seek_from_head(file, sizeof(uint32_t));
 	} else {
-		dtex_file_seek_from_head(file, sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint64_t)+sizeof(uint32_t)+sizeof(uint32_t));			
+		fs_seek_from_head(file, sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint64_t)+sizeof(uint32_t)+sizeof(uint32_t));			
 	}
-	dtex_file_read(file, height, sizeof(uint32_t));
-	dtex_file_read(file, width, sizeof(uint32_t));
+	fs_read(file, height, sizeof(uint32_t));
+	fs_read(file, width, sizeof(uint32_t));
 
-	dtex_file_seek_from_head(file, PVRTEX3_HEADERSIZE);
+	fs_seek_from_head(file, PVRTEX3_HEADERSIZE);
 
 	size_t sz = *width * *height / 2;
 	uint8_t* buf = (uint8_t*)malloc(sz);
 	if (buf == NULL) {
 		dtex_fault("Fail to malloc (dtex_pvr_read_file)");
 	}
-	if (dtex_file_read(file, buf, sz) != 1) {
+	if (fs_read(file, buf, sz) != 1) {
 		dtex_fault("Invalid uncompress data source\n");
 	}
-	dtex_file_close(file);	
+	fs_close(file);	
 
 	return buf;
 }
 
 void 
 dtex_pvr_write_file(const char* filepath, const uint8_t* buf, uint32_t width, uint32_t height) {
-	struct dtex_file* file = dtex_file_open(filepath, "wb");
+	struct fs_file* file = fs_open(filepath, "wb");
 	if (file == NULL) {
 		assert(0);
 		dtex_fault("Can't open pvr file: %s\n", filepath);
@@ -698,11 +699,11 @@ dtex_pvr_write_file(const char* filepath, const uint8_t* buf, uint32_t width, ui
 	header.pvrTag = 559044176;
 	header.numSurfs = 1;
 
-	dtex_file_write(file, &header, PVRTEX3_HEADERSIZE);
+	fs_write(file, &header, PVRTEX3_HEADERSIZE);
 
-	dtex_file_write(file, (void*)buf, sz);
+	fs_write(file, (void*)buf, sz);
 
-	dtex_file_close(file);
+	fs_close(file);
 }
 
 unsigned 

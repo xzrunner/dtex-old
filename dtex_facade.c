@@ -11,7 +11,6 @@
 #include "dtex_tp.h"
 #include "dtex_sprite.h"
 #include "dtex_gl.h"
-#include "dtex_file.h"
 #include "dtex_log.h"
 #include "dtex_package.h"
 #include "dtex_statistics.h"
