@@ -1013,7 +1013,7 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 	int unique_sz = 0;
 	_get_unique_prenodes(c2, unique_set, &unique_sz);
 
-	LOGD(" c2 end count: %d", unique_sz);
+//	LOGD(" c2 end count: %d", unique_sz);
 
 	// insert
 	dtex_draw_begin();
