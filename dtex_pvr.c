@@ -1,10 +1,10 @@
 #include "dtex_pvr.h"
 #include "dtex_math.h"
 #include "dtex_gl.h"
-#include "dtex_log.h"
 #include "dtex_statistics.h"
 
 #include <fs_file.h>
+#include <fault.h>
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -425,7 +425,7 @@ dtex_pvr_decode(const uint8_t* buf, int width, int height) {
 
 	uint8_t* dst = (uint8_t*)malloc(width * height * 4);
 	if (dst == NULL) {
-		dtex_fault("Fail to malloc (dtex_pvr_decode)");
+		fault("Fail to malloc (dtex_pvr_decode)");
 	}
 	memset(dst, 0x00, width * height * 4);
 
@@ -520,7 +520,7 @@ dtex_pvr_encode(const uint8_t* buf, int width, int height) {
 	size_t sz = width * height / 2;
 	uint8_t* dst = (uint8_t*)malloc(sz);
 	if (dst == NULL) {
-		dtex_fault("Fail to malloc (dtex_pvr_decode)");
+		fault("Fail to malloc (dtex_pvr_decode)");
 	}
 	memset(dst, 0x00, sz);	
 
@@ -643,7 +643,7 @@ dtex_pvr_read_file(const char* filepath, uint32_t* width, uint32_t* height) {
 	struct fs_file* file = fs_open(filepath, "rb");
 	if (file == NULL) {
 		assert(0);
-		dtex_fault("Can't open pvr file: %s\n", filepath);
+		fault("Can't open pvr file: %s\n", filepath);
 	}
 
 	uint32_t type;
@@ -667,10 +667,10 @@ dtex_pvr_read_file(const char* filepath, uint32_t* width, uint32_t* height) {
 	size_t sz = *width * *height / 2;
 	uint8_t* buf = (uint8_t*)malloc(sz);
 	if (buf == NULL) {
-		dtex_fault("Fail to malloc (dtex_pvr_read_file)");
+		fault("Fail to malloc (dtex_pvr_read_file)");
 	}
 	if (fs_read(file, buf, sz) != 1) {
-		dtex_fault("Invalid uncompress data source\n");
+		fault("Invalid uncompress data source\n");
 	}
 	fs_close(file);	
 
@@ -682,7 +682,7 @@ dtex_pvr_write_file(const char* filepath, const uint8_t* buf, uint32_t width, ui
 	struct fs_file* file = fs_open(filepath, "wb");
 	if (file == NULL) {
 		assert(0);
-		dtex_fault("Can't open pvr file: %s\n", filepath);
+		fault("Can't open pvr file: %s\n", filepath);
 	}
 
 	int sz = width * height * 0.5f;

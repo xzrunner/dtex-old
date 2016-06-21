@@ -1,5 +1,4 @@
 #include "dtex_texture.h"
-#include "dtex_log.h"
 #include "dtex_tp.h"
 #include "dtex_gl.h"
 #include "dtex_target.h"
@@ -10,6 +9,7 @@
 #include "dtex_screen.h"
 
 #include <opengl.h>
+#include <fault.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -46,7 +46,7 @@ struct dtex_texture*
 dtex_texture_create_raw(int lod) {
 	struct dtex_texture* tex = _get_free_texture();
 	if (!tex) {
-		dtex_fault("dtex_create_texture_raw fail.");
+		fault("dtex_create_texture_raw fail.");
 		return NULL;
 	}
 
@@ -61,7 +61,7 @@ struct dtex_texture*
 dtex_texture_create_mid(int edge) {
 	struct dtex_texture* tex = _get_free_texture();
 	if (!tex) {
-		dtex_fault("dtex_texture_create_mid _get_free_texture fail.");
+		fault("dtex_texture_create_mid _get_free_texture fail.");
 		return NULL;
 	}
 
@@ -71,7 +71,7 @@ dtex_texture_create_mid(int edge) {
 
 	uint8_t* empty_data = (uint8_t*)malloc(edge*edge*4);
 	if (!empty_data) {
-		dtex_fault("dtex_texture_create_mid malloc fail.");
+		fault("dtex_texture_create_mid malloc fail.");
 		return NULL;
 	}
 	
@@ -89,7 +89,7 @@ dtex_texture_create_mid(int edge) {
 	int id = dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, 0);
 	free(empty_data);
 	if (dtex_gl_out_of_memory()) {
-		dtex_fault("dtex_texture_create_mid dtex_gl_create_texture fail.");
+		fault("dtex_texture_create_mid dtex_gl_create_texture fail.");
 		return NULL;
 	}
 
@@ -106,7 +106,7 @@ struct dtex_texture*
 dtex_texture_create_mid_ref(int edge) {
 	struct dtex_texture* tex = _get_free_texture();
 	if (!tex) {
-		dtex_fault("dtex_texture_create_mid _get_free_texture fail.");
+		fault("dtex_texture_create_mid _get_free_texture fail.");
 		return NULL;
 	}
 
@@ -152,7 +152,7 @@ dtex_texture_reload(struct dtex_texture* tex) {
 // 	int sz = tex->width * tex->height * 4;
 // 	uint8_t* empty_data = (uint8_t*)malloc(sz);
 // 	if (!empty_data) {
-// 		dtex_fault("dtex_texture_create_mid malloc fail.");
+// 		fault("dtex_texture_create_mid malloc fail.");
 // 		return;
 // 	}
 // 	memset(empty_data, 0xff, sz);

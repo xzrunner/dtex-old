@@ -1,5 +1,6 @@
 #include "dtex_stream_import.h"
-#include "dtex_log.h"
+
+#include <fault.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +13,7 @@
 uint8_t
 dtex_import_uint8(struct dtex_import_stream* is) {
 	if (is->size < 1) {
-		dtex_fault("dtex_import_uint8");
+		fault("dtex_import_uint8");
 	}
 	uint8_t ret;
 	STREAM_IMPORT(is, ret);
@@ -22,7 +23,7 @@ dtex_import_uint8(struct dtex_import_stream* is) {
 uint16_t
 dtex_import_uint16(struct dtex_import_stream* is) {
 	if (is->size < 2) {
-		dtex_fault("dtex_import_uint16");
+		fault("dtex_import_uint16");
 	}
 	uint16_t ret;
 	STREAM_IMPORT(is, ret);
@@ -32,7 +33,7 @@ dtex_import_uint16(struct dtex_import_stream* is) {
 uint32_t
 dtex_import_uint32(struct dtex_import_stream* is) {
 	if (is->size < 4) {
-		dtex_fault("dtex_import_uint32");
+		fault("dtex_import_uint32");
 	}
 	uint32_t ret;
 	STREAM_IMPORT(is, ret);
@@ -46,7 +47,7 @@ dtex_import_string(struct dtex_import_stream* is) {
 		return NULL;
 	}
 	if (is->size < n) {
-		dtex_fault("dtex_import_string");
+		fault("dtex_import_string");
 	}
 
 	char* buf = (char*)malloc(n + 1);

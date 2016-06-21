@@ -1,10 +1,10 @@
 #include "dtex_target.h"
-#include "dtex_log.h"
 #include "dtex_shader.h"
 #include "dtex_gl.h"
 
 #include <fs_file.h>
 #include <opengl.h>
+#include <logger.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,7 +17,7 @@ struct dtex_target {
 
 struct dtex_target* 
 dtex_target_create() {
-    dtex_info("dtex_target: new target");
+    LOGI("dtex_target: new target");
 	struct dtex_target* target = (struct dtex_target*)malloc(sizeof(struct dtex_target));
 	glGenFramebuffers(1, &target->target_id);
 	target->texture_id = 0;
@@ -38,21 +38,21 @@ _check_framebuffer_status() {
 	case GL_FRAMEBUFFER_COMPLETE:
 		return 1;
 	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-		dtex_warning("Framebuffer incomplete: Attachment is NOT complete.\n");
+		LOGW("Framebuffer incomplete: Attachment is NOT complete.\n");
 		return 0;
 	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-		dtex_warning("Framebuffer incomplete: No image is attached to FBO.\n");
+		LOGW("Framebuffer incomplete: No image is attached to FBO.\n");
 		return 0;
 #if !defined(_WIN32) && !defined(__MACOSX)
 	case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-		dtex_warning("Framebuffer incomplete: Attached images have different dimensions.\n");
+		LOGW("Framebuffer incomplete: Attached images have different dimensions.\n");
 		return 0;
 #endif
 	case GL_FRAMEBUFFER_UNSUPPORTED:
-		dtex_warning("Unsupported by FBO implementation.\n");
+		LOGW("Unsupported by FBO implementation.\n");
 		return 0;
 	default:
-		dtex_warning("Unknow error.\n");
+		LOGW("Unknow error.\n");
 		return 0;
 	}
 }

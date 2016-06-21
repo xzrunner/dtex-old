@@ -1,5 +1,4 @@
 #include "dtex_desc_loader.h"
-#include "dtex_log.h"
 #include "dtex_stream_import.h"
 #include "dtex_package.h"
 #include "dtex_ej_utility.h"
@@ -10,6 +9,8 @@
 #include "dtex_b4r.h"
 
 #include "ejoy2d.h"
+
+#include <fault.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -127,7 +128,7 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 // 	uint32_t cap = buf[0] | buf[1]<<8 | buf[2]<<16 | buf[3]<<24;
 // 	struct dtex_rrp* rrp = dtex_rrp_create(buf + 4, sz - 4, cap);
 // 	if (rrp == NULL) {
-// 		dtex_fault("Error create rrp.\n");
+// 		fault("Error create rrp.\n");
 // 	}
 // 	return rrp;
 // }
@@ -137,7 +138,7 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 // 	uint32_t cap = buf[0] | buf[1]<<8 | buf[2]<<16 | buf[3]<<24;
 // 	struct dtex_pts* pts = dtex_pts_create(buf + 4, sz - 4, cap);
 // 	if (pts == NULL) {
-// 		dtex_fault("Error create pts.\n");
+// 		fault("Error create pts.\n");
 // 	}
 // 	return pts;
 // }
@@ -147,7 +148,7 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 // 	uint32_t cap = buf[0] | buf[1]<<8 | buf[2]<<16 | buf[3]<<24;
 // 	struct dtex_rrr* rrr = dtex_rrr_create(buf + 4, sz - 4, cap);
 // 	if (rrr == NULL) {
-// 		dtex_fault("Error create rrr.\n");
+// 		fault("Error create rrr.\n");
 // 	}
 // 	// dtex_rrr_preload_to_pkg(rrr, pkg);
 // 	return rrr;
@@ -158,7 +159,7 @@ dtex_load_epe(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 // 	uint32_t cap = buf[0] | buf[1]<<8 | buf[2]<<16 | buf[3]<<24;
 // 	struct dtex_b4r* b4r = dtex_b4r_create(buf + 4, sz - 4, cap);
 // 	if (b4r == NULL) {
-// 		dtex_fault("Error create b4r.\n");
+// 		fault("Error create b4r.\n");
 // 	}
 // 	// dtex_b4r_preload_to_pkg(b4r, pkg);
 // 	return b4r;

@@ -1,8 +1,8 @@
 #include "dtex_png.h"
-#include "dtex_log.h"
 #include "dtex_typedef.h"
 
 #include <fs_file.h>
+#include <fault.h>
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -23,13 +23,13 @@ uint8_t*
 dtex_png_read(const char* filepath, int* width, int* height, int* channels, int* format) {
 	struct fs_file* file = fs_open(filepath, "rb");
 	if (file == NULL) {
-//		dtex_fault("Can't open png file: %s\n", filepath);
+//		fault("Can't open png file: %s\n", filepath);
 	}
 	
 	size_t sz = fs_size(file);
 	uint8_t* buf = (uint8_t*)malloc(sz);
 	if (fs_read(file, buf, sz) != 1) {
-//		dtex_fault("Invalid uncompress data source\n");
+//		fault("Invalid uncompress data source\n");
 	}
 	fs_close(file);
 

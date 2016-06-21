@@ -9,10 +9,8 @@
 #include "dtex_async_queue.h"
 #include "dtex_texture_cache.h"
 
-#include "dtex_log.h"
-
 #include <ds_array.h>
-
+#include <logger.h>
 #include <pthread.h>
 
 #include <string.h>
@@ -103,7 +101,7 @@ _cb_func(void* ud) {
 	}
 	dtex_package_remove_all_textures_ref(pkg);
 
-	dtex_debug("+++++++ dtex_async_load_c2_from_c3 end, %s", pkg->name);
+	LOGD("+++++++ dtex_async_load_c2_from_c3 end, %s", pkg->name);
 
 	DTEX_ASYNC_QUEUE_PUSH(PARAMS_QUEUE, params);
 }
@@ -119,7 +117,7 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 		return false;
 	}
 
-	dtex_debug("+++++++ dtex_async_load_c2_from_c3 begin, %s", pkg->name);
+	LOGD("+++++++ dtex_async_load_c2_from_c3 begin, %s", pkg->name);
 
 	pkg->c2_loading = 1;
 
@@ -157,7 +155,7 @@ dtex_async_load_c2_from_c3(struct dtex_loader* loader,
 		}
 	}
 
-	dtex_debug("++++++++++++++++++++++ ori %d, curr %d, %s", size, tex_ids_sz, pkg->name);
+	LOGD("++++++++++++++++++++++ ori %d, curr %d, %s", size, tex_ids_sz, pkg->name);
 
 	params->loader = loader;
 	params->c2 = c2;

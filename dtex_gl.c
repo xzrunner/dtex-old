@@ -2,12 +2,13 @@
 #include "dtex_shader.h"
 #include "dtex_statistics.h"
 #include "dtex_typedef.h"
-#include "dtex_log.h"
 #include "dtex_pvr.h"
 #include "dtex_etc1.h"
 #include "dtex_math.h"
 
 #include <opengl.h>
+#include <logger.h>
+
 #include <stdlib.h>
 
 #if !defined (VAO_DISABLE) && !defined (__ANDROID__)

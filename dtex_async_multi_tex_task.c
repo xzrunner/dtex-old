@@ -5,9 +5,9 @@
 #include "dtex_async_loader.h"
 #include "dtex_texture.h"
 #include "dtex_res_path.h"
-#include "dtex_log.h"
 
 #include <ds_array.h>
+#include <logger.h>
 
 #include <pthread.h>
 
@@ -115,7 +115,7 @@ dtex_async_load_multi_textures(struct dtex_package* pkg, int* texture_idx_list, 
 			pkg->textures[idx] = dtex_texture_create_raw(pkg->LOD);
 			pkg->textures[idx]->t.RAW.scale = 1;
 		} else {
-			dtex_warning("+++++ already exist, small scale.");
+			LOGW("+++++ already exist, small scale.");
 			assert(0);
 		}
 		params->tex = pkg->textures[idx];

@@ -1,6 +1,5 @@
 #include "dtex_cs.h"
 #include "dtex_texture.h"
-#include "dtex_log.h"
 #include "dtex_gl.h"
 #include "dtex_typedef.h"
 #include "dtex_res_cache.h"
@@ -12,6 +11,7 @@
 #include "dtex_screen.h"
 
 #include <opengl.h>
+#include <fault.h>
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -85,7 +85,7 @@ dtex_cs_on_size(struct dtex_cs* cs, int width, int height) {
 
 	uint8_t* empty_data = (uint8_t*)malloc(width*height*4);
 	if (!empty_data) {
-		dtex_fault("dtex_cs_on_size malloc fail.");
+		fault("dtex_cs_on_size malloc fail.");
 		return;
 	}
 
@@ -98,7 +98,7 @@ dtex_cs_on_size(struct dtex_cs* cs, int width, int height) {
 	int id = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, empty_data, 0, last_id);
 	free(empty_data);
 	if (dtex_gl_out_of_memory()) {
-		dtex_fault("dtex_cs_on_size dtex_gl_create_texture fail.");
+		fault("dtex_cs_on_size dtex_gl_create_texture fail.");
 		return;
 	}
 

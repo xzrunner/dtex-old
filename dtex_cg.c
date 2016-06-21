@@ -1,12 +1,12 @@
 #include "dtex_cg.h"
 #include "dtex_texture.h"
 #include "dtex_gl.h"
-#include "dtex_log.h"
 #include "dtex_tp.h"
 
 #include "dtex_facade.h"
 
 #include <ds_hash.h>
+#include <logger.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -123,7 +123,7 @@ dtex_cg_clear(struct dtex_cg* cg) {
 float* 
 dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dtex_glyph* glyph) {
 	if (cg->node_size >= MAX_NODE) {
-		dtex_warning(" cg nodes empty.");
+		LOGW(" cg nodes empty.");
 		return NULL;
 	}
 

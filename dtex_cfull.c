@@ -2,11 +2,11 @@
 #include "dtex_package.h"
 #include "dtex_texture.h"
 #include "dtex_tp.h"
-#include "dtex_log.h"
 #include "dtex_render.h"
 #include "dtex_ej_utility.h"
 
 #include <ds_hash.h>
+#include <logger.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -121,7 +121,7 @@ dtex_cf_pack_prenodes(struct dtex_cf_prenode* prenode, struct dtex_cf_texture* c
 		pos = dtex_tp_add(cf_tex->tp, h, w, false);
 	}
 	if (!pos) {
-		dtex_warning("+++++++++++++++++ cf insert fail.");
+		LOGW("+++++++++++++++++ cf insert fail.");
 		return false;
 	}
 
@@ -132,7 +132,7 @@ dtex_cf_pack_prenodes(struct dtex_cf_prenode* prenode, struct dtex_cf_texture* c
 
 	struct dtex_cf_node* node = NULL;
 	if (cf_tex->node_count == DTEX_CF_MAX_NODE_COUNT) {
-		dtex_warning("+++++ cf nodes full.");
+		LOGW("+++++ cf nodes full.");
 		return false;
 	}
 	node = &cf_tex->nodes[cf_tex->node_count++];

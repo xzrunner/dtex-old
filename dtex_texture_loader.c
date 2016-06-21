@@ -8,7 +8,8 @@
 #include "dtex_texture.h"
 #include "dtex_render.h"
 #include "dtex_package.h"
-#include "dtex_log.h"
+
+#include <fault.h>
 
 #include <stdlib.h>
 #include <assert.h>
@@ -58,7 +59,7 @@ _load_desc_v0(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 	for (int i = 0; i < count; ++i) {
 		struct dtex_texture* tex = dtex_texture_create_raw(pkg->LOD);
 		if (!tex) {
-			dtex_fault("_unpack_memory_to_preload_all_textures dtex_texture_create_raw err.");
+			fault("_unpack_memory_to_preload_all_textures dtex_texture_create_raw err.");
 		}
 
 		tex->t.RAW.format = DTEX_PNG8;	// todo
@@ -87,7 +88,7 @@ _load_desc_v1(struct dtex_import_stream* is, struct dtex_package* pkg, float sca
 	for (int i = 0; i < count; ++i) {
 		struct dtex_texture* tex = dtex_texture_create_raw(pkg->LOD);
 		if (!tex) {
-			dtex_fault("_unpack_memory_to_preload_all_textures dtex_texture_create_raw err.");
+			fault("_unpack_memory_to_preload_all_textures dtex_texture_create_raw err.");
 		}
 
 		int w = dtex_import_uint16(is),
@@ -229,7 +230,7 @@ dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex) {
 		}
 		break;
 	default:
-		dtex_fault("unknown texture type! \n");
+		fault("unknown texture type! \n");
 	}
 	tex->t.RAW.format = format;
 	tex->width = width;

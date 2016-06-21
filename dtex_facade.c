@@ -11,7 +11,6 @@
 #include "dtex_tp.h"
 #include "dtex_sprite.h"
 #include "dtex_gl.h"
-#include "dtex_log.h"
 #include "dtex_package.h"
 #include "dtex_statistics.h"
 #include "dtex_ej_sprite.h"
@@ -36,7 +35,7 @@
 #include "dtex_shader.h"
 
 #include <ds_array.h>
-
+#include <logger.h>
 #include <cJSON.h>
 
 #include <stdlib.h>
@@ -86,7 +85,7 @@ static inline void
 _config(const char* str) {
 	cJSON* root = cJSON_Parse(str);
 	if (!root) {
-		dtex_warning("dtex parse config fail!");
+		LOGW("dtex parse config fail!");
 	}
 
 	if (cJSON_GetObjectItem(root, "needed_texture")) {
@@ -163,8 +162,6 @@ dtexf_create(const char* cfg) {
 	if (cfg) {
 		_config(cfg);		
 	}
-
-	dtex_log_init();
 
 	dtex_hard_res_init(CFG.needed_texture * 2048 * 2048);
 

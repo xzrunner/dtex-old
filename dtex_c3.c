@@ -9,13 +9,14 @@
 #include "dtex_texture.h"
 #include "dtex_res_cache.h"
 #include "dtex_res_path.h"
-#include "dtex_log.h"
-#include "dtex_debug.h"
 #include "dtex_render.h"
 #include "dtex_c3_strategy.h"
+#include "dtex_debug.h"
 
 #include "dtex_facade.h"
 
+#include <logger.h>
+#include <fault.h>
 #include <ds_array.h>
 #include <ds_hash.h>
 
@@ -173,7 +174,7 @@ dtex_c3_load(struct dtex_c3* c3, struct dtex_package* pkg, float scale, bool for
 
 	for (int i = 0; i < pkg->texture_count; ++i) {
 		if (c3->prenode_size == MAX_PRELOAD_COUNT) {
-			dtex_warning("dtex_c3_load preload full");
+			LOGW("dtex_c3_load preload full");
 			return;
 		}
 		struct dtex_cf_prenode* n = &c3->prenodes[c3->prenode_size++];
@@ -432,7 +433,7 @@ _alloc_texture(struct dtex_c3* c3, struct dtex_cf_prenode** pre_list, int pre_sz
 
 	//while (area > 0) {
 	//	if (c3->t.MULTI.tex_size == MULTI_TEX_COUNT) {
-	//		dtex_fault("c3 texture full.");
+	//		fault("c3 texture full.");
 	//	}
 	//	struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(c3->tex_edge);
 	//	c3->t.MULTI.textures[c3->t.MULTI.tex_size++] = tex;

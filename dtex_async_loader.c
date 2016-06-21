@@ -3,9 +3,8 @@
 #include "dtex_loader.h"
 #include "dtex_stream_import.h"
 
-#include "dtex_log.h"
-
 #include <pthread.h>
+#include <logger.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -117,7 +116,7 @@ dtex_async_loader_clear() {
 	do {
 		DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
 		if (job) {
-			//dtex_debug_to_file("async_load clear pop JOB_LOAD_QUEUE, job: %p", job);
+			//logger_printf("async_load clear pop JOB_LOAD_QUEUE, job: %p", job);
 			DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
 		}
 	} while (job);
@@ -125,7 +124,7 @@ dtex_async_loader_clear() {
 	do {
 		DTEX_ASYNC_QUEUE_POP(JOB_PARSE_QUEUE, job);
 		if (job) {
-			//dtex_debug_to_file("async_load clear pop JOB_PARSE_QUEUE, job: %p", job);
+			//logger_printf("async_load clear pop JOB_PARSE_QUEUE, job: %p", job);
 			struct parse_params* params = (struct parse_params*)job->ud;
 			free(params->data), params->data = NULL;
 			params->size = 0;
@@ -190,7 +189,7 @@ _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 	memcpy(job->desc, prev_params->desc, sizeof(prev_params->desc));
 	DTEX_ASYNC_QUEUE_PUSH(JOB_PARSE_QUEUE, job);
 
-	//dtex_debug_to_file("async_load push 3, job: %p", job);
+	//logger_printf("async_load push 3, job: %p", job);
 }
 
 static inline void*
@@ -201,7 +200,7 @@ _load_file(void* arg) {
 		return NULL;
 	}
 
-	//dtex_debug_to_file("async_load pop 2, job: %p", job);
+	//logger_printf("async_load pop 2, job: %p", job);
 
 	struct load_params* params = (struct load_params*)job->ud;
 	if (_is_valid_version(params->version)) {
@@ -243,7 +242,7 @@ dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream*
 	job->desc[strlen(job->desc)] = 0;
 	DTEX_ASYNC_QUEUE_PUSH(JOB_LOAD_QUEUE, job);
 
-	//dtex_debug_to_file("async_load push 1, job: %p", job);
+	//logger_printf("async_load push 1, job: %p", job);
 
 	pthread_create(&job->id, NULL, _load_file, NULL);
 }
@@ -256,7 +255,7 @@ dtex_async_loader_update() {
 		return;
 	}
 
-	//dtex_debug_to_file("async_load pop 4, job: %p", job);
+	//logger_printf("async_load pop 4, job: %p", job);
 
 	struct parse_params* params = (struct parse_params*)job->ud;
 	if (_is_valid_version(params->version) && params->cb) {
