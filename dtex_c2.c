@@ -210,7 +210,7 @@ dtex_c2_release(struct dtex_c2* c2) {
 
 static inline void
 _clear(struct dtex_c2* c2, struct dtex_loader* loader) {
-	LOGW(" c2 clear");
+	LOGW("%s", "c2 clear");
 
 	c2->loadable = 0;
 
@@ -302,7 +302,7 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 	}
 
 	if (params->c2->prenode_size >= MAX_PRELOAD_COUNT - 1) {
-		LOGW("c2 prenode full.");
+		LOGW("%s", "c2 prenode full.");
 		return;
 	}
 
@@ -334,7 +334,7 @@ dtex_c2_load_spr(struct dtex_c2* c2, struct dtex_package* pkg, int spr_id) {
 	}
 
 	if (c2->prenode_size >= MAX_PRELOAD_COUNT - 1) {
-		LOGW("c2 prenode full.");
+		LOGW("%s", "c2 prenode full.");
 		return;
 	}
 
@@ -952,7 +952,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 
 	struct c2_node* node = NULL;
 	if (ip.index->node_count == MAX_NODE_COUNT) {
-		LOGW(" c2 nodes empty.");
+		LOGW("%s", "c2 nodes empty.");
 		return false;
 	}
 	node = &ip.index->nodes[ip.index->node_count++];

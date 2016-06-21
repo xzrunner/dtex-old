@@ -123,7 +123,7 @@ dtex_cg_clear(struct dtex_cg* cg) {
 float* 
 dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dtex_glyph* glyph) {
 	if (cg->node_size >= MAX_NODE) {
-		LOGW(" cg nodes empty.");
+		LOGW("%s", "cg nodes empty.");
 		return NULL;
 	}
 

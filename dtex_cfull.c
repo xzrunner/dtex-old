@@ -121,7 +121,7 @@ dtex_cf_pack_prenodes(struct dtex_cf_prenode* prenode, struct dtex_cf_texture* c
 		pos = dtex_tp_add(cf_tex->tp, h, w, false);
 	}
 	if (!pos) {
-		LOGW("+++++++++++++++++ cf insert fail.");
+		LOGW("%s", "cf insert fail.");
 		return false;
 	}
 
@@ -132,7 +132,7 @@ dtex_cf_pack_prenodes(struct dtex_cf_prenode* prenode, struct dtex_cf_texture* c
 
 	struct dtex_cf_node* node = NULL;
 	if (cf_tex->node_count == DTEX_CF_MAX_NODE_COUNT) {
-		LOGW("+++++ cf nodes full.");
+		LOGW("%s", "cf nodes full.");
 		return false;
 	}
 	node = &cf_tex->nodes[cf_tex->node_count++];

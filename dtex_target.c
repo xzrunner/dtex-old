@@ -17,7 +17,7 @@ struct dtex_target {
 
 struct dtex_target* 
 dtex_target_create() {
-    LOGI("dtex_target: new target");
+    LOGI("%s", "dtex_target: new target");
 	struct dtex_target* target = (struct dtex_target*)malloc(sizeof(struct dtex_target));
 	glGenFramebuffers(1, &target->target_id);
 	target->texture_id = 0;
@@ -38,21 +38,21 @@ _check_framebuffer_status() {
 	case GL_FRAMEBUFFER_COMPLETE:
 		return 1;
 	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-		LOGW("Framebuffer incomplete: Attachment is NOT complete.\n");
+		LOGW("%s", "Framebuffer incomplete: Attachment is NOT complete.\n");
 		return 0;
 	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-		LOGW("Framebuffer incomplete: No image is attached to FBO.\n");
+		LOGW("%s", "Framebuffer incomplete: No image is attached to FBO.\n");
 		return 0;
 #if !defined(_WIN32) && !defined(__MACOSX)
 	case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-		LOGW("Framebuffer incomplete: Attached images have different dimensions.\n");
+		LOGW("%s", "Framebuffer incomplete: Attached images have different dimensions.\n");
 		return 0;
 #endif
 	case GL_FRAMEBUFFER_UNSUPPORTED:
-		LOGW("Unsupported by FBO implementation.\n");
+		LOGW("%s", "Unsupported by FBO implementation.\n");
 		return 0;
 	default:
-		LOGW("Unknow error.\n");
+		LOGW("%s", "Unknow error.\n");
 		return 0;
 	}
 }

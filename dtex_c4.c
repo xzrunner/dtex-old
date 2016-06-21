@@ -115,7 +115,7 @@ dtex_c4_load(struct dtex_c4* c4, struct dtex_package* pkg) {
 		}
 
 		if (c4->prenode_size == MAX_PRELOAD_COUNT) {
-			LOGW("dtex_c4_load preload full");
+			LOGW("%s", "dtex_c4_load preload full");
 			return;
 		}
 		struct dtex_cf_prenode* n = &c4->prenodes[c4->prenode_size++];
@@ -142,7 +142,7 @@ _pack_nodes(struct dtex_c4* c4, struct dtex_cf_prenode** pre_list, int pre_sz) {
 			}
 		}
 		if (!succ) {
-			LOGW("+++++++++++++++++  dtex_c4_load_end node insert fail.");
+			LOGW("%s", "dtex_c4_load_end node insert fail.");
 		}
 	}
 	return tex_max - tex_begin + 1;
@@ -244,7 +244,7 @@ _relocate_nodes(struct dtex_c4* c4, struct dtex_loader* loader, bool async, int 
 void 
 dtex_c4_load_end(struct dtex_c4* c4, struct dtex_loader* loader, bool async) {
 	if (c4->tex_count >= c4->max_tex_count) {
-		LOGW("+++++++++++++++++  dtex_c4_load_end tex full.");
+		LOGW("%s", "dtex_c4_load_end tex full.");
 		return;
 	}
 

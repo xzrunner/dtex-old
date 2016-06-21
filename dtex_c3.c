@@ -174,7 +174,7 @@ dtex_c3_load(struct dtex_c3* c3, struct dtex_package* pkg, float scale, bool for
 
 	for (int i = 0; i < pkg->texture_count; ++i) {
 		if (c3->prenode_size == MAX_PRELOAD_COUNT) {
-			LOGW("dtex_c3_load preload full");
+			LOGW("%s", "dtex_c3_load preload full");
 			return;
 		}
 		struct dtex_cf_prenode* n = &c3->prenodes[c3->prenode_size++];
