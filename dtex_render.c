@@ -63,7 +63,7 @@ _before_draw(struct dtex_texture* tex) {
 	// 		shader_program(PROGRAM_SPRITE);
 	// 	} 
 
-	if (tex->type == DTEX_TT_RAW && tex->t.RAW.format == DTEX_PKM) {
+	if (tex->type == DTEX_TT_RAW && tex->t.RAW.format == DTEX_ETC1) {
 		dtex_shader_program(DTEX_PROGRAM_ETC1);
 	} else {
 		dtex_shader_program(DTEX_PROGRAM_NORMAL);
@@ -84,7 +84,7 @@ _before_target_draw(struct dtex_texture* src, struct dtex_texture* dst) {
 
 static inline void
 _draw(const float vb[16], struct dtex_texture* src) {
-	if (src->type == DTEX_TT_RAW && src->t.RAW.format == DTEX_PKM) {
+	if (src->type == DTEX_TT_RAW && src->t.RAW.format == DTEX_ETC1) {
 		//		shader_draw_separate(vb, src->id, src->id_alpha);
 	} else { 
 		assert(src->id != 0);

@@ -13,7 +13,8 @@ extern "C"
 #define DTEX_PNG4	0
 #define DTEX_PNG8	1
 #define DTEX_PVR	2
-#define DTEX_PKM	3
+#define DTEX_ETC1	3
+#define DTEX_ETC2	4
 
 enum FILE_FORMAT {
 	FILE_INVALID = 0,

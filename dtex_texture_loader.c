@@ -222,7 +222,7 @@ dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex) {
 			texid = dtex_load_pvr_tex((const uint8_t*)(is->stream), width, height, pvr_fmt);
 		}
 		break;
-	case DTEX_PKM:
+	case DTEX_ETC1:
 		{
 // 			tex->id = dtex_gl_create_texture(DTEX_TF_ETC1, width, height, is->stream, 0, 0);
 // 			// fixme
