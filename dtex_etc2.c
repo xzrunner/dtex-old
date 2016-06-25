@@ -52,8 +52,8 @@ dtex_etc2_decode(const uint8_t* buf, int width, int height, int type) {
 				read_color_block_etc(&ptr_src, &block1, &block2);
 				etcpack_unpack_etc2c(block1, block2, rgba, 4, 4, 0, 0, 4);
 				lb = rgba;
-				lh = min(y + 4, height) - y;
-				lw = min(x + 4, width) - x;
+				lh = MIN(y + 4, height) - y;
+				lw = MIN(x + 4, width) - x;
 				for (ly = 0; ly < lh; ly++,lb+=4*4)
 					for(lx = 0; lx < lw; lx++) {
 						memcpy(dst + (width*(y + ly) + x + lx)*bpp, lb + lx*4, 3);
@@ -66,8 +66,8 @@ dtex_etc2_decode(const uint8_t* buf, int width, int height, int type) {
 				read_color_block_etc(&ptr_src, &block1, &block2);
 				etcpack_unpack_etc2c(block1, block2, rgba, 4, 4, 0, 0, 4);
 				lb = rgba;
-				lh = min(y + 4, height) - y;
-				lw = min(x + 4, width) - x;
+				lh = MIN(y + 4, height) - y;
+				lw = MIN(x + 4, width) - x;
 				for (ly = 0; ly < lh; ++ly, lb += 4*4)
 					for(lx = 0; lx < lw; ++lx)
 						memcpy(dst + (width * (y + ly) + x + lx) * bpp, lb + lx * 4, 4);
@@ -76,8 +76,8 @@ dtex_etc2_decode(const uint8_t* buf, int width, int height, int type) {
 				read_color_block_etc(&ptr_src, &block1, &block2);
 				etcpack_unpack_etc21bitalphac(block1, block2, rgba, NULL, 4, 4, 0, 0, 4);
 				lb = rgba;
-				lh = min(y + 4, height) - y;
-				lw = min(x + 4, width) - x;
+				lh = MIN(y + 4, height) - y;
+				lw = MIN(x + 4, width) - x;
 				for (ly = 0; ly < lh; ly++,lb+=4*4)
 					for(lx = 0; lx < lw; lx++)
 						memcpy(dst + (width*(y + ly) + x + lx)*bpp, lb + lx*4, 4);
