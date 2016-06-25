@@ -2,6 +2,7 @@
 #include "dtex_gl.h"
 #include "dtex_pvr.h"
 #include "dtex_etc1.h"
+#include "dtex_etc2.h"
 #include "dtex_stream_import.h"
 #include "dtex_typedef.h"
 #include "dtex_statistics.h"
@@ -229,6 +230,13 @@ dtex_load_texture_all(struct dtex_import_stream* is, struct dtex_texture* tex) {
 // 			tex->t.RAW.id_alpha = dtex_gl_create_texture(DTEX_TF_ETC1, width, height, is->stream + ((width * height) >> 1), 1, 0);
 		}
 		break;
+	case DTEX_ETC2:
+		{
+			width = dtex_import_uint16(is);
+			height= dtex_import_uint16(is);
+			texid = dtex_load_etc2_tex((const uint8_t*)(is->stream), width, height);
+		}
+		break;
 	default:
 		fault("unknown texture type! \n");
 	}
@@ -276,5 +284,26 @@ dtex_load_pvr_tex(const uint8_t* data, int width, int height, int format) {
 	texid = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, uncompressed, 0, 0);
 	free(uncompressed);
 #endif
+	return texid;
+}
+
+inline int 
+dtex_load_etc2_tex(const uint8_t* data, int width, int height) {
+	int texid;
+#ifdef __ANDROID__
+	//	int internal_format = 0;
+	if (format == 4) {
+		//		internal_format = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
+		texid = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, data, 0, 0);
+	} else {
+		//		internal_format = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+		texid = dtex_gl_create_texture(DTEX_TF_PVR2, width, height, data, 0, 0);
+	}
+#else
+	uint8_t* uncompressed = dtex_etc2_decode(data, width, height, 3);
+	_reverse_y((uint32_t*)uncompressed, width, height);
+	texid = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, uncompressed, 0, 0);
+	free(uncompressed);
+#endif // __ANDROID__
 	return texid;
 }

@@ -19,7 +19,7 @@ dtex_etc1_decode(const uint8_t* buf, int width, int height) {
 
 	uint8_t* dst = (uint8_t*)malloc(width * height * 4);
 	if (dst == NULL) {
-		fault("Fail to malloc (dtex_pvr_decode)");
+		fault("Fail to malloc (dtex_etc1_decode)");
 	}
 	memset(dst, 0x00, width * height * 4);
 	const uint8_t* ptr_src = buf;
