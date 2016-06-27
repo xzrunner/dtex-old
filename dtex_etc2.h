@@ -26,6 +26,8 @@ uint8_t* dtex_etc2_encode(const uint8_t* buf, int width, int height);
 
 uint8_t* dtex_etc2_read_file(const char* filepath, uint32_t* width, uint32_t* height, int* type);
 
+uint8_t* dtex_etc2_init_blank(int edge);
+
 #endif // dynamic_texture_etc2_h
 
 #ifdef __cplusplus

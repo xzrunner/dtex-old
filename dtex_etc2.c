@@ -28,6 +28,8 @@ read_color_block_etc(uint8_t** stream, unsigned int* block1, unsigned int* block
 
 uint8_t* 
 dtex_etc2_decode(const uint8_t* buf, int width, int height, int type) {
+	etcpack_init();
+
 	assert(IS_POT(width) && IS_POT(height));
 
 	int bpp = 4;
@@ -64,6 +66,7 @@ dtex_etc2_decode(const uint8_t* buf, int width, int height, int type) {
 				etcpack_unpack_alpha_c(ptr_src, rgba+3, 4, 4, 0, 0, 4);
 				ptr_src += 8;
 				read_color_block_etc(&ptr_src, &block1, &block2);
+
 				etcpack_unpack_etc2c(block1, block2, rgba, 4, 4, 0, 0, 4);
 				lb = rgba;
 				lh = MIN(y + 4, height) - y;
@@ -138,5 +141,16 @@ dtex_etc2_read_file(const char* filepath, uint32_t* width, uint32_t* height, int
 	}
 	fs_close(file);	
 
+	return buf;
+}
+
+uint8_t* 
+dtex_etc2_init_blank(int edge) {
+	assert(IS_POT(edge));
+
+	size_t sz = edge * edge;
+	uint8_t* buf = (uint8_t*)malloc(sz);
+	memset(buf, 0, sz);
+	
 	return buf;
 }

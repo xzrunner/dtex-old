@@ -12,6 +12,7 @@
 #include "dtex_math.h"
 #include "dtex_stream_import.h"
 #include "dtex_pvr.h"
+#include "dtex_etc2.h"
 #include "dtex_texture_loader.h"
 #include "dtex_ej_utility.h"
 #include "dtex_gl.h"
@@ -42,6 +43,11 @@ struct dtex_c4 {
 	int process_count;
 };
 
+struct dtex_cf_texture_ud {
+	int format;
+	uint8_t* pixels;
+};
+
 struct dtex_c4* 
 dtex_c4_create(int tex_size, int tex_count) {
 	size_t textures_sz = sizeof(struct dtex_cf_texture) * tex_count;
@@ -60,7 +66,7 @@ dtex_c4_create(int tex_size, int tex_count) {
 	for (int i = 0; i < tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
 		tex->tex = dtex_texture_create_mid_ref(tex_size);
-		tex->ud = dtex_pvr_init_blank(tex_size);
+		tex->ud = NULL;
 		tex->region.xmin = tex->region.ymin = 0;
 		tex->region.xmax = tex->region.ymax = tex_size;
 		tex->hash = ds_hash_create(50, 50, 5, ds_string_hash_func, ds_string_equal_func);
@@ -76,7 +82,11 @@ void
 dtex_c4_release(struct dtex_c4* c4) {
 	for (int i = 0; i < c4->tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
+
+		struct dtex_cf_texture_ud* ud = (struct dtex_cf_texture_ud*)(tex->ud);
+		free(ud->pixels);
 		free(tex->ud);
+
 		if (tex->tex->id != 0) {
 			dtex_gl_release_texture(tex->tex->id);
 		}
@@ -108,7 +118,7 @@ dtex_c4_load(struct dtex_c4* c4, struct dtex_package* pkg) {
 	
 	for (int i = 0; i < pkg->texture_count; ++i) {
 		struct dtex_texture* tex = pkg->textures[i];
-		if (tex->t.RAW.format != DTEX_PVR) {
+		if (tex->t.RAW.format != DTEX_PVR && tex->t.RAW.format != DTEX_ETC2) {
 			assert(tex->t.RAW.format == DTEX_PNG8);
 			dtexf_load_texture(pkg, i);
 			continue;
@@ -152,21 +162,28 @@ static void
 _on_load_finished(struct dtex_c4* c4) {
 	for (int i = c4->tex_count, n = i + c4->used_count; i < n; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
-		tex->tex->id = dtex_load_pvr_tex(tex->ud, tex->tex->width, tex->tex->height, 4);
+		struct dtex_cf_texture_ud* ud = (struct dtex_cf_texture_ud*)(tex->ud);
+		if (ud->format == DTEX_PVR) {
+			tex->tex->id = dtex_load_pvr_tex(ud->pixels, tex->tex->width, tex->tex->height, 4);
+		} else if (ud->format == DTEX_ETC2) {
+			tex->tex->id = dtex_load_etc2_tex(ud->pixels, tex->tex->width, tex->tex->height);
+		}
 	}
 	c4->tex_count += c4->used_count;	
 }
 
 static void
-_relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
-	// todo: check file type: rrr, b4r
-	struct dtex_cf_node* node = (struct dtex_cf_node*)ud;
-
+_load_part_pvr(struct dtex_import_stream* is, struct dtex_cf_node* node) {
 	struct dtex_rect* dst_pos = &node->dst_rect;
 	assert(IS_4TIMES(dst_pos->xmin) && IS_4TIMES(dst_pos->ymin));
 
-	int format = dtex_import_uint8(is);
-	assert(format == DTEX_PVR);
+	if (!node->dst_tex->ud) {
+		struct dtex_cf_texture_ud* ud = (struct dtex_cf_texture_ud*)malloc(sizeof(struct dtex_cf_texture_ud));
+		ud->format = DTEX_PVR;
+		ud->pixels = dtex_pvr_init_blank(node->dst_tex->tex->width);
+		node->dst_tex->ud = ud;
+	}
+
 	dtex_import_uint8(is); // pvr_fmt
 	int width = dtex_import_uint16(is),
 		height = dtex_import_uint16(is);
@@ -181,7 +198,7 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 	int grid_w = width >> 2,
 		grid_h = height >> 2;
 	const uint8_t* src_data = (const uint8_t*)(is->stream);
-	uint8_t* dst_data = (uint8_t*)node->dst_tex->ud;
+	uint8_t* dst_data = ((struct dtex_cf_texture_ud*)(node->dst_tex->ud))->pixels;
 	for (int y = 0; y < grid_h; ++y) {
 		for (int x = 0; x < grid_w; ++x) {
 			int idx_src = dtex_pvr_get_morton_number(x, y);
@@ -191,6 +208,58 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 			int64_t* dst = (int64_t*)dst_data + idx_dst;
 			memcpy(dst, src, sizeof(int64_t));
 		}
+	}
+}
+
+static void
+_load_part_etc2(struct dtex_import_stream* is, struct dtex_cf_node* node) {
+	struct dtex_rect* dst_pos = &node->dst_rect;
+	assert(IS_4TIMES(dst_pos->xmin) && IS_4TIMES(dst_pos->ymin));
+
+	if (!node->dst_tex->ud) {
+		struct dtex_cf_texture_ud* ud = (struct dtex_cf_texture_ud*)malloc(sizeof(struct dtex_cf_texture_ud));
+		ud->format = DTEX_ETC2;
+		ud->pixels = dtex_etc2_init_blank(node->dst_tex->tex->width);
+		node->dst_tex->ud = ud;
+	}
+
+	int width = dtex_import_uint16(is),
+		height = dtex_import_uint16(is);
+	assert(IS_POT(width) && IS_POT(height)
+		&& width == dst_pos->xmax - dst_pos->xmin
+		&& height == dst_pos->ymax - dst_pos->ymin);
+
+	int grid_x = dst_pos->xmin >> 2,
+		grid_y = dst_pos->ymin >> 2;
+	int grid_w = width >> 2,
+		grid_h = height >> 2;
+	const uint8_t* src_data = (const uint8_t*)(is->stream);
+	uint8_t* dst_data = ((struct dtex_cf_texture_ud*)(node->dst_tex->ud))->pixels;
+	const int grid_sz = sizeof(uint8_t) * 8 * 2;
+	const int large_grid_w = node->dst_tex->tex->width >> 2;
+	for (int y = 0; y < grid_h; ++y) {
+		for (int x = 0; x < grid_w; ++x) {
+			int idx_src = x + grid_w * y;
+			int idx_dst = grid_x + x + large_grid_w * (grid_y + y);
+			assert(idx_dst < node->dst_tex->tex->width * node->dst_tex->tex->height / 16);
+			memcpy(dst_data + idx_dst * grid_sz, src_data + idx_src * grid_sz, grid_sz);
+		}
+	}
+}
+
+static void
+_relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
+	// todo: check file type: rrr, b4r
+	struct dtex_cf_node* node = (struct dtex_cf_node*)ud;
+
+	int format = dtex_import_uint8(is);
+ 	assert(format == DTEX_PVR || format == DTEX_ETC2);
+	if (format == DTEX_PVR) {
+		_load_part_pvr(is, node);
+	} else if (format == DTEX_ETC2) {
+		_load_part_etc2(is, node);
+	} else {
+		return;
 	}
 
 	dtex_ej_pkg_traverse(node->pkg->ej_pkg, dtex_cf_relocate_pic, node);
