@@ -291,14 +291,7 @@ inline int
 dtex_load_etc2_tex(const uint8_t* data, int width, int height) {
 	int texid;
 #ifdef __ANDROID__
-	//	int internal_format = 0;
-	if (format == 4) {
-		//		internal_format = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
-		texid = dtex_gl_create_texture(DTEX_TF_PVR4, width, height, data, 0, 0);
-	} else {
-		//		internal_format = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
-		texid = dtex_gl_create_texture(DTEX_TF_PVR2, width, height, data, 0, 0);
-	}
+	texid = dtex_gl_create_texture(DTEX_TF_ETC2, width, height, data, 0, 0);
 #else
 	uint8_t* uncompressed = dtex_etc2_decode(data, width, height, ETC2PACKAGE_RGBA_NO_MIPMAPS);
 //	_reverse_y((uint32_t*)uncompressed, width, height);

@@ -18,9 +18,15 @@ LOCAL_C_INCLUDES  := \
 	${LZMA_SRC_PATH} \
 	${INNER_SAVED_LOCAL_PATH} \
 	${LOGGER_SRC_PATH} \
+	${RG_ETC1_SRC_PATH} \
+	${ETCPACK_SRC_PATH} \
 
 LOCAL_SRC_FILES := \
 	$(subst $(LOCAL_PATH)/,,$(shell find $(LOCAL_PATH) -name "*.c" -print)) \
+
+LOCAL_STATIC_LIBRARIES := \
+	rg_etc1 \
+	etcpack \
 
 include $(BUILD_STATIC_LIBRARY)	
 
