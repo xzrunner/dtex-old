@@ -4,7 +4,6 @@
 #include <fs_file.h>
 #include <fault.h>
 
-#include <stdlib.h>
 #include <stdbool.h>
 
 #ifdef USED_IN_EDITOR

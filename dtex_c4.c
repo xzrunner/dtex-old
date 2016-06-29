@@ -13,9 +13,11 @@
 #include "dtex_stream_import.h"
 #include "dtex_pvr.h"
 #include "dtex_etc2.h"
+#include "dtex_png.h"
 #include "dtex_texture_loader.h"
 #include "dtex_ej_utility.h"
 #include "dtex_gl.h"
+#include "dtex_bitmap.h"
 
 // todo
 #include "dtex_facade.h"
@@ -43,10 +45,16 @@ struct dtex_c4 {
 	int process_count;
 };
 
-struct dtex_cf_texture_ud {
-	int format;
-	uint8_t* pixels;
-};
+static int
+_get_tex_type() {
+#if defined(__APPLE__) && !defined(__MACOSX)
+	return DTEX_PVR;
+#elif defined(__ANDROID__)
+	return DTEX_ETC2;
+#else
+	return DTEX_PNG8;
+#endif
+}
 
 struct dtex_c4* 
 dtex_c4_create(int tex_size, int tex_count) {
@@ -83,9 +91,8 @@ dtex_c4_release(struct dtex_c4* c4) {
 	for (int i = 0; i < c4->tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
 
-		struct dtex_cf_texture_ud* ud = (struct dtex_cf_texture_ud*)(tex->ud);
-		free(ud->pixels);
-		free(tex->ud);
+		uint8_t* pixels = (uint8_t*)(tex->ud);
+		free(pixels);
 
 		if (tex->tex->id != 0) {
 			dtex_gl_release_texture(tex->tex->id);
@@ -118,12 +125,10 @@ dtex_c4_load(struct dtex_c4* c4, struct dtex_package* pkg) {
 	
 	for (int i = 0; i < pkg->texture_count; ++i) {
 		struct dtex_texture* tex = pkg->textures[i];
-		if (tex->t.RAW.format != DTEX_PVR && tex->t.RAW.format != DTEX_ETC2) {
-			assert(tex->t.RAW.format == DTEX_PNG8);
+		if (_get_tex_type() != DTEX_PNG8 && tex->t.RAW.format != _get_tex_type()) {
 			dtexf_load_texture(pkg, i);
 			continue;
 		}
-
 		if (c4->prenode_size == MAX_PRELOAD_COUNT) {
 			LOGW("%s", "dtex_c4_load preload full");
 			return;
@@ -160,16 +165,27 @@ _pack_nodes(struct dtex_c4* c4, struct dtex_cf_prenode** pre_list, int pre_sz) {
 
 static void
 _on_load_finished(struct dtex_c4* c4) {
+	int tex_type = _get_tex_type();
 	for (int i = c4->tex_count, n = i + c4->used_count; i < n; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
-		struct dtex_cf_texture_ud* ud = (struct dtex_cf_texture_ud*)(tex->ud);
-		if (ud->format == DTEX_PVR) {
-			tex->tex->id = dtex_load_pvr_tex(ud->pixels, tex->tex->width, tex->tex->height, 4);
-		} else if (ud->format == DTEX_ETC2) {
-			tex->tex->id = dtex_load_etc2_tex(ud->pixels, tex->tex->width, tex->tex->height);
+		uint8_t* pixels = (uint8_t*)(tex->ud);
+		if (tex_type == DTEX_PVR) {
+			tex->tex->id = dtex_load_pvr_tex(pixels, tex->tex->width, tex->tex->height, 4);
+		} else if (tex_type == DTEX_ETC2) {
+			tex->tex->id = dtex_load_etc2_tex(pixels, tex->tex->width, tex->tex->height);
+		} else if (tex_type == DTEX_PNG8) {
+			tex->tex->id = dtex_gl_create_texture(DTEX_TF_RGBA8, tex->tex->width, tex->tex->height, pixels, 0, 0);
 		}
 	}
 	c4->tex_count += c4->used_count;	
+}
+
+static void
+_load_pvr_header(struct dtex_import_stream* is, int* w, int* h) {
+	dtex_import_uint8(is); // pvr_fmt
+	*w = dtex_import_uint16(is);
+	*h = dtex_import_uint16(is);
+	dtex_import_uint32(is); // size
 }
 
 static void
@@ -178,27 +194,21 @@ _load_part_pvr(struct dtex_import_stream* is, struct dtex_cf_node* node) {
 	assert(IS_4TIMES(dst_pos->xmin) && IS_4TIMES(dst_pos->ymin));
 
 	if (!node->dst_tex->ud) {
-		struct dtex_cf_texture_ud* ud = (struct dtex_cf_texture_ud*)malloc(sizeof(struct dtex_cf_texture_ud));
-		ud->format = DTEX_PVR;
-		ud->pixels = dtex_pvr_init_blank(node->dst_tex->tex->width);
-		node->dst_tex->ud = ud;
+		node->dst_tex->ud = dtex_pvr_init_blank(node->dst_tex->tex->width);
 	}
 
-	dtex_import_uint8(is); // pvr_fmt
-	int width = dtex_import_uint16(is),
-		height = dtex_import_uint16(is);
-	dtex_import_uint32(is); // size
-
-	assert(IS_POT(width) && IS_POT(height)
-		&& width == dst_pos->xmax - dst_pos->xmin
-		&& height == dst_pos->ymax - dst_pos->ymin);
+	int w, h;
+	_load_pvr_header(is, &w, &h);
+	assert(IS_POT(w) && IS_POT(h)
+		&& w == dst_pos->xmax - dst_pos->xmin
+		&& h == dst_pos->ymax - dst_pos->ymin);
 
 	int grid_x = dst_pos->xmin >> 2,
 		grid_y = dst_pos->ymin >> 2;
-	int grid_w = width >> 2,
-		grid_h = height >> 2;
+	int grid_w = w >> 2,
+		grid_h = h >> 2;
 	const uint8_t* src_data = (const uint8_t*)(is->stream);
-	uint8_t* dst_data = ((struct dtex_cf_texture_ud*)(node->dst_tex->ud))->pixels;
+	uint8_t* dst_data = (uint8_t*)(node->dst_tex->ud);
 	for (int y = 0; y < grid_h; ++y) {
 		for (int x = 0; x < grid_w; ++x) {
 			int idx_src = dtex_pvr_get_morton_number(x, y);
@@ -212,29 +222,32 @@ _load_part_pvr(struct dtex_import_stream* is, struct dtex_cf_node* node) {
 }
 
 static void
+_load_etc2_header(struct dtex_import_stream* is, int* w, int* h) {
+	*w = dtex_import_uint16(is);
+	*h = dtex_import_uint16(is);
+}
+
+static void
 _load_part_etc2(struct dtex_import_stream* is, struct dtex_cf_node* node) {
 	struct dtex_rect* dst_pos = &node->dst_rect;
 	assert(IS_4TIMES(dst_pos->xmin) && IS_4TIMES(dst_pos->ymin));
 
 	if (!node->dst_tex->ud) {
-		struct dtex_cf_texture_ud* ud = (struct dtex_cf_texture_ud*)malloc(sizeof(struct dtex_cf_texture_ud));
-		ud->format = DTEX_ETC2;
-		ud->pixels = dtex_etc2_init_blank(node->dst_tex->tex->width);
-		node->dst_tex->ud = ud;
+		node->dst_tex->ud = dtex_etc2_init_blank(node->dst_tex->tex->width);
 	}
 
-	int width = dtex_import_uint16(is),
-		height = dtex_import_uint16(is);
-	assert(IS_POT(width) && IS_POT(height)
-		&& width == dst_pos->xmax - dst_pos->xmin
-		&& height == dst_pos->ymax - dst_pos->ymin);
+	int w, h;
+	_load_etc2_header(is, &w, &h);
+	assert(IS_POT(w) && IS_POT(h)
+		&& w == dst_pos->xmax - dst_pos->xmin
+		&& h == dst_pos->ymax - dst_pos->ymin);
 
 	int grid_x = dst_pos->xmin >> 2,
 		grid_y = dst_pos->ymin >> 2;
-	int grid_w = width >> 2,
-		grid_h = height >> 2;
+	int grid_w = w >> 2,
+		grid_h = h >> 2;
 	const uint8_t* src_data = (const uint8_t*)(is->stream);
-	uint8_t* dst_data = ((struct dtex_cf_texture_ud*)(node->dst_tex->ud))->pixels;
+	uint8_t* dst_data = (uint8_t*)(node->dst_tex->ud);
 	const int grid_sz = sizeof(uint8_t) * 8 * 2;
 	const int large_grid_w = node->dst_tex->tex->width >> 2;
 	for (int y = 0; y < grid_h; ++y) {
@@ -248,18 +261,83 @@ _load_part_etc2(struct dtex_import_stream* is, struct dtex_cf_node* node) {
 }
 
 static void
+_load_part_png8_data(int w, int h, const uint8_t* pixels, struct dtex_cf_node* node) {
+	struct dtex_rect* dst_pos = &node->dst_rect;
+	assert(w == dst_pos->xmax - dst_pos->xmin
+		&& h == dst_pos->ymax - dst_pos->ymin);
+
+	const uint8_t* src_data = pixels;
+	uint8_t* dst_data = (uint8_t*)(node->dst_tex->ud);
+	const int large_w = node->dst_tex->tex->width;
+	for (int y = 0; y < h; ++y) {
+		int idx_src = w * y;
+		int idx_dst = dst_pos->xmin + large_w * (dst_pos->ymin + y);
+		memcpy(dst_data + idx_dst * 4, src_data + idx_src * 4, 4 * w);
+	}
+}
+
+static void
+_load_part_png8(struct dtex_import_stream* is, struct dtex_cf_node* node) {
+	if (!node->dst_tex->ud) {
+		node->dst_tex->ud = dtex_bmp_init_blank(node->dst_tex->tex->width);
+	}
+ 	int w = dtex_import_uint16(is),
+ 		h = dtex_import_uint16(is);
+	_load_part_png8_data(w, h, (const uint8_t*)(is->stream), node);
+}
+
+static void
+_load_part_pvr_as_png(struct dtex_import_stream* is, struct dtex_cf_node* node) {
+	int w, h;
+	_load_pvr_header(is, &w, &h);
+
+	const uint8_t* pixels = (const uint8_t*)(is->stream);
+	uint8_t* uncompressed = dtex_pvr_decode(pixels, w, h);
+	dtex_bmp_revert_y((uint32_t*)uncompressed, w, h);
+	_load_part_png8_data(w, h, uncompressed, node);
+	free(uncompressed);
+}
+
+static void
+_load_part_etc2_as_png(struct dtex_import_stream* is, struct dtex_cf_node* node) {
+	int w, h;
+	_load_etc2_header(is, &w, &h);
+
+	const uint8_t* pixels = (const uint8_t*)(is->stream);
+	uint8_t* uncompressed = dtex_etc2_decode(pixels, w, h, ETC2PACKAGE_RGBA_NO_MIPMAPS);
+	_load_part_png8_data(w, h, uncompressed, node);
+	free(uncompressed);
+}
+
+static void
 _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 	// todo: check file type: rrr, b4r
+
 	struct dtex_cf_node* node = (struct dtex_cf_node*)ud;
 
 	int format = dtex_import_uint8(is);
- 	assert(format == DTEX_PVR || format == DTEX_ETC2);
-	if (format == DTEX_PVR) {
+	int tex_type = _get_tex_type();
+	switch (tex_type)
+	{
+	case DTEX_PVR:
+		assert(format == DTEX_PVR);
 		_load_part_pvr(is, node);
-	} else if (format == DTEX_ETC2) {
+		break;
+	case DTEX_ETC2:
+		assert(format == DTEX_ETC2);
 		_load_part_etc2(is, node);
-	} else {
-		return;
+		break;
+	case DTEX_PNG8:
+		if (format == DTEX_PNG8) {
+			_load_part_png8(is, node);
+		} else if (format == DTEX_PVR) {
+			_load_part_pvr_as_png(is, node);
+		} else if (format == DTEX_ETC2) {
+			_load_part_etc2_as_png(is, node);
+		} else {
+			assert(0);
+		}
+		break;
 	}
 
 	dtex_ej_pkg_traverse(node->pkg->ej_pkg, dtex_cf_relocate_pic, node);
