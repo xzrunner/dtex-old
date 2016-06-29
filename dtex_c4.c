@@ -278,9 +278,6 @@ _load_part_png8_data(int w, int h, const uint8_t* pixels, struct dtex_cf_node* n
 
 static void
 _load_part_png8(struct dtex_import_stream* is, struct dtex_cf_node* node) {
-	if (!node->dst_tex->ud) {
-		node->dst_tex->ud = dtex_bmp_init_blank(node->dst_tex->tex->width);
-	}
  	int w = dtex_import_uint16(is),
  		h = dtex_import_uint16(is);
 	_load_part_png8_data(w, h, (const uint8_t*)(is->stream), node);
@@ -328,6 +325,9 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 		_load_part_etc2(is, node);
 		break;
 	case DTEX_PNG8:
+		if (!node->dst_tex->ud) {
+			node->dst_tex->ud = dtex_bmp_init_blank(node->dst_tex->tex->width);
+		}
 		if (format == DTEX_PNG8) {
 			_load_part_png8(is, node);
 		} else if (format == DTEX_PVR) {
