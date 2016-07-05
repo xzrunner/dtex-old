@@ -266,7 +266,7 @@ dtex_load_pvr_tex(const uint8_t* data, int width, int height, int format) {
 	}
 #else
 	uint8_t* uncompressed = dtex_pvr_decode(data, width, height);
-	dtex_bmp_revert_y((uint32_t*)uncompressed, width, height);
+//	dtex_bmp_revert_y((uint32_t*)uncompressed, width, height);
 	texid = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, uncompressed, 0, 0);
 	free(uncompressed);
 #endif
