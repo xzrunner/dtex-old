@@ -266,7 +266,7 @@ dtex_load_pvr_tex(const uint8_t* data, int width, int height, int format) {
 	}
 #else
 	uint8_t* uncompressed = dtex_pvr_decode(data, width, height);
-//	dtex_bmp_revert_y((uint32_t*)uncompressed, width, height);
+	dtex_bmp_revert_y((uint32_t*)uncompressed, width, height);
 	texid = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, uncompressed, 0, 0);
 	free(uncompressed);
 #endif
@@ -280,7 +280,6 @@ dtex_load_etc2_tex(const uint8_t* data, int width, int height) {
 	texid = dtex_gl_create_texture(DTEX_TF_ETC2, width, height, data, 0, 0);
 #else
 	uint8_t* uncompressed = dtex_etc2_decode(data, width, height, ETC2PACKAGE_RGBA_NO_MIPMAPS);
-//	_reverse_y((uint32_t*)uncompressed, width, height);
 	texid = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, uncompressed, 0, 0);
 	free(uncompressed);
 #endif // __ANDROID__

@@ -290,7 +290,7 @@ _load_part_pvr_as_png(struct dtex_import_stream* is, struct dtex_cf_node* node) 
 
 	const uint8_t* pixels = (const uint8_t*)(is->stream);
 	uint8_t* uncompressed = dtex_pvr_decode(pixels, w, h);
-//	dtex_bmp_revert_y((uint32_t*)uncompressed, w, h);
+	dtex_bmp_revert_y((uint32_t*)uncompressed, w, h);
 	_load_part_png8_data(w, h, uncompressed, node);
 	free(uncompressed);
 }
