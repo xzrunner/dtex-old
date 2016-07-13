@@ -158,6 +158,7 @@ _pack_nodes(struct dtex_c4* c4, struct dtex_cf_prenode** pre_list, int pre_sz) {
 		}
 		if (!succ) {
 			LOGW("%s", "dtex_c4_load_end node insert fail.");
+			dtexf_load_texture(node->pkg, node->tex_idx);
 		}
 	}
 	return tex_max - tex_begin + 1;
