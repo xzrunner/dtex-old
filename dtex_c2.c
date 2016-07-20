@@ -28,6 +28,7 @@
 #define MAX_PRELOAD_COUNT	4096*2
 
 #define TEX_PKG_ID			4096
+#define TEX_QUAD_IDX		0
 
 #define PADDING 0
 #define EXTRUDE 1
@@ -37,6 +38,7 @@ static int SRC_EXTRUDE = 0;
 struct hash_key {
 	int pkg_id;
 	int spr_id;
+	int quad_idx;
 };
 
 struct c2_node {
@@ -65,6 +67,7 @@ struct c2_prenode {
 			struct ej_pack_quad* ej_quad;
 			struct dtex_texture* ori_tex;
 			int spr_id;
+			int quad_idx;
 
 			struct dtex_rect rect;
 		} SPR;
@@ -116,7 +119,7 @@ struct dtex_c2 {
 static inline unsigned int 
 _hash_func(int hash_sz, void* key) {
 	struct hash_key* hk = (struct hash_key*)key;
-	return ((hk->pkg_id * 51439) ^ hk->spr_id) % hash_sz;
+	return ((hk->pkg_id * 51439) ^ (hk->spr_id * 97) ^ hk->quad_idx) % hash_sz;
 }
 
 static inline bool 
@@ -124,7 +127,8 @@ _equal_func(void* key0, void* key1) {
 	struct hash_key* hk0 = (struct hash_key*)key0;
 	struct hash_key* hk1 = (struct hash_key*)key1;
 	return hk0->pkg_id == hk1->pkg_id
-		&& hk0->spr_id == hk1->spr_id;
+		&& hk0->spr_id == hk1->spr_id
+		&& hk0->quad_idx == hk1->quad_idx;
 }
 
 static inline void
@@ -321,6 +325,7 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 			pn->t.SPR.ori_tex = dtex_texture_fetch(ej_q->texid);
 		}
 		pn->t.SPR.spr_id = pic_id;
+		pn->t.SPR.quad_idx = i;
 		_get_texcoords_region(ej_q->texture_coord, &pn->t.SPR.rect);
 	}
 }
@@ -387,6 +392,9 @@ _compare_unique(const void *arg1, const void *arg2) {
 		if(node1->t.SPR.spr_id < node2->t.SPR.spr_id) return -1;
 		if(node1->t.SPR.spr_id > node2->t.SPR.spr_id) return 1;
 
+		if(node1->t.SPR.quad_idx < node2->t.SPR.quad_idx) return -1;
+		if(node1->t.SPR.quad_idx > node2->t.SPR.quad_idx) return 1;
+
 		return 0;
 	} else if (node1->type == C2_PT_TEX && node2->type == C2_PT_TEX) {
 		return node1->t.TEX.key < node2->t.TEX.key ? -1 : 1;
@@ -408,6 +416,14 @@ _get_unique_prenodes(struct dtex_c2* c2, struct c2_prenode** ret_set, int* ret_s
 	for (int i = 1; i < c2->prenode_size; ++i) {
 		struct c2_prenode* last = unique[unique_size-1];
 		struct c2_prenode* curr = ret_set[i];
+
+		int last_id = last->t.SPR.spr_id,
+			curr_id = curr->t.SPR.spr_id;
+		struct ej_pack_quad* last_q = last->t.SPR.ej_quad,
+			*curr_q = curr->t.SPR.ej_quad;
+		struct dtex_texture* last_tex = last->t.SPR.ori_tex,
+			*curr_tex = curr->t.SPR.ori_tex;
+
 		if (_compare_unique(&curr, &last) == 0) {
 			;
 		} else {
@@ -469,10 +485,11 @@ _compare_max_edge(const void *arg1, const void *arg2) {
 }
 
 static inline struct c2_node*
-_query_node(struct dtex_c2* c2, int pkg_id, int spr_id) {
+_query_node(struct dtex_c2* c2, int pkg_id, int spr_id, int quad_idx) {
 	struct hash_key hk;
 	hk.pkg_id = pkg_id;
 	hk.spr_id = spr_id;
+	hk.quad_idx = quad_idx;
 	if (c2->one_tex_mode) {
 		for (int i = 0; i < 4; ++i) {
 			struct c2_node* ret = (struct c2_node*)ds_hash_query(c2->t.ONE.index[i].hash, &hk);
@@ -906,7 +923,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	ip.c2 = c2;
 	ip.loader = loader;
 	if (pn->type == C2_PT_SPR) {
-		if (_query_node(c2, pn->t.SPR.pkg->id, pn->t.SPR.spr_id)) {
+		if (_query_node(c2, pn->t.SPR.pkg->id, pn->t.SPR.spr_id, pn->t.SPR.quad_idx)) {
 			return true;
 		}		
 		ip.w = pn->t.SPR.rect.xmax - pn->t.SPR.rect.xmin;
@@ -969,10 +986,12 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	if (pn->type == C2_PT_SPR) {
 		node->hk.pkg_id = pn->t.SPR.pkg->id;
 		node->hk.spr_id = pn->t.SPR.spr_id;
+		node->hk.quad_idx = pn->t.SPR.quad_idx;
 		tex = *pn->t.SPR.ori_tex;
 	} else {
 		node->hk.pkg_id = TEX_PKG_ID;
 		node->hk.spr_id = pn->t.TEX.key;
+		node->hk.quad_idx = TEX_QUAD_IDX;
 		tex.id = pn->t.TEX.id;
 		tex.width = pn->t.TEX.w;
 		tex.height = pn->t.TEX.h;
@@ -1034,6 +1053,7 @@ dtex_c2_remove_tex(struct dtex_c2* c2, int key) {
 	struct hash_key hk;
 	hk.pkg_id = TEX_PKG_ID;
 	hk.spr_id = key;
+	hk.quad_idx = TEX_QUAD_IDX;
 	if (c2->one_tex_mode) {
 		for (int i = 0; i < 4; ++i) {
 			struct c2_node* ret = (struct c2_node*)ds_hash_query(c2->t.ONE.index[i].hash, &hk);
@@ -1059,7 +1079,7 @@ dtex_c2_reload_tex(struct dtex_c2* c2, int tex_id, int tex_width, int tex_height
 		return;
 	}
 
-	struct c2_node* node = _query_node(c2, TEX_PKG_ID, key);
+	struct c2_node* node = _query_node(c2, TEX_PKG_ID, key, TEX_QUAD_IDX);
 	assert(node);
 
 	struct dtex_texture tex;
@@ -1083,8 +1103,8 @@ dtex_c2_reload_end() {
 }
 
 float* 
-dtex_c2_query_spr(struct dtex_c2* c2, int pkg_id, int spr_id, int* out_texid) {
-	struct c2_node* node = _query_node(c2, pkg_id, spr_id);
+dtex_c2_query_spr(struct dtex_c2* c2, int pkg_id, int spr_id, int quad_idx, int* out_texid) {
+	struct c2_node* node = _query_node(c2, pkg_id, spr_id, quad_idx);
 	if (!node) {
 		return NULL;
 	}
@@ -1096,7 +1116,7 @@ dtex_c2_query_spr(struct dtex_c2* c2, int pkg_id, int spr_id, int* out_texid) {
 
 float* 
 dtex_c2_query_tex(struct dtex_c2* c2, int key, int* out_texid) {
-	struct c2_node* node = _query_node(c2, TEX_PKG_ID, key);
+	struct c2_node* node = _query_node(c2, TEX_PKG_ID, key, TEX_QUAD_IDX);
 	if (!node) {
 		return NULL;
 	}
@@ -1107,9 +1127,9 @@ dtex_c2_query_tex(struct dtex_c2* c2, int key, int* out_texid) {
 }
 
 void 
-dtexc2_query_map_addr(struct dtex_c2* c2, int pkg_id, int spr_id,
-	               struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos) {
-	struct c2_node* node = _query_node(c2, pkg_id, spr_id);
+dtexc2_query_map_addr(struct dtex_c2* c2, int pkg_id, int spr_id, int quad_idx,
+                      struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos) {
+	struct c2_node* node = _query_node(c2, pkg_id, spr_id, quad_idx);
 	if (node) {
 		*out_tex = node->dst_tex;
 		*out_pos = node->dst_pos;

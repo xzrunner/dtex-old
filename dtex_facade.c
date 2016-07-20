@@ -435,9 +435,9 @@ dtexf_c2_reload_end() {
 }
 
 float* 
-dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, int* dst_tex) {
+dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, int quad_idx, int* dst_tex) {
 	if (C2) {
-		return dtex_c2_query_spr(C2, pkg_id, spr_id, dst_tex);
+		return dtex_c2_query_spr(C2, pkg_id, spr_id, quad_idx, dst_tex);
 	} else {
 		return NULL;
 	}
@@ -764,19 +764,19 @@ dtexf_update() {
 
 void 
 dtexf_debug_draw() {
-  	if (T0) {
-  		dtex_c1_debug_draw(T0);
-  	} 
+// 	if (T0) {
+// 		dtex_c1_debug_draw(T0);
+// 	} 
 // 	if (T1) {
 // 		dtex_c1_debug_draw(T1);
 // 	} 
 
-// 	if (C2) {
-// 		dtex_c2_debug_draw(C2);
-// 	}
-// 	if (C3) {
-// 		dtex_c3_debug_draw(C3);
-// 	}
+	if (C2) {
+		dtex_c2_debug_draw(C2);
+	}
+	if (C3) {
+		dtex_c3_debug_draw(C3);
+	}
 // 	if (C4) {
 // 		dtex_c4_debug_draw(C4);
 // 	}

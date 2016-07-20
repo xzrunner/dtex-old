@@ -34,7 +34,7 @@ void dtex_c2_reload_begin(struct dtex_c2*);
 void dtex_c2_reload_tex(struct dtex_c2*, int tex_id, int tex_width, int tex_height, int key);
 void dtex_c2_reload_end();
 
-float* dtex_c2_query_spr(struct dtex_c2*, int pkg_id, int spr_id, int* out_texid);
+float* dtex_c2_query_spr(struct dtex_c2*, int pkg_id, int spr_id, int quad_idx, int* out_texid);
 float* dtex_c2_query_tex(struct dtex_c2*, int key, int* out_texid);
 void dtexc2_query_map_addr(struct dtex_c2*, int pkg_id, int spr_id, struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos);
 
