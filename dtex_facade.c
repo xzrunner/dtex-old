@@ -505,6 +505,13 @@ dtexf_t0_unbind() {
 	}
 }
 
+void 
+dtexf_t0_draw(float src_w, float src_h, float dst_w, float dst_h) {
+	if (T0) {
+		dtex_c1_draw(T0, src_w, src_h, dst_w, dst_h);
+	}
+}
+
 uint32_t 
 dtexf_t0_get_texture_id() {
 	if (T0) {
@@ -584,6 +591,28 @@ dtexf_t1_get_texture_size() {
 	}
 }
 
+void 
+dtexf_c1_set_viewport() {
+	int sz = dtex_c1_get_texture_size(T0);
+	dtex_gl_viewport(0, 0, sz, sz);
+}
+
+void 
+dtexf_c1_draw_between(bool t0tot1, float src_w, float src_h, float dst_w, float dst_h) {
+	struct dtex_c1 *from, *to;
+	if (t0tot1) {
+		from = T0;
+		to = T1;
+	} else {
+		from = T1;
+		to = T0;
+	}
+
+	dtex_c1_bind(to);
+	dtex_c1_draw(from, src_w, src_h, dst_w, dst_h);
+	dtex_c1_unbind(to);	
+}
+
 /************************************************************************/
 /* CG                                                                   */
 /************************************************************************/
@@ -612,9 +641,9 @@ dtexf_cs1_unbind() {
 }
 
 void 
-dtexf_cs1_draw(void (*before_draw)(void* ud), void* ud) {
+dtexf_cs1_draw(float src_w, float src_h, float dst_w, float dst_h, void (*before_draw)(void* ud), void* ud) {
 	if (CS1) {
-		dtex_cs_draw(CS1, before_draw, ud);
+		dtex_cs_draw(CS1, src_w, src_h, dst_w, dst_h, before_draw, ud);
 	}
 }
 
@@ -638,9 +667,9 @@ dtexf_cs2_unbind() {
 }
 
 void 
-dtexf_cs2_draw(void (*before_draw)(void* ud), void* ud) {
+dtexf_cs2_draw(float src_w, float src_h, float dst_w, float dst_h, void (*before_draw)(void* ud), void* ud) {
 	if (CS2) {
-		dtex_cs_draw(CS2, before_draw, ud);
+		dtex_cs_draw(CS2, src_w, src_h, dst_w, dst_h, before_draw, ud);
 	}
 }
 
@@ -649,20 +678,11 @@ dtexf_cs2_get_texture_id() {
 	return CS2 ? dtex_cs_get_texture_id(CS2) : 0;
 }
 
-void 
-dtexf_cs_draw_between(bool c1toc2) {
-	struct dtex_cs *from, *to;
-	if (c1toc2) {
-		from = CS1;
-		to = CS2;
-	} else {
-		from = CS2;
-		to = CS1;
-	}
-
-	dtex_cs_bind(to);
-	dtex_cs_draw(from, NULL, NULL);
-	dtex_cs_unbind(to);
+void
+dtexf_cs_set_viewport() {
+	float w, h, s;
+	dtex_get_screen(&w, &h, &s);
+	dtex_gl_viewport(0, 0, w * s, h * s);
 }
 
 /************************************************************************/
@@ -747,9 +767,9 @@ dtexf_debug_draw() {
   	if (T0) {
   		dtex_c1_debug_draw(T0);
   	} 
-	if (T1) {
-		dtex_c1_debug_draw(T1);
-	} 
+// 	if (T1) {
+// 		dtex_c1_debug_draw(T1);
+// 	} 
 
 // 	if (C2) {
 // 		dtex_c2_debug_draw(C2);

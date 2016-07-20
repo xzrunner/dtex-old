@@ -178,17 +178,17 @@ dtex_cs_dirty(struct dtex_cs* cs) {
 }
 
 void 
-dtex_cs_draw(struct dtex_cs* cs, void (*before_draw)(void* ud), void* ud) {
+dtex_cs_draw(struct dtex_cs* cs, float src_w, float src_h, float dst_w, float dst_h, void (*before_draw)(void* ud), void* ud) {
 	float vb[16];
 
 	float vx_min = (-1 + cs->x) * cs->scale,
-		  vx_max = ( 1 + cs->x) * cs->scale,
+		  vx_max = (-1 + dst_w * 2 + cs->x) * cs->scale,
 		  vy_min = (-1 + cs->y) * cs->scale,
-		  vy_max = ( 1 + cs->y) * cs->scale;
+		  vy_max = (-1 + dst_h * 2 + cs->y) * cs->scale;
 	vb[0] = vx_min; vb[1] = vy_min; vb[2] = 0; vb[3] = 0;
-	vb[4] = vx_max; vb[5] = vy_min; vb[6] = 1; vb[7] = 0;
-	vb[8] = vx_max; vb[9] = vy_max; vb[10]= 1; vb[11]= 1;
-	vb[12]= vx_min; vb[13]= vy_max; vb[14]= 0; vb[15]= 1;
+	vb[4] = vx_max; vb[5] = vy_min; vb[6] = src_w; vb[7] = 0;
+	vb[8] = vx_max; vb[9] = vy_max; vb[10]= src_w; vb[11]= src_h;
+	vb[12]= vx_min; vb[13]= vy_max; vb[14]= 0; vb[15]= src_h;
 
 	dtex_shader_begin();
 

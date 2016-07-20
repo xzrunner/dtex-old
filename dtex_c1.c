@@ -4,6 +4,7 @@
 #include "dtex_res_cache.h"
 #include "dtex_debug.h"
 #include "dtex_gl.h"
+#include "dtex_shader.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -76,6 +77,22 @@ dtex_c1_get_texture_id(struct dtex_c1* c1) {
 uint32_t 
 dtex_c1_get_texture_size(struct dtex_c1* c1) {
 	return c1->texture->width;
+}
+
+void 
+dtex_c1_draw(struct dtex_c1* c1, float src_w, float src_h, float dst_w, float dst_h) {
+	float vb[16];
+
+	float vx_min = -1, vx_max = -1 + dst_w * 2,
+		  vy_min = -1, vy_max = -1 + dst_h * 2;
+	vb[0] = vx_min; vb[1] = vy_min; vb[2] = 0; vb[3] = 0;
+	vb[4] = vx_max; vb[5] = vy_min; vb[6] = src_w; vb[7] = 0;
+	vb[8] = vx_max; vb[9] = vy_max; vb[10]= src_w; vb[11]= src_h;
+	vb[12]= vx_min; vb[13]= vy_max; vb[14]= 0; vb[15]= src_h;
+
+	dtex_shader_begin();
+	dtex_shader_draw(vb, dtex_c1_get_texture_id(c1));
+	dtex_shader_end();
 }
 
 void 

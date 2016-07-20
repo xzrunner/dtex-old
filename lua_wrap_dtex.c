@@ -220,6 +220,49 @@ lclear_state(lua_State* L) {
 }
 
 /************************************************************************/
+/* c1                                                                   */
+/************************************************************************/
+
+static int
+lt0_bind(lua_State* L) {
+	dtexf_t0_bind();
+	return 0;
+}
+
+static int
+lt0_unbind(lua_State* L) {
+	dtexf_t0_unbind();
+	return 0;
+}
+
+static int
+lt0_draw(lua_State* L) {
+	float src_w = luaL_optnumber(L, 1, 1),
+		  src_h = luaL_optnumber(L, 2, 1);
+	float dst_w = luaL_optnumber(L, 3, 1),
+		  dst_h = luaL_optnumber(L, 4, 1);
+	dtexf_t0_draw(src_w, src_h, dst_w, dst_h);
+	return 0;
+}
+
+static int
+lc1_set_viewport(lua_State* L) {
+	dtexf_c1_set_viewport();
+	return 0;
+}
+
+static int
+lc1_draw_between(lua_State* L) {
+	bool t0tot1 = lua_toboolean(L, 1);
+	float src_w = luaL_optnumber(L, 2, 1),
+		  src_h = luaL_optnumber(L, 3, 1);
+	float dst_w = luaL_optnumber(L, 4, 1),
+		  dst_h = luaL_optnumber(L, 5, 1);
+	dtexf_c1_draw_between(t0tot1, src_w, src_h, dst_w, dst_h);
+	return 0;
+}
+
+/************************************************************************/
 /* c3                                                                   */
 /************************************************************************/
 
@@ -287,7 +330,11 @@ lcs1_unbind(lua_State* L) {
 
 static int
 lcs1_draw(lua_State* L) {
-	dtexf_cs1_draw(NULL, NULL);
+	float src_w = luaL_optnumber(L, 1, 1),
+		  src_h = luaL_optnumber(L, 2, 1);
+	float dst_w = luaL_optnumber(L, 3, 1),
+		  dst_h = luaL_optnumber(L, 4, 1);
+	dtexf_cs1_draw(src_w, src_h, dst_w, dst_h, NULL, NULL);
 	return 0;
 }
 
@@ -305,14 +352,17 @@ lcs2_unbind(lua_State* L) {
 
 static int
 lcs2_draw(lua_State* L) {
-	dtexf_cs2_draw(NULL, NULL);
+	float src_w = luaL_optnumber(L, 1, 1),
+		  src_h = luaL_optnumber(L, 2, 1);
+	float dst_w = luaL_optnumber(L, 3, 1),
+		  dst_h = luaL_optnumber(L, 4, 1);
+	dtexf_cs2_draw(src_w, src_h, dst_w, dst_h, NULL, NULL);
 	return 0;
 }
 
 static int
-lcs_draw_between(lua_State* L) {
-	bool c1toc2 = lua_toboolean(L, 1);
-	dtexf_cs_draw_between(c1toc2);
+lcs_set_viewport(lua_State* L) {
+	dtexf_cs_set_viewport();
 	return 0;
 }
 
@@ -341,6 +391,13 @@ luaopen_dtex_c(lua_State* L) {
 
 		{ "clear_state", lclear_state },
 
+		// C1
+		{ "t0_bind", lt0_bind },
+		{ "t0_unbind", lt0_unbind },
+		{ "t0_draw", lt0_draw },
+		{ "c1_set_viewport", lc1_set_viewport },
+		{ "c1_draw_between", lc1_draw_between },
+
 		// C3
 		{ "c3_load", lc3_load },
 		{ "c3_load_end", lc3_load_end },
@@ -358,7 +415,7 @@ luaopen_dtex_c(lua_State* L) {
 		{ "cs2_bind", lcs2_bind },
 		{ "cs2_unbind", lcs2_unbind },
 		{ "cs2_draw", lcs2_draw },
-		{ "cs_draw_between", lcs_draw_between },
+		{ "cs_set_viewport", lcs_set_viewport },
 
 		{ NULL, NULL },		
 	};

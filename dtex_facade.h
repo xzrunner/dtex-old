@@ -82,6 +82,7 @@ void dtexf_c2_clear();
 void dtexf_t0_clear(float xmin, float ymin, float xmax, float ymax);
 void dtexf_t0_bind();
 void dtexf_t0_unbind();
+void dtexf_t0_draw(float src_w, float src_h, float dst_w, float dst_h);
 uint32_t dtexf_t0_get_texture_id();
 uint32_t dtexf_t0_get_texture_size();
 //void dtexf_t0_update(struct dtex_package* pkg, struct ej_sprite* spr);
@@ -95,6 +96,9 @@ void dtexf_t1_unbind();
 uint32_t dtexf_t1_get_texture_id();
 uint32_t dtexf_t1_get_texture_size();
 
+void dtexf_c1_set_viewport();
+void dtexf_c1_draw_between(bool t0tot1, float src_w, float src_h, float dst_w, float dst_h);
+
 /************************************************************************/
 /* CG                                                                   */
 /************************************************************************/
@@ -105,15 +109,15 @@ struct dtex_cg* dtexf_get_cg();
 /************************************************************************/
 void dtexf_cs1_bind();
 void dtexf_cs1_unbind();
-void dtexf_cs1_draw(void (*before_draw)(void* ud), void* ud);
+void dtexf_cs1_draw(float src_w, float src_h, float dst_w, float dst_h, void (*before_draw)(void* ud), void* ud);
 int  dtexf_cs1_get_texture_id();
 
 void dtexf_cs2_bind();
 void dtexf_cs2_unbind();
-void dtexf_cs2_draw(void (*before_draw)(void* ud), void* ud);
+void dtexf_cs2_draw(float src_w, float src_h, float dst_w, float dst_h, void (*before_draw)(void* ud), void* ud);
 int  dtexf_cs2_get_texture_id();
 
-void dtexf_cs_draw_between(bool c1toc2);
+void dtexf_cs_set_viewport();
 
 //void dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path);
 

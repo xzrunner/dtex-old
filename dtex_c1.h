@@ -23,6 +23,8 @@ void dtex_c1_unbind(struct dtex_c1*);
 uint32_t dtex_c1_get_texture_id(struct dtex_c1*);
 uint32_t dtex_c1_get_texture_size(struct dtex_c1*);
 
+void dtex_c1_draw(struct dtex_c1*, float src_w, float src_h, float dst_w, float dst_h);
+
 void dtex_c1_debug_draw(struct dtex_c1*);
 
 #endif // dynamic_texture_cache1_h
