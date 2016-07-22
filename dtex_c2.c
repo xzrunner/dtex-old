@@ -1008,6 +1008,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 // 	if (rrp_pic) {
 // 		dtex_draw_rrp_to_tex(&tex, rrp_pic, tex, pos, rotate);
 // 	} else {
+		//dtex_gl_dummy();
 		dtex_draw_to_texture(&tex, ip.tex, node->trans_vb);
 //	}
 
@@ -1048,6 +1049,9 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 	if (--c2->loadable > 0 || c2->prenode_size == 0) {
 		return;
 	}
+
+	// todo
+	dtex_gl_dummy();
 
 	struct c2_prenode* unique_set[c2->prenode_size];
 	int unique_sz = 0;

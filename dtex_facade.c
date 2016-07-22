@@ -774,9 +774,9 @@ dtexf_debug_draw() {
 	if (C2) {
 		dtex_c2_debug_draw(C2);
 	}
-	if (C3) {
-		dtex_c3_debug_draw(C3);
-	}
+// 	if (C3) {
+// 		dtex_c3_debug_draw(C3);
+// 	}
 // 	if (C4) {
 // 		dtex_c4_debug_draw(C4);
 // 	}

@@ -41,6 +41,8 @@ int dtex_gl_get_curr_target();
 
 void dtex_gl_check_error();
 
+void dtex_gl_dummy();
+
 #endif // dynamic_texture_gl_h
 
 #ifdef __cplusplus
