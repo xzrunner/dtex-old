@@ -11,6 +11,7 @@
 #include "dtex_debug.h"
 #include "dtex_render.h"
 #include "dtex_cg.h"
+#include "dtex_gl.h"
 
 #include "ejoy2d.h"
 
@@ -1065,7 +1066,6 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 	struct c2_node* last_dst = NULL;
 	struct tp_index* last_tp = NULL;
 	for (int i = 0; i < unique_sz; ++i) {
- 		struct c2_prenode* node = unique_set[i];
 		struct c2_prenode* curr_src = unique_set[i];
 		struct c2_node* curr_dst = NULL;
 		struct tp_index* curr_tp = NULL;
