@@ -394,7 +394,9 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 		}
 
  		if (!async) {
- 			dtex_cf_relocate_node(ori_tex, node);
+			dtex_draw_begin();
+			dtex_cf_relocate_node(ori_tex, node);
+			dtex_draw_end();
  			if (!tex_loaded) {
 				dtex_package_remove_texture_ref(pkg, ori_tex);
 				dtex_texture_release(ori_tex);
