@@ -10,6 +10,7 @@
 #include "dtex_render.h"
 #include "dtex_package.h"
 #include "dtex_bitmap.h"
+#include "dtex_shader.h"
 
 #include <fault.h>
 
@@ -177,9 +178,11 @@ _scale_texture(struct dtex_texture* tex, float scale) {
 	dst.type = DTEX_TT_MID;
 	dst.t.MID.tp = NULL;
 
+	dtex_shader_scissor(false);
 	dtex_draw_begin();
 	dtex_draw_to_texture(tex, &dst, vb);
 	dtex_draw_end();
+	dtex_shader_scissor(true);
 
 	dtex_gl_release_texture(tex->id);
 

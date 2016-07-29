@@ -6,6 +6,8 @@ extern "C"
 #ifndef dynamic_texture_shader_h
 #define dynamic_texture_shader_h
 
+#include <stdbool.h>
+
 #define DTEX_PROGRAM_NULL	0
 #define DTEX_PROGRAM_NORMAL	1
 #define DTEX_PROGRAM_ETC1	2
@@ -20,7 +22,9 @@ void dtex_shader_init(void (*program)(int n),
 					  void (*draw_begin)(),
 					  void (*draw)(const float vb[16], int texid),
 					  void (*draw_end)(),
-					  void (*draw_flush)());
+					  void (*draw_flush)(),
+					  void (*scissor_enable)(),
+					  void (*scissor_disable)());
 
 void dtex_shader_program(int n);
 void dtex_shader_blend(int mode);
@@ -37,6 +41,8 @@ void dtex_shader_draw(const float vb[16], int texid);
 void dtex_shader_end();
 
 void dtex_shader_flush();
+
+void dtex_shader_scissor(bool enable);
 
 #endif // dynamic_texture_shader_h
 

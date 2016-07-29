@@ -12,6 +12,7 @@
 #include "dtex_render.h"
 #include "dtex_cg.h"
 #include "dtex_gl.h"
+#include "dtex_shader.h"
 
 #include "ejoy2d.h"
 
@@ -1009,7 +1010,6 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 // 	if (rrp_pic) {
 // 		dtex_draw_rrp_to_tex(&tex, rrp_pic, tex, pos, rotate);
 // 	} else {
-		dtex_gl_dummy();
 		dtex_draw_to_texture(&tex, ip.tex, node->trans_vb);
 //	}
 
@@ -1051,15 +1051,13 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 		return;
 	}
 
-	// todo
-	//dtex_gl_dummy();
-
 	struct c2_prenode* unique_set[c2->prenode_size];
 	int unique_sz = 0;
 	_get_unique_prenodes(c2, unique_set, &unique_sz);
 //	LOGD(" c2 end count: %d", unique_sz);
 
 	// insert
+	dtex_shader_scissor(false);
 	dtex_draw_begin();
 	qsort((void*)unique_set, unique_sz, sizeof(struct c2_prenode*), _compare_max_edge);	
 	struct c2_prenode* last_src = NULL;
@@ -1102,6 +1100,7 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 		last_tp = curr_tp;
 	}
 	dtex_draw_end();
+	dtex_shader_scissor(true);
 
 	c2->prenode_size = 0;
 }

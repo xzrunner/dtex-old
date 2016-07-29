@@ -12,6 +12,7 @@
 #include "dtex_render.h"
 #include "dtex_c3_strategy.h"
 #include "dtex_debug.h"
+#include "dtex_shader.h"
 
 #include "dtex_facade.h"
 
@@ -306,9 +307,11 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 		tex_loaded = true;
 	}
 
+	dtex_shader_scissor(false);
 	dtex_draw_begin();
 	dtex_cf_relocate_node(tex, node);
 	dtex_draw_end();
+	dtex_shader_scissor(true);
 
 	if (!tex_loaded) {
 		dtex_package_remove_texture_ref(node->pkg, tex);
@@ -394,9 +397,11 @@ _relocate_nodes(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 		}
 
  		if (!async) {
+			dtex_shader_scissor(false);
 			dtex_draw_begin();
 			dtex_cf_relocate_node(ori_tex, node);
 			dtex_draw_end();
+			dtex_shader_scissor(true);
  			if (!tex_loaded) {
 				dtex_package_remove_texture_ref(pkg, ori_tex);
 				dtex_texture_release(ori_tex);
@@ -460,9 +465,11 @@ dtex_c3_load_end(struct dtex_c3* c3, struct dtex_loader* loader, bool async) {
 
 	/*float scale = */_pack_nodes(c3, unique_set, unique_sz, alloc_scale);
 
+	dtex_shader_scissor(false);
 	dtex_draw_begin();
 	_relocate_nodes(c3, loader, async);
 	dtex_draw_end();
+	dtex_shader_scissor(true);
 
 	c3->prenode_size = 0;
 }

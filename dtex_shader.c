@@ -10,6 +10,8 @@ static void (*DRAW_BEGIN)();
 static void (*DRAW)(const float vb[16], int texid);
 static void (*DRAW_END)();
 static void (*DRAW_FLUSH)();
+static void (*SCISSOR_ENABLE)();
+static void (*SCISSOR_DISABLE)();
 
 void 
 dtex_shader_init(void (*program)(int n),
@@ -21,7 +23,9 @@ dtex_shader_init(void (*program)(int n),
 				 void (*draw_begin)(),
 				 void (*draw)(const float vb[16], int texid),
 				 void (*draw_end)(),
-				 void (*draw_flush)()) {
+				 void (*draw_flush)(),
+				 void (*scissor_enable)(),
+				 void (*scissor_disable)()) {
 	PROGRAM = program;
 	BLEND = blend;
 	SET_TEXTURE = set_texture;
@@ -32,6 +36,8 @@ dtex_shader_init(void (*program)(int n),
 	DRAW = draw;
 	DRAW_END = draw_end;
 	DRAW_FLUSH = draw_flush;
+	SCISSOR_ENABLE = scissor_enable;
+	SCISSOR_DISABLE = scissor_disable;
 }
 
 void 
@@ -84,4 +90,17 @@ dtex_shader_end() {
 void 
 dtex_shader_flush() {
 	DRAW_FLUSH();
+}
+
+void 
+dtex_shader_scissor(bool enable) {
+	if (enable) {
+		if (SCISSOR_ENABLE) {
+			SCISSOR_ENABLE();
+		}
+	} else {
+		if (SCISSOR_DISABLE) {
+			SCISSOR_DISABLE();
+		}
+	}
 }

@@ -140,9 +140,3 @@ dtex_gl_check_error() {
 		exit(1);
 	}
 }
-
-void
-dtex_gl_dummy() {
-	glEnable(GL_SCISSOR_TEST);
-	glDisable(GL_SCISSOR_TEST);
-}
