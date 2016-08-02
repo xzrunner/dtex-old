@@ -121,13 +121,11 @@ dtex_cg_clear(struct dtex_cg* cg) {
 }
 
 float* 
-dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dtex_glyph* glyph) {
+dtex_cg_load_bmp(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dtex_glyph* glyph) {
 	if (cg->node_size >= MAX_NODE) {
 		LOGW("%s", "cg nodes empty.");
 		return NULL;
 	}
-
-	struct glyph_node* node = &cg->nodes[cg->node_size++];
 
 	// insert
 	//	bool rot = false;
@@ -136,6 +134,8 @@ dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dt
 		dtexf_c2_clear_from_cg();
 		return NULL;
 	}
+
+	struct glyph_node* node = &cg->nodes[cg->node_size++];
 	float xmin = (pos->r.xmin + PADDING) * cg->tex->inv_width,
 		  xmax = (pos->r.xmax - PADDING) * cg->tex->inv_width,
 		  ymin = (pos->r.ymin + PADDING) * cg->tex->inv_height,
@@ -144,6 +144,12 @@ dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dt
 	node->texcoords[4] = xmax;	node->texcoords[5] = ymin;
 	node->texcoords[2] = xmin;	node->texcoords[3] = ymin;
 	node->texcoords[6] = xmax;	node->texcoords[7] = ymax;
+
+// 	node->texcoords[0] = xmin;	node->texcoords[1] = ymin;
+// 	node->texcoords[2] = xmax;	node->texcoords[3] = ymin;
+// 	node->texcoords[4] = xmax;	node->texcoords[5] = ymax;
+// 	node->texcoords[6] = xmin;	node->texcoords[7] = ymax;
+
 	node->key = *glyph;
 	ds_hash_insert(cg->hash, &node->key, node, true);
 
@@ -163,6 +169,27 @@ dtex_cg_load(struct dtex_cg* cg, uint32_t* buf, int width, int height, struct dt
 		cg->buf[i] = a << 24 | b << 16 | g << 8 | r;
 	}
 	dtex_gl_update_texture(cg->buf, pos->r.xmin + PADDING, pos->r.ymin + PADDING, width, height, cg->tex->id);
+
+	return node->texcoords;
+}
+
+float* 
+dtex_cg_load_user(struct dtex_cg* cg, struct dtex_glyph* glyph, float* (*query_and_load_c2)(void* ud, struct dtex_glyph* glyph), void* ud) {
+	if (cg->node_size >= MAX_NODE) {
+		LOGW("%s", "cg nodes empty.");
+		return NULL;
+	}
+	
+	int texid = 0;
+	float* texcoords = query_and_load_c2(ud, glyph);
+	if (!texcoords) {
+		return NULL;
+	}
+
+	struct glyph_node* node = &cg->nodes[cg->node_size++];
+	memcpy(node->texcoords, texcoords, sizeof(float) * 8);
+	node->key = *glyph;
+	ds_hash_insert(cg->hash, &node->key, node, true);
 
 	return node->texcoords;
 }

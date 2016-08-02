@@ -71,7 +71,7 @@ _load_c2(struct dtex_package* pkg) {
 		dtexf_c2_load_begin();
 		for (int i = 0; i < stg->diff_spr_count; ++i) {
 			int spr_id = spr_ids[i];
-			dtexf_c2_load(pkg, spr_id);
+			dtexf_c2_load_spr(pkg, spr_id);
 		}
 		dtexf_c2_load_end();
 		succ = true;

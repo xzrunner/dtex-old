@@ -59,7 +59,7 @@ void dtexf_c3_clear();
 /* C2                                                                   */
 /************************************************************************/
 void dtexf_c2_load_begin();
-void dtexf_c2_load(struct dtex_package* pkg, int spr_id);
+void dtexf_c2_load_spr(struct dtex_package* pkg, int spr_id);
 void dtexf_c2_load_tex(int tex_id, int tex_width, int tex_height, int key);
 void dtexf_c2_load_end();
 
@@ -69,7 +69,7 @@ void dtexf_c2_reload_begin();
 void dtexf_c2_reload_tex(int tex_id, int tex_width, int tex_height, int key);
 void dtexf_c2_reload_end();
 
-float* dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, int quad_idx, int* dst_tex);
+float* dtexf_c2_query_spr(int pkg_id, int spr_id, int quad_idx, int* dst_tex);
 float* dtexf_c2_query_tex(int key, int* out_texid);
 //void dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos);
 

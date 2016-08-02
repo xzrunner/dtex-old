@@ -386,7 +386,7 @@ dtexf_c2_load_begin() {
 }
 
 void 
-dtexf_c2_load(struct dtex_package* pkg, int spr_id) {
+dtexf_c2_load_spr(struct dtex_package* pkg, int spr_id) {
 	if (C2) {
 		dtex_c2_load_spr(C2, pkg, spr_id);		
 	}
@@ -435,7 +435,7 @@ dtexf_c2_reload_end() {
 }
 
 float* 
-dtexf_c2_lookup_texcoords(int pkg_id, int spr_id, int quad_idx, int* dst_tex) {
+dtexf_c2_query_spr(int pkg_id, int spr_id, int quad_idx, int* dst_tex) {
 	if (C2) {
 		return dtex_c2_query_spr(C2, pkg_id, spr_id, quad_idx, dst_tex);
 	} else {

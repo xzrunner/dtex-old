@@ -33,7 +33,8 @@ void dtex_cg_release(struct dtex_cg*);
 
 void dtex_cg_clear(struct dtex_cg*);
 
-float* dtex_cg_load(struct dtex_cg*, uint32_t* buf, int width, int height, struct dtex_glyph* glyph);
+float* dtex_cg_load_bmp(struct dtex_cg*, uint32_t* buf, int width, int height, struct dtex_glyph* glyph);
+float* dtex_cg_load_user(struct dtex_cg*, struct dtex_glyph* glyph, float* (*query_and_load_c2)(void* ud, struct dtex_glyph* glyph), void* ud);
 void dtex_cg_reload(struct dtex_cg*, uint32_t* buf, int width, int height, float* texcoords);
 void dtex_cg_commit(struct dtex_cg*);
 
