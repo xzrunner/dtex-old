@@ -140,15 +140,10 @@ dtex_cg_load_bmp(struct dtex_cg* cg, uint32_t* buf, int width, int height, struc
 		  xmax = (pos->r.xmax - PADDING) * cg->tex->inv_width,
 		  ymin = (pos->r.ymin + PADDING) * cg->tex->inv_height,
 		  ymax = (pos->r.ymax - PADDING) * cg->tex->inv_height;
-	node->texcoords[0] = xmin;	node->texcoords[1] = ymax;
-	node->texcoords[4] = xmax;	node->texcoords[5] = ymin;
-	node->texcoords[2] = xmin;	node->texcoords[3] = ymin;
-	node->texcoords[6] = xmax;	node->texcoords[7] = ymax;
-
-// 	node->texcoords[0] = xmin;	node->texcoords[1] = ymin;
-// 	node->texcoords[2] = xmax;	node->texcoords[3] = ymin;
-// 	node->texcoords[4] = xmax;	node->texcoords[5] = ymax;
-// 	node->texcoords[6] = xmin;	node->texcoords[7] = ymax;
+	node->texcoords[0] = xmin;	node->texcoords[1] = ymin;
+	node->texcoords[2] = xmax;	node->texcoords[3] = ymin;
+	node->texcoords[4] = xmax;	node->texcoords[5] = ymax;
+	node->texcoords[6] = xmin;	node->texcoords[7] = ymax;
 
 	node->key = *glyph;
 	ds_hash_insert(cg->hash, &node->key, node, true);
