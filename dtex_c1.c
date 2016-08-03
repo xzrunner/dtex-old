@@ -12,8 +12,6 @@
 struct dtex_c1 {
 	struct dtex_texture* texture;
 	struct dtex_target* target;
-
-	int last_target;
 };
 
 struct dtex_c1* 
@@ -23,7 +21,6 @@ dtex_c1_create(int texture_size) {
 
 	c1->texture = dtex_res_cache_fetch_mid_texture(texture_size);
 	c1->target = dtex_res_cache_fetch_target();
-	c1->last_target = 0;
 
 	return c1;
 }
@@ -40,19 +37,19 @@ dtex_c1_clear(struct dtex_c1* c1, float xmin, float ymin, float xmax, float ymax
 
 void 
 dtex_c1_bind(struct dtex_c1* c1) {
-	c1->last_target = dtex_target_bind(c1->target);
+	dtex_target_bind(c1->target);
 	dtex_target_bind_texture(c1->target, c1->texture->id);
 }
 
 void 
 dtex_c1_unbind(struct dtex_c1* c1) {
 	dtex_target_unbind_texture(c1->target);
-	dtex_target_unbind(c1->last_target);
+	dtex_target_unbind();
 }
 
 //void 
 //dtex_c1_update(struct dtex_c1* c1, struct dtex_c2* c2, struct dtex_package* pkg, struct ej_sprite* spr) {
-//	int ori = dtex_target_bind(c1->target);
+//	dtex_target_bind(c1->target);
 //
 ////	float w, h, s;
 ////	dtex_get_screen(&w, &h, &s);
@@ -66,7 +63,7 @@ dtex_c1_unbind(struct dtex_c1* c1) {
 ////	dtex_shader_flush();
 ////	glViewport(0, 0, w, h);
 //
-//	dtex_target_unbind(ori);
+//	dtex_target_unbind();
 //}
 
 uint32_t 

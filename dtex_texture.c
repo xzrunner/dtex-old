@@ -175,13 +175,13 @@ dtex_texture_clear(struct dtex_texture* tex) {
 
 	struct dtex_target* target = dtex_res_cache_fetch_target();
 
-	int ori = dtex_target_bind(target);
+	dtex_target_bind(target);
 	dtex_target_bind_texture(target, tex->id);
 
 	dtex_gl_clear_color(0, 0, 0, 0);
 
 	dtex_target_unbind_texture(target);
-	dtex_target_unbind(ori);
+	dtex_target_unbind();
 	dtex_res_cache_return_target(target);
 }
 void 
@@ -201,7 +201,7 @@ dtex_texture_clear_part(struct dtex_texture* tex, float xmin, float ymin, float 
 		tex->height * (ymax - ymin));
 
 	struct dtex_target* target = dtex_res_cache_fetch_target();
-	int ori = dtex_target_bind(target);
+	dtex_target_bind(target);
 	dtex_target_bind_texture(target, tex->id);
 
 	glEnable(GL_SCISSOR_TEST);
@@ -209,7 +209,7 @@ dtex_texture_clear_part(struct dtex_texture* tex, float xmin, float ymin, float 
 	glDisable(GL_SCISSOR_TEST);
 
 	dtex_target_unbind_texture(target);
-	dtex_target_unbind(ori);
+	dtex_target_unbind();
 
 	dtex_res_cache_return_target(target);
 

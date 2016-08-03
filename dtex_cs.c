@@ -32,8 +32,6 @@ struct dtex_cs {
 	struct dtex_texture* texture;
 	struct dtex_target* target;
 
-	int last_target;
-
 	struct dtex_cs_rect invalid_rect[MAX_RECT];
 	int rect_count;
 
@@ -48,7 +46,6 @@ dtex_cs_create() {
 
 	cs->texture = NULL;
 	cs->target = dtex_res_cache_fetch_target();
-	cs->last_target = 0;
 
 	cs->rect_count = 0;
 
@@ -117,7 +114,7 @@ dtex_cs_on_size(struct dtex_cs* cs, int width, int height) {
 
 void 
 dtex_cs_bind(struct dtex_cs* cs) {
-	cs->last_target = dtex_target_bind(cs->target);
+	dtex_target_bind(cs->target);
 	dtex_target_bind_texture(cs->target, cs->texture->id);
 
 //	dtex_shader_begin();
@@ -128,7 +125,7 @@ dtex_cs_unbind(struct dtex_cs* cs) {
 //	dtex_shader_end();
 
 	dtex_target_unbind_texture(cs->target);
-	dtex_target_unbind(cs->last_target);
+	dtex_target_unbind();
 }
 
 void 

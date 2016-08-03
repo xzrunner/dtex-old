@@ -14,8 +14,8 @@ void dtex_target_release(struct dtex_target*);
 void dtex_target_bind_texture(struct dtex_target*, int texid);
 void dtex_target_unbind_texture(struct dtex_target*);
 
-int dtex_target_bind(struct dtex_target*);
-void dtex_target_unbind(int ori_target);
+void dtex_target_bind(struct dtex_target*);
+void dtex_target_unbind();
 
 #endif // dynamic_texture_target_h
 

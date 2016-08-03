@@ -13,8 +13,6 @@
 struct render_state {
 	struct dtex_texture* dst;
 	struct dtex_target* target;
-//	float scr_w, scr_h;
-	int ori_target;
 
 	bool dirty;
 };
@@ -31,7 +29,7 @@ _before_all_draw() {
 	assert(RS.target == NULL);
 	RS.target = dtex_res_cache_fetch_target();
 
-	RS.ori_target = dtex_target_bind(RS.target);
+	dtex_target_bind(RS.target);
 }
 
 static inline void 
@@ -42,7 +40,7 @@ _after_all_draw() {
 	}
 
 	dtex_target_unbind_texture(RS.target);
-	dtex_target_unbind(RS.ori_target);  
+	dtex_target_unbind();  
 	dtex_res_cache_return_target(RS.target);
 
 	RS.dst = NULL;
