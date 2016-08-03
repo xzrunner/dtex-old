@@ -29,7 +29,6 @@ dtex_target_create() {
 	struct dtex_target* target = (struct dtex_target*)malloc(sizeof(struct dtex_target));
 	glGenFramebuffers(1, &target->target_id);
 	target->texture_id = 0;
-	S.depth = 0;
 	return target;
 }
 
