@@ -711,14 +711,14 @@ _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 			  vd_ymax = dst_ymax * 2 - 1;
 
 		n->trans_vb[0] = vd_xmin; n->trans_vb[1] = vd_ymin; n->trans_vb[2] = 0; n->trans_vb[3] = 0;
-		n->trans_vb[4] = vd_xmax; n->trans_vb[5] = vd_ymin; n->trans_vb[6] = 1; n->trans_vb[7] = 0;
+		n->trans_vb[4] = vd_xmin; n->trans_vb[5] = vd_ymax; n->trans_vb[6] = 0; n->trans_vb[7] = 1;
 		n->trans_vb[8] = vd_xmax; n->trans_vb[9] = vd_ymax; n->trans_vb[10]= 1; n->trans_vb[11]= 1;
-		n->trans_vb[12]= vd_xmin; n->trans_vb[13]= vd_ymax; n->trans_vb[14]= 0; n->trans_vb[15]= 1;
+		n->trans_vb[12]= vd_xmax; n->trans_vb[13]= vd_ymin; n->trans_vb[14]= 1; n->trans_vb[15]= 0;
 
 		n->dst_vb[0] = dst_xmin; n->dst_vb[1] = dst_ymin; 
-		n->dst_vb[2] = dst_xmax; n->dst_vb[3] = dst_ymin; 
+		n->dst_vb[2] = dst_xmin; n->dst_vb[3] = dst_ymax;
 		n->dst_vb[4] = dst_xmax; n->dst_vb[5] = dst_ymax; 
-		n->dst_vb[6] = dst_xmin; n->dst_vb[7] = dst_ymax;
+		n->dst_vb[6] = dst_xmax; n->dst_vb[7] = dst_ymin; 
 		if (rotate) {
 			_rotate_trans_vb(n->trans_vb, false);
 			_rotate_dst_vb(n->dst_vb, false);
