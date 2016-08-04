@@ -172,6 +172,8 @@ dtexf_create(const char* cfg) {
 		_config(cfg);		
 	}
 
+	dtex_target_stack_init();
+
 	dtex_hard_res_init(CFG.needed_texture * 2048 * 2048);
 
 	dtex_stat_init();
@@ -267,6 +269,8 @@ dtexf_release() {
 	dtex_async_loader_release();
 
 	dtex_res_cache_release();
+
+	dtex_target_stack_release();
 }
 
 struct dtex_package* 

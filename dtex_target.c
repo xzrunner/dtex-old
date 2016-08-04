@@ -23,6 +23,17 @@ struct stack {
 
 static struct stack S;
 
+void 
+dtex_target_stack_init() {
+	S.depth = 0;
+	S.layers[S.depth++] = dtex_shader_get_target();
+}
+
+void 
+dtex_target_stack_release() {
+	S.depth = 0;
+}
+
 struct dtex_target* 
 dtex_target_create() {
     LOGI("%s", "dtex_target: new target");
@@ -90,31 +101,28 @@ dtex_target_unbind_texture(struct dtex_target* target) {
 }
 
 void 
-dtex_target_bind(struct dtex_target* target) {
+dtex_target_bind(struct dtex_target* target) {	
 	assert(S.depth < MAX_LAYER);
-
-	int curr = dtex_shader_get_target();
-	if (curr == target->target_id) {
-		return;
-	}
-
 	dtex_shader_flush();
-	dtex_shader_set_target(target->target_id);
-	glBindFramebuffer(GL_FRAMEBUFFER, target->target_id);
+
+	int curr = S.layers[S.depth - 1];
+	if (curr != target->target_id) {
+		dtex_shader_set_target(target->target_id);
+		glBindFramebuffer(GL_FRAMEBUFFER, target->target_id);
+	}
 	S.layers[S.depth++] = target->target_id;
 }
 
 void 
 dtex_target_unbind() {
-	assert(S.depth > 0);
-
+	assert(S.depth > 1);
 	dtex_shader_flush();
 
+	int curr = S.layers[S.depth - 1];
 	--S.depth;
-	int id = 0;
-	if (S.depth > 0) {
-		id = S.layers[S.depth - 1];
+	int id = S.layers[S.depth - 1];
+	if (curr != id) {
+		dtex_shader_set_target(id);
+		glBindFramebuffer(GL_FRAMEBUFFER, id);
 	}
-	dtex_shader_set_target(id);
-	glBindFramebuffer(GL_FRAMEBUFFER, id);
 }

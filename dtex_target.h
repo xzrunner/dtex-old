@@ -8,6 +8,9 @@ extern "C"
 
 struct dtex_target;
 
+void dtex_target_stack_init();
+void dtex_target_stack_release();
+
 struct dtex_target* dtex_target_create();
 void dtex_target_release(struct dtex_target*);
 
