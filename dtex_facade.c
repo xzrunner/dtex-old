@@ -33,6 +33,7 @@
 #include "dtex_cs.h"
 #include "dtex_screen.h"
 #include "dtex_shader.h"
+#include "dtex_target.h"
 
 #include <ds_array.h>
 #include <logger.h>
