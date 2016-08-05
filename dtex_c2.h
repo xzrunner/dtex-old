@@ -23,6 +23,9 @@ void dtex_c2_release(struct dtex_c2*);
 void dtex_c2_clear(struct dtex_c2*);
 void dtex_c2_clear_from_cg(struct dtex_c2*, struct dtex_loader*);
 
+int dtex_c2_get_cg_quad();
+void dtex_c2_set_static_quad(struct dtex_c2*, int quad);
+
 void dtex_c2_load_begin(struct dtex_c2*);
 void dtex_c2_load_spr(struct dtex_c2*, struct dtex_package* pkg, int spr_id);
 void dtex_c2_load_tex(struct dtex_c2*, int tex_id, int tex_width, int tex_height, int key);

@@ -58,6 +58,7 @@ void dtexf_c3_clear();
 /************************************************************************/
 /* C2                                                                   */
 /************************************************************************/
+void dtexf_c2_set_static_quad(int quad);
 void dtexf_c2_load_begin();
 void dtexf_c2_load_spr(struct dtex_package* pkg, int spr_id);
 void dtexf_c2_load_tex(int tex_id, int tex_width, int tex_height, int key);

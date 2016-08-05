@@ -394,6 +394,13 @@ dtexf_c3_clear() {
 /************************************************************************/
 
 void 
+dtexf_c2_set_static_quad(int quad) {
+	if (C2) {
+		dtex_c2_set_static_quad(C2, quad);
+	}
+}
+
+void 
 dtexf_c2_load_begin() {
 	if (C2) {
 		dtex_c2_load_begin(C2);

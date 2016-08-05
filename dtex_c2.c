@@ -32,8 +32,10 @@
 #define TEX_PKG_ID			4096
 #define TEX_QUAD_IDX		0
 
-#define PADDING 0
-#define EXTRUDE 1
+#define PADDING				0
+#define EXTRUDE				1
+
+#define CG_QUAD				2
 
 static int SRC_EXTRUDE = 0;
 
@@ -97,6 +99,8 @@ struct tp_index {
 struct dtex_c2 {
 	int loadable;
 
+	int static_quad;
+
 	bool one_tex_mode;
 	union {
 		struct {
@@ -146,12 +150,9 @@ _clear_tp_index(struct tp_index* index) {
 
 static inline void clear_part_from_cg(void* ud) {
 	struct dtex_c2* c2 = (struct dtex_c2*)ud;
-
-	int idx = 2;
-	float xmin = 0,
-		  ymin = 0;
+	float xmin = 0, ymin = 0;
 	dtex_texture_clear_part(c2->t.ONE.texture, xmin, ymin, xmin+0.5f, ymin+0.5f);
-	_clear_tp_index(&c2->t.ONE.index[idx]);
+	_clear_tp_index(&c2->t.ONE.index[CG_QUAD]);
 }
 
 struct dtex_c2* 
@@ -178,7 +179,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 		}
 		c2->t.ONE.cg = NULL;
 		if (open_cg) {
-			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[2].tp, c2->t.ONE.texture, clear_part_from_cg, c2);
+			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[CG_QUAD].tp, c2->t.ONE.texture, clear_part_from_cg, c2);
 		}
 	} else {
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
@@ -190,6 +191,8 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 	}
 
 	c2->prenode_size = 0;
+
+	c2->static_quad = -1;
 
 	return c2;
 }
@@ -231,7 +234,7 @@ _clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 			x = 0.5f;
 		}
 
-		if (idx == 2) {
+		if (idx == CG_QUAD) {
 			dtex_cg_clear(c2->t.ONE.cg);
 		}
 
@@ -273,8 +276,19 @@ dtex_c2_clear_from_cg(struct dtex_c2* c2, struct dtex_loader* loader)
 		return;
 	}
 
-	c2->t.ONE.clear_idx = 2;
+	c2->t.ONE.clear_idx = CG_QUAD;
 	_clear(c2, loader);
+}
+
+int 
+dtex_c2_get_cg_quad() {
+	return CG_QUAD;
+}
+
+void 
+dtex_c2_set_static_quad(struct dtex_c2* c2, int quad) {
+	assert(quad >= -1 && quad <= 3);
+	c2->static_quad = quad;
 }
 
 void 
@@ -732,6 +746,7 @@ struct insert_params {
 	int w;
 	int h;
 	bool can_clear;
+	int static_quad;
 
 	bool rotate;
 	struct dtex_tp_pos* pos;
@@ -740,29 +755,44 @@ struct insert_params {
 };
 
 static inline bool
+_mode_one_insert_node_quad(struct insert_params* p, float half_edge, int quad) {
+	struct tp_index* index = &p->c2->t.ONE.index[quad];
+	if (index->is_static == p->can_clear) {
+		return false;
+	}
+	p->pos = dtex_tp_add(index->tp, p->w + PADDING*2 + EXTRUDE*2, p->h + PADDING*2 + EXTRUDE*2, true);
+	p->rotate = false;
+	if (!p->pos) {
+		return false;
+	}
+	p->index = index;
+	if (quad == 0 || quad == 1) {
+		p->pos->r.ymin += half_edge;
+		p->pos->r.ymax += half_edge;
+	}
+	if (quad == 3 || quad == 1) {
+		p->pos->r.xmin += half_edge;
+		p->pos->r.xmax += half_edge;
+	}
+	return true;
+}
+
+static inline bool
 _mode_one_insert_node(struct insert_params* p) {
 	p->tex = p->c2->t.ONE.texture;
 	assert(p->tex->type == DTEX_TT_MID);
 	float half_edge = p->c2->t.ONE.texture->width * 0.5f;
-	
-	for (int i = 0; i < 4; ++i) {
-		struct tp_index* index = &p->c2->t.ONE.index[i];
-		if (index->is_static == p->can_clear) {
-			continue;
-		}
-		p->pos = dtex_tp_add(index->tp, p->w + PADDING*2 + EXTRUDE*2, p->h + PADDING*2 + EXTRUDE*2, true);
-		p->rotate = false;
-		if (p->pos) {
-			p->index = index;
-			if (i == 0 || i == 1) {
-				p->pos->r.ymin += half_edge;
-				p->pos->r.ymax += half_edge;
-			}
-			if (i == 3 || i == 1) {
-				p->pos->r.xmin += half_edge;
-				p->pos->r.xmax += half_edge;
-			}
+	if (p->static_quad >= 0) {
+		assert(p->static_quad >= 0 && p->static_quad <= 3);
+		if (_mode_one_insert_node_quad(p, half_edge, p->static_quad)) {
 			return true;
+		}
+	} else {
+		assert(p->static_quad == -1);
+		for (int i = 0; i < 4; ++i) {
+			if (_mode_one_insert_node_quad(p, half_edge, i)) {
+				return true;
+			}
 		}
 	}
 
@@ -773,7 +803,6 @@ _mode_one_insert_node(struct insert_params* p) {
 		// 3. clear
 		_clear(p->c2, p->loader);
 	}
-
 	return false;
 }
 
@@ -946,6 +975,7 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 	//	h = rrp_pic->h;
 	//}
 
+	ip.static_quad = c2->static_quad;
 	ip.rotate = false;
 	ip.pos = NULL;
 	ip.tex = NULL;
