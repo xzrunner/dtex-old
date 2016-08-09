@@ -55,15 +55,6 @@ static struct dtex_c1* T1 = NULL;
 static struct dtex_cs* CS1 = NULL;
 static struct dtex_cs* CS2 = NULL;
 
-#define MAX_C1_LAYER 8
-
-struct c1_stack {
-	int depth;
-	int layers[MAX_C1_LAYER];
-};
-
-static struct c1_stack C1_STACK;
-
 /************************************************************************/
 /* dtexf overall                                                        */
 /************************************************************************/
@@ -209,7 +200,6 @@ dtexf_create(const char* cfg) {
  	if (CFG.open_c1) {
  		T0 = dtex_c1_create(CFG.c1_tex_size);
 		T1 = dtex_c1_create(CFG.c1_tex_size);
-		C1_STACK.depth = 0;
  	}
  	if (CFG.open_c2) {
  		C2 = dtex_c2_create(CFG.c2_tex_size, true, 0, CFG.open_cg, CFG.src_extrude);
@@ -517,8 +507,6 @@ void
 dtexf_t0_bind() {
 	if (T0) {
 		dtex_c1_bind(T0);
-		assert(C1_STACK.depth < MAX_C1_LAYER);
-		C1_STACK.layers[C1_STACK.depth++] = 0;
 	}
 }
 
@@ -526,14 +514,6 @@ void
 dtexf_t0_unbind() {
 	if (T0) {
 		dtex_c1_unbind(T0);
-		--C1_STACK.depth;
-		if (C1_STACK.depth > 0) {
-			if (C1_STACK.layers[C1_STACK.depth - 1] == 0) {
-				dtex_c1_bind(T0);
-			} else if (C1_STACK.layers[C1_STACK.depth - 1] == 1) {
-				dtex_c1_bind(T1);
-			}
-		}
 	}
 }
 
@@ -595,8 +575,6 @@ void
 dtexf_t1_bind() {
 	if (T1) {
 		dtex_c1_bind(T1);
-		assert(C1_STACK.depth < MAX_C1_LAYER);
-		C1_STACK.layers[C1_STACK.depth++] = 1;
 	}
 }
 
@@ -604,14 +582,6 @@ void
 dtexf_t1_unbind() {
 	if (T1) {
 		dtex_c1_unbind(T1);
-		--C1_STACK.depth;
-		if (C1_STACK.depth > 0) {
-			if (C1_STACK.layers[C1_STACK.depth - 1] == 0) {
-				dtex_c1_bind(T0);
-			} else if (C1_STACK.layers[C1_STACK.depth - 1] == 1) {
-				dtex_c1_bind(T1);
-			}
-		}
 	}
 }
 
