@@ -101,7 +101,7 @@ dtex_target_unbind_texture(struct dtex_target* target) {
 }
 
 void 
-dtex_target_bind(struct dtex_target* target) {	
+dtex_target_bind(struct dtex_target* target) {
 	assert(S.depth < MAX_LAYER);
 	dtex_shader_flush();
 
@@ -109,8 +109,9 @@ dtex_target_bind(struct dtex_target* target) {
 	if (curr != target->target_id) {
 		dtex_shader_set_target(target->target_id);
 		glBindFramebuffer(GL_FRAMEBUFFER, target->target_id);
-		S.layers[S.depth++] = target->target_id;
 	}
+
+	S.layers[S.depth++] = target->target_id;
 }
 
 void 
@@ -120,8 +121,10 @@ dtex_target_unbind() {
 
 	int curr = S.layers[S.depth - 1],
 		prev = S.layers[S.depth - 2];
-	assert(curr != prev);
+	if (curr != prev) {
+		dtex_shader_set_target(prev);
+		glBindFramebuffer(GL_FRAMEBUFFER, prev);
+	}
+
 	--S.depth;
-	dtex_shader_set_target(prev);
-	glBindFramebuffer(GL_FRAMEBUFFER, prev);
 }
