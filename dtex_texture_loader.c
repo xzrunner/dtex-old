@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <math.h>
 
 // static inline GLuint
 // _pvr_texture_create(uint8_t* data, size_t sz, int internal_format, int width, int height) {

@@ -1,5 +1,8 @@
 #include "dtex_ej_utility.h"
 
+#include <ps_2d.h>
+#include <ps_3d.h>
+
 void 
 dtex_ej_pkg_traverse(struct ej_sprite_pack* ej_pkg, void (*pic_func)(int pic_id, struct ej_pack_picture* ej_pic, void* ud), void* ud) {
 	for (int spr_id = 0; spr_id < ej_pkg->n; ++spr_id) {
