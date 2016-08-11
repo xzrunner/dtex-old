@@ -14,6 +14,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 // static inline int
 // _comp_export(const void* a, const void* b) {
