@@ -27,7 +27,7 @@ dtex_png_read(const char* filepath, int* width, int* height, int* channels, int*
 	
 	size_t sz = fs_size(file);
 	uint8_t* buf = (uint8_t*)malloc(sz);
-	if (fs_read(file, buf, sz) != 1) {
+	if (fs_read(file, buf, sz) != sz) {
 //		fault("Invalid uncompress data source\n");
 	}
 	fs_close(file);

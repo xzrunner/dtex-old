@@ -116,7 +116,7 @@ _unpack_file(struct dtex_loader* loader, struct fs_file* file, void (*unpack_fun
 				fault("_unpack_file malloc fail.\n");
 			}
 		}
-		if (fs_read(file, (char*)buf, sz) != 1) {
+		if (fs_read(file, (char*)buf, sz) != sz) {
 			if (!loader) { free(buf); }
 			fault("Invalid uncompress data source\n");
 		}
@@ -146,7 +146,7 @@ _unpack_file(struct dtex_loader* loader, struct fs_file* file, void (*unpack_fun
 		}
 
 		struct block* block = (struct block*)buf;
-		if (sz <= 4 + LZMA_PROPS_SIZE || fs_read(file, block, sz) != 1) {
+		if (sz <= 4 + LZMA_PROPS_SIZE || fs_read(file, block, sz) != sz) {
 			if (!loader) { free(buf); }
 			fault("Invalid compress data source\n");
 		}

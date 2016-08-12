@@ -136,7 +136,7 @@ dtex_etc2_read_file(const char* filepath, uint32_t* width, uint32_t* height, int
 	if (buf == NULL) {
 		fault("Fail to malloc (dtex_etc2_read_file)");
 	}
-	if (fs_read(file, buf, sz) != 1) {
+	if (fs_read(file, buf, sz) != sz) {
 		fault("Invalid uncompress data source\n");
 	}
 	fs_close(file);	
