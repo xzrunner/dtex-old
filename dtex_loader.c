@@ -13,11 +13,11 @@
 #include <logger.h>
 #include <fault.h>
 
-#ifndef USED_IN_EDITOR
+#ifndef EASY_EDITOR
 #include <LzAlloc.h>
 #else
 #include <Alloc.h>
-#endif // USED_IN_EDITOR
+#endif // EASY_EDITOR
 #include <LzmaDec.h>
 
 #include <stdlib.h>
