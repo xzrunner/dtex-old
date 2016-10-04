@@ -5,6 +5,7 @@
 #include <fault.h>
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 #ifdef EASY_EDITOR
 
