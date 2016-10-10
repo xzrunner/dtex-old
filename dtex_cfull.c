@@ -121,7 +121,7 @@ dtex_cf_pack_prenodes(struct dtex_cf_prenode* prenode, struct dtex_cf_texture* c
 		pos = dtex_tp_add(cf_tex->tp, h, w, false);
 	}
 	if (!pos) {
-		LOGW("%s", "cf insert fail.");
+//		LOGW("%s", "cf insert fail.");
 		return false;
 	}
 

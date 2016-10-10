@@ -174,7 +174,7 @@ dtexf_create(const char* cfg) {
 
 	dtex_res_cache_create();
 
-	dtex_texture_cache_init(2048 * 2048 * 2);
+	dtex_texture_cache_init(2048 * 2048 * 1);
 
 	dtex_c2_strategy_init(CFG.c2_max_no_update_count);
 
@@ -192,7 +192,7 @@ dtexf_create(const char* cfg) {
 	LOADER = dtexloader_create();
 
 	if (CFG.open_c4) {
-		C4 = dtex_c4_create(CFG.c4_tex_size, 1);
+		C4 = dtex_c4_create(CFG.c4_tex_size, 4);
 	}
 	if (CFG.open_c3) {
 		C3 = dtex_c3_create(CFG.c3_tex_size, false);	
@@ -786,12 +786,12 @@ dtexf_debug_draw() {
 	if (C2) {
 		dtex_c2_debug_draw(C2);
 	}
-// 	if (C3) {
-// 		dtex_c3_debug_draw(C3);
-// 	}
-// 	if (C4) {
-// 		dtex_c4_debug_draw(C4);
-// 	}
+	if (C3) {
+		dtex_c3_debug_draw(C3);
+	}
+	if (C4) {
+		dtex_c4_debug_draw(C4);
+	}
 }
 
 //void

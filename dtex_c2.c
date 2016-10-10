@@ -331,6 +331,14 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 			break;
 		}
 		struct ej_pack_quad* ej_q = &ej_pic->rect[i];
+		struct dtex_rect rect;
+		_get_texcoords_region(ej_q->texture_coord, &rect);
+		// todo
+		if (rect.xmax - rect.xmin > 384 ||
+			rect.ymax - rect.ymin > 384) {
+			continue;
+		}
+
 		struct c2_prenode* pn = &params->c2->prenodes[params->c2->prenode_size++];
 		pn->type = C2_PT_SPR;
 		pn->t.SPR.pkg = params->pkg;
@@ -342,7 +350,7 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		}
 		pn->t.SPR.spr_id = pic_id;
 		pn->t.SPR.quad_idx = i;
-		_get_texcoords_region(ej_q->texture_coord, &pn->t.SPR.rect);
+		pn->t.SPR.rect = rect;
 	}
 }
 
