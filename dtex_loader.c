@@ -83,21 +83,24 @@ struct block {
 };
 
 static inline void
-_buf_reserve(struct dtex_loader* loader, uint32_t sz) {
-	if (sz <= loader->buf_size) {
-		return;
-	}
-
-	int new_sz = sz * 1.5f;
-	unsigned char* buf = malloc(new_sz);
+_buf_resize(struct dtex_loader* loader, uint32_t sz) {
+	unsigned char* buf = malloc(sz);
 	if (buf == NULL) {
 		return;
 	}
-	loader->buf_size = new_sz;
+	loader->buf_size = sz;
 	free(loader->buf);
 	loader->buf = buf;
+	LOGI("dtex_loader buf resize:%0.1fM", (float)sz / 1024 / 1024);
+}
 
-	LOGI("dtex_loader buf size:%0.1fM", (float)new_sz / 1024 / 1024);
+static inline void
+_buf_reserve(struct dtex_loader* loader, uint32_t sz) {
+	if (sz <= loader->buf_size * 0.25f) {
+		_buf_resize(loader, loader->buf_size * 0.95f);
+	} else if (sz > loader->buf_size) {
+		_buf_resize(loader, sz * 1.5f);
+	}
 }
 
 static inline void
