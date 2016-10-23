@@ -32,7 +32,7 @@ struct dtex_loader {
 	int pkg_size;
 
 	// cache memory buf
-	uint8_t* buf;
+	char* buf;
 	size_t buf_size;
 	// cache tex id
 	// todo
@@ -83,24 +83,19 @@ struct block {
 };
 
 static inline void
-_buf_resize(struct dtex_loader* loader, uint32_t sz) {
-	unsigned char* buf = malloc(sz);
-	if (buf == NULL) {
+_buf_reserve(struct dtex_loader* loader, uint32_t sz) {
+	if (sz <= loader->buf_size) {
 		return;
 	}
-	loader->buf_size = sz;
-	free(loader->buf);
-	loader->buf = buf;
-	LOGI("dtex_loader buf resize:%0.1fM", (float)sz / 1024 / 1024);
-}
 
-static inline void
-_buf_reserve(struct dtex_loader* loader, uint32_t sz) {
-	if (sz <= loader->buf_size * 0.25f) {
-		_buf_resize(loader, loader->buf_size * 0.95f);
-	} else if (sz > loader->buf_size) {
-		_buf_resize(loader, sz * 1.5f);
+	if(loader->buf) { free(loader->buf); }
+	loader->buf = malloc(sz);
+	if (loader->buf == NULL) {
+        fault("_buf_reserve malloc failed.\n");
 	}
+	loader->buf_size = sz;
+
+	LOGI("dtex_loader buf size:%0.1fM", (float)sz / 1024 / 1024);
 }
 
 static inline void
@@ -159,6 +154,7 @@ _unpack_file(struct dtex_loader* loader, struct fs_file* file, void (*unpack_fun
 
 		int r = _lzma_uncompress(buffer, &ori_sz, block->data, &compressed_sz, block->prop, LZMA_PROPS_SIZE);
 		if (r != SZ_OK) {
+			if (!loader) { free(buf); }
 			fault("Uncompress error %d\n",r);
 		}
 
