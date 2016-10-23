@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 struct job {
 	struct job* next;
@@ -77,65 +78,6 @@ struct parse_params_queue {
 
 static struct parse_params_queue PARAMS_PARSE_QUEUE;
 
-void 
-dtex_async_loader_create() {
-	DTEX_ASYNC_QUEUE_INIT(JOB_FREE_QUEUE);
-	DTEX_ASYNC_QUEUE_INIT(JOB_LOAD_QUEUE);
-	DTEX_ASYNC_QUEUE_INIT(JOB_PARSE_QUEUE);
-	DTEX_ASYNC_QUEUE_INIT(PARAMS_LOAD_QUEUE);
-	DTEX_ASYNC_QUEUE_INIT(PARAMS_PARSE_QUEUE);
-
-	VERSION = 0;
-	pthread_mutex_init(&VERSION_LOCK, 0);
-}
-
-static void
-_release_parse_params(void* data) {
-	struct parse_params* params = (struct parse_params*)data;
-	free(params->data);
-	params->data = NULL;
-}
-
-void 
-dtex_async_loader_release() {
-	DTEX_ASYNC_QUEUE_CLEAR(JOB_FREE_QUEUE, struct job);
-	DTEX_ASYNC_QUEUE_CLEAR(JOB_LOAD_QUEUE, struct job);
-	DTEX_ASYNC_QUEUE_CLEAR(JOB_PARSE_QUEUE, struct job);
-	DTEX_ASYNC_QUEUE_CLEAR(PARAMS_LOAD_QUEUE, struct load_params);
-	DTEX_ASYNC_QUEUE_CLEAR2(PARAMS_PARSE_QUEUE, struct parse_params, _release_parse_params);
-
-}
-
-void
-dtex_async_loader_clear() {
-	pthread_mutex_lock(&VERSION_LOCK);
-	++VERSION;
-
-	struct job* job = NULL;
-
-	do {
-		DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
-		if (job) {
-			//logger_printf("async_load clear pop JOB_LOAD_QUEUE, job: %p", job);
-			DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
-		}
-	} while (job);
-
-	do {
-		DTEX_ASYNC_QUEUE_POP(JOB_PARSE_QUEUE, job);
-		if (job) {
-			//logger_printf("async_load clear pop JOB_PARSE_QUEUE, job: %p", job);
-			struct parse_params* params = (struct parse_params*)job->ud;
-			free(params->data), params->data = NULL;
-			params->size = 0;
-			DTEX_ASYNC_QUEUE_PUSH(PARAMS_PARSE_QUEUE, params);
-			DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
-		}
-	} while (job);
-
-	pthread_mutex_unlock(&VERSION_LOCK);
-}
-
 static inline int
 _get_version() {
 	int ret;
@@ -192,26 +134,89 @@ _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 	//logger_printf("async_load push 3, job: %p", job);
 }
 
-static inline void*
+static void
 _load_file(void* arg) {
 	struct job* job = NULL;
-	DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
-	if (!job) {
-		return NULL;
+	while (1) {
+		DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
+		if (!job) {
+			sleep(0);
+			continue;
+		}
+
+		//logger_printf("async_load pop 2, job: %p", job);
+
+		struct load_params* params = (struct load_params*)job->ud;
+		if (_is_valid_version(params->version)) {
+			memcpy(params->desc, job->desc, sizeof(job->desc));
+			dtex_load_file(params->filepath, &_unpack_memory_to_job, params);
+		}
+
+		DTEX_ASYNC_QUEUE_PUSH(PARAMS_LOAD_QUEUE, params);
+		DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
 	}
+}
 
-	//logger_printf("async_load pop 2, job: %p", job);
+void
+dtex_async_loader_create() {
+	DTEX_ASYNC_QUEUE_INIT(JOB_FREE_QUEUE);
+	DTEX_ASYNC_QUEUE_INIT(JOB_LOAD_QUEUE);
+	DTEX_ASYNC_QUEUE_INIT(JOB_PARSE_QUEUE);
+	DTEX_ASYNC_QUEUE_INIT(PARAMS_LOAD_QUEUE);
+	DTEX_ASYNC_QUEUE_INIT(PARAMS_PARSE_QUEUE);
 
-	struct load_params* params = (struct load_params*)job->ud;
-	if (_is_valid_version(params->version)) {
-		memcpy(params->desc, job->desc, sizeof(job->desc));
-		dtex_load_file(params->filepath, &_unpack_memory_to_job, params);
-	}
+	VERSION = 0;
+	pthread_mutex_init(&VERSION_LOCK, 0);
 
-	DTEX_ASYNC_QUEUE_PUSH(PARAMS_LOAD_QUEUE, params);
-	DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
+	pthread_t id;
+	pthread_create(&id, NULL, _load_file, NULL);
+}
 
-	return NULL;
+static void
+_release_parse_params(void* data) {
+	struct parse_params* params = (struct parse_params*)data;
+	free(params->data);
+	params->data = NULL;
+}
+
+void
+dtex_async_loader_release() {
+	DTEX_ASYNC_QUEUE_CLEAR(JOB_FREE_QUEUE, struct job);
+	DTEX_ASYNC_QUEUE_CLEAR(JOB_LOAD_QUEUE, struct job);
+	DTEX_ASYNC_QUEUE_CLEAR(JOB_PARSE_QUEUE, struct job);
+	DTEX_ASYNC_QUEUE_CLEAR(PARAMS_LOAD_QUEUE, struct load_params);
+	DTEX_ASYNC_QUEUE_CLEAR2(PARAMS_PARSE_QUEUE, struct parse_params, _release_parse_params);
+
+}
+
+void
+dtex_async_loader_clear() {
+	pthread_mutex_lock(&VERSION_LOCK);
+	++VERSION;
+
+	struct job* job = NULL;
+
+	do {
+		DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
+		if (job) {
+			//logger_printf("async_load clear pop JOB_LOAD_QUEUE, job: %p", job);
+			DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
+		}
+	} while (job);
+
+	do {
+		DTEX_ASYNC_QUEUE_POP(JOB_PARSE_QUEUE, job);
+		if (job) {
+			//logger_printf("async_load clear pop JOB_PARSE_QUEUE, job: %p", job);
+			struct parse_params* params = (struct parse_params*)job->ud;
+			free(params->data), params->data = NULL;
+			params->size = 0;
+			DTEX_ASYNC_QUEUE_PUSH(PARAMS_PARSE_QUEUE, params);
+			DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
+		}
+	} while (job);
+
+	pthread_mutex_unlock(&VERSION_LOCK);
 }
 
 void 
@@ -244,7 +249,7 @@ dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream*
 
 	//logger_printf("async_load push 1, job: %p", job);
 
-	pthread_create(&job->id, NULL, _load_file, NULL);
+	// pthread_create(&job->id, NULL, _load_file, NULL);
 }
 
 void 
