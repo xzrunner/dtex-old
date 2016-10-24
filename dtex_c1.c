@@ -19,7 +19,7 @@ dtex_c1_create(int texture_size) {
 	struct dtex_c1* c1 = (struct dtex_c1*)malloc(sizeof(struct dtex_c1));
 	memset(c1, 0, sizeof(struct dtex_c1));
 
-	c1->texture = dtex_res_cache_fetch_mid_texture(texture_size);
+	c1->texture = dtex_res_cache_fetch_mid_texture(texture_size, texture_size);
 	c1->target = dtex_res_cache_fetch_target();
 
 	return c1;

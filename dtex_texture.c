@@ -58,35 +58,38 @@ dtex_texture_create_raw(int lod) {
 }
 
 struct dtex_texture* 
-dtex_texture_create_mid(int edge) {
+dtex_texture_create_mid(int width, int height) {
 	struct dtex_texture* tex = _get_free_texture();
 	if (!tex) {
 		fault("dtex_texture_create_mid _get_free_texture fail.");
 		return NULL;
 	}
 
-	if (edge > dtex_max_texture_size()) {
-		edge = dtex_max_texture_size();
+	if (width > dtex_max_texture_size()) {
+		width = dtex_max_texture_size();
+	}
+	if (height > dtex_max_texture_size()) {
+		height = dtex_max_texture_size();
 	}
 
-	uint8_t* empty_data = (uint8_t*)malloc(edge*edge*4);
+	uint8_t* empty_data = (uint8_t*)malloc(width*height*4);
 	if (!empty_data) {
 		fault("dtex_texture_create_mid malloc fail.");
 		return NULL;
 	}
-	
-// 	uint32_t col = 0xffff0000;
-// 	int ptr = 0;
-// 	for (int i = 0; i < edge; ++i) {
-// 		for (int j = 0; j < edge; ++j) {
-// 			memcpy(&empty_data[ptr], &col, 4);
-// 			ptr += 4;
-// 		}
-// 	}
 
-	memset(empty_data, 0x00, edge*edge*4);
+	// 	uint32_t col = 0xffff0000;
+	// 	int ptr = 0;
+	// 	for (int i = 0; i < edge; ++i) {
+	// 		for (int j = 0; j < edge; ++j) {
+	// 			memcpy(&empty_data[ptr], &col, 4);
+	// 			ptr += 4;
+	// 		}
+	// 	}
 
-	int id = dtex_gl_create_texture(DTEX_TF_RGBA8, edge, edge, empty_data, 0, 0);
+	memset(empty_data, 0x00, width*height*4);
+
+	int id = dtex_gl_create_texture(DTEX_TF_RGBA8, width, height, empty_data, 0, 0);
 	free(empty_data);
 	if (dtex_gl_out_of_memory()) {
 		fault("dtex_texture_create_mid dtex_gl_create_texture fail.");
@@ -95,29 +98,36 @@ dtex_texture_create_mid(int edge) {
 
 	tex->type = DTEX_TT_MID;
 	tex->id = id;
-	tex->width = tex->height = edge;
-	tex->inv_width = tex->inv_height = 1.0f / edge;
+	tex->width = width;
+	tex->height = height;
+	tex->inv_width = 1.0f / width;
+	tex->inv_height = 1.0f / height;
 	tex->t.MID.tp = NULL;
 
 	return tex;
 }
 
 struct dtex_texture* 
-dtex_texture_create_mid_ref(int edge) {
+dtex_texture_create_mid_ref(int width, int height) {
 	struct dtex_texture* tex = _get_free_texture();
 	if (!tex) {
 		fault("dtex_texture_create_mid _get_free_texture fail.");
 		return NULL;
 	}
 
-	if (edge > dtex_max_texture_size()) {
-		edge = dtex_max_texture_size();
+	if (width > dtex_max_texture_size()) {
+		width = dtex_max_texture_size();
 	}
-
+	if (height > dtex_max_texture_size()) {
+		height = dtex_max_texture_size();
+	}
+	
 	tex->type = DTEX_TT_MID;
 	tex->id = 0;
-	tex->width = tex->height = edge;
-	tex->inv_width = tex->inv_height = 1.0f / edge;
+	tex->width = width;
+	tex->height = height;
+	tex->inv_width = 1.0f / width;
+	tex->inv_height = 1.0f / height;
 	tex->t.MID.tp = NULL;
 
 	return tex;

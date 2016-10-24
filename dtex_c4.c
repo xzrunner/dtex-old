@@ -73,7 +73,7 @@ dtex_c4_create(int tex_size, int tex_count) {
 	c4->textures = (struct dtex_cf_texture*)(c4 + 1);
 	for (int i = 0; i < tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
-		tex->tex = dtex_texture_create_mid_ref(tex_size);
+		tex->tex = dtex_texture_create_mid_ref(tex_size, tex_size);
 		tex->ud = NULL;
 		tex->region.xmin = tex->region.ymin = 0;
 		tex->region.xmax = tex->region.ymax = tex_size;

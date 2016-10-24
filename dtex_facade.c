@@ -70,7 +70,7 @@ struct dtex_config {
 	bool open_cs;
 
 	int c1_tex_size;
-	int c2_tex_size;
+	int c2_tex_width, c2_tex_height;
 	int c3_tex_size;
 	int c4_tex_size;
 
@@ -108,7 +108,11 @@ _config(const char* str) {
 		CFG.c1_tex_size = cJSON_GetObjectItem(root, "c1_tex_size")->valueint;
 	}
 	if (cJSON_GetObjectItem(root, "c2_tex_size")) {
-		CFG.c2_tex_size = cJSON_GetObjectItem(root, "c2_tex_size")->valueint;
+		CFG.c2_tex_width = CFG.c2_tex_height = cJSON_GetObjectItem(root, "c2_tex_size")->valueint;
+	}
+	if (cJSON_GetObjectItem(root, "c2_tex_width") && cJSON_GetObjectItem(root, "c2_tex_height")) {
+		CFG.c2_tex_width = cJSON_GetObjectItem(root, "c2_tex_width")->valueint;
+		CFG.c2_tex_height = cJSON_GetObjectItem(root, "c2_tex_height")->valueint;
 	}
 	if (cJSON_GetObjectItem(root, "c3_tex_size")) {
 		CFG.c3_tex_size = cJSON_GetObjectItem(root, "c3_tex_size")->valueint;
@@ -148,7 +152,7 @@ dtexf_create(const char* cfg) {
 	CFG.open_cs = false;
 
 	CFG.c1_tex_size = 1024;
-	CFG.c2_tex_size = 4096;
+	CFG.c2_tex_width = CFG.c2_tex_height = 4096;
 	CFG.c3_tex_size = 2048;
 	CFG.c4_tex_size = 2048;
 
@@ -202,7 +206,7 @@ dtexf_create(const char* cfg) {
 		T1 = dtex_c1_create(CFG.c1_tex_size);
  	}
  	if (CFG.open_c2) {
- 		C2 = dtex_c2_create(CFG.c2_tex_size, true, 0, CFG.open_cg, CFG.src_extrude);
+ 		C2 = dtex_c2_create(CFG.c2_tex_width, CFG.c2_tex_height, true, 0, CFG.open_cg, CFG.src_extrude);
  	}
 	if (CFG.open_cs) {
 		float w, h, s;
@@ -786,12 +790,12 @@ dtexf_debug_draw() {
 	if (C2) {
 		dtex_c2_debug_draw(C2);
 	}
-	if (C3) {
-		dtex_c3_debug_draw(C3);
-	}
-	if (C4) {
-		dtex_c4_debug_draw(C4);
-	}
+// 	if (C3) {
+// 		dtex_c3_debug_draw(C3);
+// 	}
+// 	if (C4) {
+// 		dtex_c4_debug_draw(C4);
+// 	}
 }
 
 //void

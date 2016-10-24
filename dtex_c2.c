@@ -37,6 +37,8 @@
 
 #define CG_QUAD				2
 
+#define MAX_QUAD_SIZE		384
+
 static int SRC_EXTRUDE = 0;
 
 struct hash_key {
@@ -156,7 +158,7 @@ static inline void clear_part_from_cg(void* ud) {
 }
 
 struct dtex_c2* 
-dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_cg, int src_extrude) {
+dtex_c2_create(int width, int height, bool one_tex_mode, int static_count, bool open_cg, int src_extrude) {
 	SRC_EXTRUDE = src_extrude;
 
 	size_t sz = sizeof(struct dtex_c2) + sizeof(struct c2_prenode) * MAX_PRELOAD_COUNT;
@@ -168,13 +170,14 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 
 	c2->one_tex_mode = one_tex_mode;
 	if (one_tex_mode) {
-		c2->t.ONE.texture = dtex_res_cache_fetch_mid_texture(texture_size);
+		c2->t.ONE.texture = dtex_res_cache_fetch_mid_texture(width, height);
 		c2->t.ONE.clear_idx = static_count;
-		int half_sz = texture_size >> 1;
+		int hw = width >> 1;
+		int hh = height >> 1;
 		for (int i = 0; i < 4; ++i) {
 			struct tp_index* index = &c2->t.ONE.index[i];
 			index->hash = ds_hash_create(1000, 2000, 0.5f, _hash_func, _equal_func);
-			index->tp = dtex_tp_create(half_sz, half_sz, MAX_PRELOAD_COUNT / 4);
+			index->tp = dtex_tp_create(hw, hh, MAX_PRELOAD_COUNT / 4);
 			index->is_static = i < static_count;
 		}
 		c2->t.ONE.cg = NULL;
@@ -182,7 +185,7 @@ dtex_c2_create(int texture_size, bool one_tex_mode, int static_count, bool open_
 			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[CG_QUAD].tp, c2->t.ONE.texture, clear_part_from_cg, c2);
 		}
 	} else {
-		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
+		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(width, height);
 		tex->t.MID.tp = dtex_tp_create(tex->width, tex->height, MAX_PRELOAD_COUNT);
 		c2->t.MULTI.textures[c2->t.MULTI.tex_size++] = tex;
 
@@ -333,9 +336,8 @@ _preload_picture(int pic_id, struct ej_pack_picture* ej_pic, void* ud) {
 		struct ej_pack_quad* ej_q = &ej_pic->rect[i];
 		struct dtex_rect rect;
 		_get_texcoords_region(ej_q->texture_coord, &rect);
-		// todo
-		if (rect.xmax - rect.xmin > 384 ||
-			rect.ymax - rect.ymin > 384) {
+		if (rect.xmax - rect.xmin > MAX_QUAD_SIZE ||
+			rect.ymax - rect.ymin > MAX_QUAD_SIZE) {
 			continue;
 		}
 
@@ -763,7 +765,7 @@ struct insert_params {
 };
 
 static inline bool
-_mode_one_insert_node_quad(struct insert_params* p, float half_edge, int quad) {
+_mode_one_insert_node_quad(struct insert_params* p, float hw, float hh, int quad) {
 	struct tp_index* index = &p->c2->t.ONE.index[quad];
 	if (index->is_static == p->can_clear) {
 		return false;
@@ -775,12 +777,12 @@ _mode_one_insert_node_quad(struct insert_params* p, float half_edge, int quad) {
 	}
 	p->index = index;
 	if (quad == 0 || quad == 1) {
-		p->pos->r.ymin += half_edge;
-		p->pos->r.ymax += half_edge;
+		p->pos->r.ymin += hh;
+		p->pos->r.ymax += hh;
 	}
 	if (quad == 3 || quad == 1) {
-		p->pos->r.xmin += half_edge;
-		p->pos->r.xmax += half_edge;
+		p->pos->r.xmin += hw;
+		p->pos->r.xmax += hw;
 	}
 	return true;
 }
@@ -789,16 +791,17 @@ static inline bool
 _mode_one_insert_node(struct insert_params* p) {
 	p->tex = p->c2->t.ONE.texture;
 	assert(p->tex->type == DTEX_TT_MID);
-	float half_edge = p->c2->t.ONE.texture->width * 0.5f;
+	float hw = p->c2->t.ONE.texture->width * 0.5f,
+		  hh = p->c2->t.ONE.texture->height * 0.5f;
 	if (p->static_quad >= 0) {
 		assert(p->static_quad >= 0 && p->static_quad <= 3);
-		if (_mode_one_insert_node_quad(p, half_edge, p->static_quad)) {
+		if (_mode_one_insert_node_quad(p, hw, hh, p->static_quad)) {
 			return true;
 		}
 	} else {
 		assert(p->static_quad == -1);
 		for (int i = 0; i < 4; ++i) {
-			if (_mode_one_insert_node_quad(p, half_edge, i)) {
+			if (_mode_one_insert_node_quad(p, hw, hh, i)) {
 				return true;
 			}
 		}

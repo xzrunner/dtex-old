@@ -41,8 +41,8 @@ struct dtex_texture {
 };
 
 struct dtex_texture* dtex_texture_create_raw(int lod);
-struct dtex_texture* dtex_texture_create_mid(int edge);
-struct dtex_texture* dtex_texture_create_mid_ref(int edge);
+struct dtex_texture* dtex_texture_create_mid(int width, int height);
+struct dtex_texture* dtex_texture_create_mid_ref(int width, int height);
 void dtex_texture_release(struct dtex_texture*);
 
 void dtex_texture_reload(struct dtex_texture*);

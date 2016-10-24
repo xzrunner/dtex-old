@@ -70,7 +70,7 @@ dtex_c3_create(int texture_size, bool one_tex_mode) {
 
 	c3->one_tex_mode = one_tex_mode;
 	if (one_tex_mode) {
-		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size);
+		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(texture_size, texture_size);
 		struct dtex_cf_texture* up = &c3->t.ONE.s_up_tex;
 		struct dtex_cf_texture* down = &c3->t.ONE.d_down_tex;
 
@@ -90,7 +90,7 @@ dtex_c3_create(int texture_size, bool one_tex_mode) {
 	} else {
 		for (int i = 0; i < MULTI_TEX_COUNT; ++i) {
 			struct dtex_cf_texture* tex = &c3->t.MULTI.textures[i];
-			tex->tex = dtex_res_cache_fetch_mid_texture(texture_size);
+			tex->tex = dtex_res_cache_fetch_mid_texture(texture_size, texture_size);
 			tex->region.xmin = tex->region.ymin = 0;
 			tex->region.xmax = tex->region.ymax = texture_size;
 			tex->hash = ds_hash_create(50, 50, 5, ds_string_hash_func, ds_string_equal_func);

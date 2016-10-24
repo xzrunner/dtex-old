@@ -17,7 +17,7 @@ struct dtex_texture_with_rect;
 struct dtex_package;
 struct dtex_cg;
 
-struct dtex_c2* dtex_c2_create(int texture_size, bool one_tex, int static_count, bool open_cg, int src_extrude);
+struct dtex_c2* dtex_c2_create(int width, int height, bool one_tex, int static_count, bool open_cg, int src_extrude);
 void dtex_c2_release(struct dtex_c2*);
 
 void dtex_c2_clear(struct dtex_c2*);
