@@ -26,7 +26,7 @@ dtex_res_cache_create() {
 static inline void
 _release_texture_list(struct ds_array* tex_list) {
 	for (int i = 0, n = ds_array_size(tex_list); i < n; ++i) {
-		struct dtex_texture* texture = *(struct dtex_texture**)ds_array_fetch(tex_list, i);
+		struct dtex_texture* texture = (struct dtex_texture*)ds_array_fetch(tex_list, i);
 		dtex_texture_release(texture);
 	}
 	ds_array_release(tex_list);
