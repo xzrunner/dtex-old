@@ -219,6 +219,13 @@ lclear_state(lua_State* L) {
 	return 0;
 }
 
+static int
+lis_task_finished(lua_State* L) {
+	bool finished = dtex_async_loader_empty();
+	lua_pushboolean(L, finished);
+	return 1;
+}
+
 /************************************************************************/
 /* c1                                                                   */
 /************************************************************************/
@@ -390,6 +397,8 @@ luaopen_dtex_c(lua_State* L) {
 		{ "query", lquery },
 
 		{ "clear_state", lclear_state },
+
+		{ "is_task_finished", lis_task_finished },
 
 		// C1
 		{ "t0_bind", lt0_bind },
