@@ -25,7 +25,6 @@ void dtex_load_texture(struct dtex_loader*, struct dtex_package*, int idx);
 void dtex_load_texture_raw(struct dtex_loader*, const char* path, struct dtex_texture*);
 
 void dtex_load_file(const char* filepath, void (*unpack_func)(struct dtex_import_stream* is, void* ud), void* ud);
-struct dtex_texture* dtex_load_image(const char* filepath);
 
 void dtex_package_traverse(struct dtex_loader*, void (*pkg_func)(struct dtex_package* pkg));
 struct dtex_package* dtex_query_pkg(struct dtex_loader*, const char* name);
