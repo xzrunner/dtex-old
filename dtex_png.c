@@ -7,8 +7,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#ifdef EASY_EDITOR
-
 #include <png.h>
 
 static int _offset = 0;
@@ -143,12 +141,3 @@ dtex_png_read(const char* filepath, int* width, int* height, int* channels, int*
 
 	free(buf);
 }
-
-#else
-
-uint8_t* 
-dtex_png_read(const char* filepath, int* width, int* height, int* channels, int* format) {
-	return NULL;
-}
-
-#endif // EASY_EDITOR
