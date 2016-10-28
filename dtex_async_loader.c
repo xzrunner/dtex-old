@@ -14,6 +14,7 @@
 	#include <windows.h>
 #else
 	#include <unistd.h>
+	#include <errno.h>
 #endif
 
 struct job {
@@ -151,11 +152,7 @@ _need_quit(pthread_mutex_t* mtx)
 		return 1;
 
 	/* return 0 (false) if the mutex was locked */
-#ifdef __ANDROID__
-	case 16:
-#else
 	case EBUSY: 
-#endif // __ANDROID__
 		return 0;
 	}
 	return 1;
