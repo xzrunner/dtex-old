@@ -140,7 +140,7 @@ _load_file(void* arg) {
 	while (1) {
 		DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
 		if (!job) {
-			sleep(0);
+			sleep(30);
 			continue;
 		}
 
