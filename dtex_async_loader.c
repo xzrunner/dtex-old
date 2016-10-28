@@ -38,6 +38,7 @@ static struct job_queue JOB_PARSE_QUEUE;
 
 static int VERSION;
 static pthread_mutex_t VERSION_LOCK;
+static pthread_mutex_t QUIT_LOCK;
 static pthread_t THREAD;
 
 enum JOB_TYPE {
@@ -140,15 +141,24 @@ _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 	//logger_printf("async_load push 3, job: %p", job);
 }
 
+static int 
+_need_quit(pthread_mutex_t* mtx)
+{
+	switch (pthread_mutex_trylock(mtx)) {
+	case 0: /* if we got the lock, unlock and return 1 (true) */
+		pthread_mutex_unlock(mtx);
+		return 1;
+// 	case EBUSY: /* return 0 (false) if the mutex was locked */
+// 		return 0;
+	}
+	return 1;
+}
+
 static void*
 _load_file(void* arg) {
-#ifndef __ANDROID__
-	int old_type;
-	pthread_setcanceltype(PTHREAD_CANCEL_ENABLE, &old_type);
-#endif // __ANDROID__
-
-	struct job* job = NULL;
-	while (1) {
+	pthread_mutex_t* mtx = arg;
+	while (!_need_quit(mtx)) {
+		struct job* job = NULL;
 		DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
 		if (!job) {
 #ifdef _WIN32
@@ -184,7 +194,10 @@ dtex_async_loader_create() {
 	VERSION = 0;
 	pthread_mutex_init(&VERSION_LOCK, 0);
 
-	pthread_create(&THREAD, NULL, _load_file, NULL);
+	pthread_mutex_init(&QUIT_LOCK, NULL);
+	pthread_mutex_lock(&QUIT_LOCK);
+
+	pthread_create(&THREAD, NULL, _load_file, &QUIT_LOCK);
 }
 
 static void
@@ -201,9 +214,9 @@ dtex_async_loader_release() {
 	DTEX_ASYNC_QUEUE_CLEAR(JOB_PARSE_QUEUE, struct job);
 	DTEX_ASYNC_QUEUE_CLEAR(PARAMS_LOAD_QUEUE, struct load_params);
 	DTEX_ASYNC_QUEUE_CLEAR2(PARAMS_PARSE_QUEUE, struct parse_params, _release_parse_params);
-#ifndef __ANDROID__
-	pthread_cancel(THREAD);
-#endif // __ANDROID__
+
+	pthread_mutex_unlock(&QUIT_LOCK); 
+	pthread_join(THREAD, NULL);
 }
 
 void
