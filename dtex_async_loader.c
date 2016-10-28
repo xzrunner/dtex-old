@@ -142,8 +142,10 @@ _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 
 static void*
 _load_file(void* arg) {
+#ifndef __ANDROID__
 	int old_type;
 	pthread_setcanceltype(PTHREAD_CANCEL_ENABLE, &old_type);
+#endif // __ANDROID__
 
 	struct job* job = NULL;
 	while (1) {
@@ -199,8 +201,9 @@ dtex_async_loader_release() {
 	DTEX_ASYNC_QUEUE_CLEAR(JOB_PARSE_QUEUE, struct job);
 	DTEX_ASYNC_QUEUE_CLEAR(PARAMS_LOAD_QUEUE, struct load_params);
 	DTEX_ASYNC_QUEUE_CLEAR2(PARAMS_PARSE_QUEUE, struct parse_params, _release_parse_params);
-
+#ifndef __ANDROID__
 	pthread_cancel(THREAD);
+#endif // __ANDROID__
 }
 
 void
