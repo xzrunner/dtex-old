@@ -9,7 +9,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <unistd.h>
+
+#ifdef _WIN32
+	#include <windows.h>
+#else
+	#include <unistd.h>
+#endif
 
 struct job {
 	struct job* next;
@@ -22,9 +27,9 @@ struct job {
 };
 
 struct job_queue {
- 	struct job* head;
- 	struct job* tail;
- 	pthread_rwlock_t lock;
+	struct job* head;
+	struct job* tail;
+	pthread_rwlock_t lock;
 };
 
 static struct job_queue JOB_FREE_QUEUE;
@@ -33,6 +38,7 @@ static struct job_queue JOB_PARSE_QUEUE;
 
 static int VERSION;
 static pthread_mutex_t VERSION_LOCK;
+static pthread_t THREAD;
 
 enum JOB_TYPE {
 	JOB_INVALID = 0,
@@ -134,13 +140,20 @@ _unpack_memory_to_job(struct dtex_import_stream* is, void* ud) {
 	//logger_printf("async_load push 3, job: %p", job);
 }
 
-static void
+static void*
 _load_file(void* arg) {
+	int old_type;
+	pthread_setcanceltype(PTHREAD_CANCEL_ENABLE, &old_type);
+
 	struct job* job = NULL;
 	while (1) {
 		DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
 		if (!job) {
-			sleep(30);
+#ifdef _WIN32
+		Sleep(100);
+#else
+		usleep(100);
+#endif
 			continue;
 		}
 
@@ -155,6 +168,7 @@ _load_file(void* arg) {
 		DTEX_ASYNC_QUEUE_PUSH(PARAMS_LOAD_QUEUE, params);
 		DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
 	}
+	return NULL;
 }
 
 void
@@ -168,8 +182,7 @@ dtex_async_loader_create() {
 	VERSION = 0;
 	pthread_mutex_init(&VERSION_LOCK, 0);
 
-	pthread_t id;
-	pthread_create(&id, NULL, _load_file, NULL);
+	pthread_create(&THREAD, NULL, _load_file, NULL);
 }
 
 static void
@@ -187,6 +200,7 @@ dtex_async_loader_release() {
 	DTEX_ASYNC_QUEUE_CLEAR(PARAMS_LOAD_QUEUE, struct load_params);
 	DTEX_ASYNC_QUEUE_CLEAR2(PARAMS_PARSE_QUEUE, struct parse_params, _release_parse_params);
 
+	pthread_cancel(THREAD);
 }
 
 void
