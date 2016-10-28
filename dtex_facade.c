@@ -316,6 +316,11 @@ dtexf_load_texture_raw(const char* filepath, struct dtex_texture* tex) {
 	dtex_load_texture_raw(LOADER, filepath, tex);
 }
 
+struct dtex_texture*
+dtexf_load_image(const char* filepath) {
+	return dtex_load_image(filepath);
+}
+
 //struct ej_sprite* 
 //dtexf_create_sprite(const char* path) {
 //	if (C3 == NULL) {

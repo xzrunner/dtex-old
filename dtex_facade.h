@@ -37,7 +37,7 @@ int dtexf_preload_all_textures(const char* path, struct dtex_package* pkg, float
 void dtexf_preload_texture(struct dtex_package* pkg, int idx, float scale);
 void dtexf_load_texture(struct dtex_package*, int idx);
 void dtexf_load_texture_raw(const char* filepath, struct dtex_texture*);
-
+struct dtex_texture* dtexf_load_image(const char* filepath); 
 // todo sort sprite list for C3
 //struct ej_sprite* dtexf_create_sprite(const char* path);
 
