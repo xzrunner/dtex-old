@@ -88,15 +88,18 @@ dtex_c4_create(int tex_size, int tex_count) {
 
 void 
 dtex_c4_release(struct dtex_c4* c4) {
-	for (int i = 0; i < c4->tex_count; ++i) {
+	for (int i = 0; i < c4->max_tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
 
-		uint8_t* pixels = (uint8_t*)(tex->ud);
-		free(pixels);
+		if (tex->ud) {
+			uint8_t* pixels = (uint8_t*)(tex->ud);
+			free(pixels);
+		}
 
 		if (tex->tex->id != 0) {
 			dtex_gl_release_texture(tex->tex->id);
 		}
+
 		ds_hash_release(tex->hash);
 		dtex_tp_release(tex->tp);
 	}

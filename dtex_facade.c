@@ -261,8 +261,6 @@ dtexf_release() {
 	dtex_async_load_c2_release();
 	dtex_async_load_c2_from_c3_release();
 
-	dtex_async_loader_release();
-
 	dtex_res_cache_release();
 
 	dtex_target_stack_release();
