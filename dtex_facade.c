@@ -321,6 +321,14 @@ dtexf_load_image(const char* filepath) {
 	return dtex_load_image(filepath);
 }
 
+void
+dtexf_unload_texture(int texid) {
+	struct dtex_texture* tex = dtex_texture_fetch(texid);
+	if (tex) {
+		dtex_texture_release(tex);
+	}
+}
+
 //struct ej_sprite* 
 //dtexf_create_sprite(const char* path) {
 //	if (C3 == NULL) {

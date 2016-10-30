@@ -210,6 +210,13 @@ lload_image(lua_State* L) {
 }
 
 static int
+lunload_image(lua_State* L) {
+	const int id = lua_tointeger(L, 1);
+	dtexf_unload_texture(id);
+	return 0;
+}
+
+static int
 lquery(lua_State* L) {
 	const char* pkg_name = luaL_checkstring(L, 1);
 	const char* spr_name = luaL_checkstring(L, 2);
@@ -410,6 +417,7 @@ luaopen_dtex_c(lua_State* L) {
 		{ "preload_texture", lpreload_texture },
 		{ "load_texture", lload_texture },
 		{ "load_image", lload_image },		
+		{ "unload_image", lunload_image },
 
 		{ "query", lquery },
 
