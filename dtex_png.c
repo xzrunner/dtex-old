@@ -87,8 +87,9 @@ dtex_png_read(const char* filepath, int* width, int* height, int* channels, int*
 			*channels = lTransparency ? 4 : 3;
 			break;
 		case PNG_COLOR_TYPE_RGB:
-			*format = lTransparency ? PIXEL_RGBA : PIXEL_RGB;
-			*channels = lTransparency ? 4 : 3;
+			png_set_add_alpha(lPngPtr, 0xff, PNG_FILLER_AFTER);
+			*format = PIXEL_RGBA;
+			*channels = 4;
 			break;
 		case PNG_COLOR_TYPE_RGBA:
 			*format = PIXEL_RGBA;

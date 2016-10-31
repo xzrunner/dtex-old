@@ -466,7 +466,12 @@ dtex_load_image(const char* filepath) {
 	if (strstr(filepath, ".png")) {
 		int w, h, c, f;
 		uint8_t* p = dtex_png_read(filepath, &w, &h, &c, &f);
+		if ( !p ) {
+			return NULL;
+		}
+	
 		_pre_muilti_alpha(p, w, h);
+		
 		int id = dtex_gl_create_texture(DTEX_TF_RGBA8, w, h, p, c, 0);
 		free(p);
 
