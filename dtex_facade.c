@@ -327,6 +327,11 @@ dtexf_unload_texture(int texid) {
 	}
 }
 
+int 
+dtexf_load_buf_sz() {
+	return dtex_load_buf_sz(LOADER);
+}
+
 //struct ej_sprite* 
 //dtexf_create_sprite(const char* path) {
 //	if (C3 == NULL) {

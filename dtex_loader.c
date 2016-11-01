@@ -566,3 +566,8 @@ dtex_query_pkg(struct dtex_loader* loader, const char* name) {
 //	}
 //	return NULL;
 //}
+
+int 
+dtex_load_buf_sz(struct dtex_loader* loader) {
+	return loader->buf_size;
+}

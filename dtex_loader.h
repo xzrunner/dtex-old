@@ -35,6 +35,8 @@ struct dtex_package* dtex_query_pkg(struct dtex_loader*, const char* name);
 //struct dtex_rrp* dtexloader_query_rrp(struct dtex_loader*, struct ej_sprite_pack*);
 //struct dtex_pts* dtexloader_query_pts(struct dtex_loader*, struct ej_sprite_pack*);
 
+int dtex_load_buf_sz(struct dtex_loader*);
+
 #endif // dynamic_texture_loader_h
 
 #ifdef __cplusplus

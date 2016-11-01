@@ -39,6 +39,7 @@ void dtexf_load_texture(struct dtex_package*, int idx);
 void dtexf_load_texture_raw(const char* filepath, struct dtex_texture*);
 struct dtex_texture* dtexf_load_image(const char* filepath);
 void dtexf_unload_texture(int texid);
+int dtexf_load_buf_sz();
 // todo sort sprite list for C3
 //struct ej_sprite* dtexf_create_sprite(const char* path);
 

@@ -59,7 +59,7 @@ dtex_gl_texture_init(int (*texture_create)(int type, int width, int height, cons
 int 
 dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, unsigned int id) {
 	id = TEXTURE_CREATE(type, width, height, data, channel, id);
-	dtex_stat_add_texture(id, width, height);
+	dtex_stat_add_tex(id, type, width, height);
 	return id;
 }
 
@@ -67,7 +67,7 @@ void
 dtex_gl_release_texture(int id) {
 	dtex_shader_set_texture(0);
 	TEXTURE_RELEASE(id);
-	dtex_stat_delete_texture(id);
+	dtex_stat_del_tex(id);
 }
 
 void 
