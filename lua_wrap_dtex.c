@@ -8,6 +8,7 @@
 #include "dtex_c2_strategy.h"
 #include "dtex_async_loader.h"
 #include "dtex_texture_cache.h"
+#include "dtex_texture.h"
 
 #include <string.h>
 #include <assert.h>
@@ -190,6 +191,28 @@ lload_texture(lua_State* L) {
 
 	dtexf_load_texture(pkg, idx);
 
+	return 0;
+}
+
+static int
+lload_image(lua_State* L) {
+	const char* path = luaL_checkstring(L, 1);
+	struct dtex_texture* tex = dtexf_load_image(path);
+
+	if (tex) {
+		lua_pushinteger(L, tex->uid);
+		lua_pushinteger(L, tex->width);
+		lua_pushinteger(L, tex->height);
+		return 3;
+	}
+
+	return 0;
+}
+
+static int
+lunload_image(lua_State* L) {
+	const int id = lua_tointeger(L, 1);
+	dtexf_unload_texture(id);
 	return 0;
 }
 
@@ -393,6 +416,8 @@ luaopen_dtex_c(lua_State* L) {
 		{ "preload_all_textures", lpreload_all_textures },
 		{ "preload_texture", lpreload_texture },
 		{ "load_texture", lload_texture },
+		{ "load_image", lload_image },		
+		{ "unload_image", lunload_image },
 
 		{ "query", lquery },
 

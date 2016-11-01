@@ -6,8 +6,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-
-#ifdef EASY_EDITOR
+#include <string.h>
 
 #include <png.h>
 
@@ -24,12 +23,16 @@ dtex_png_read(const char* filepath, int* width, int* height, int* channels, int*
 	struct fs_file* file = fs_open(filepath, "rb");
 	if (file == NULL) {
 //		fault("Can't open png file: %s\n", filepath);
+		return NULL;
 	}
 	
 	size_t sz = fs_size(file);
 	uint8_t* buf = (uint8_t*)malloc(sz);
 	if (fs_read(file, buf, sz) != sz) {
 //		fault("Invalid uncompress data source\n");
+		fs_close(file);
+		free(buf);		
+		return NULL;
 	}
 	fs_close(file);
 
@@ -89,8 +92,9 @@ dtex_png_read(const char* filepath, int* width, int* height, int* channels, int*
 			*channels = lTransparency ? 4 : 3;
 			break;
 		case PNG_COLOR_TYPE_RGB:
-			*format = lTransparency ? PIXEL_RGBA : PIXEL_RGB;
-			*channels = lTransparency ? 4 : 3;
+			png_set_add_alpha(lPngPtr, 0xff, PNG_FILLER_AFTER);
+			*format = PIXEL_RGBA;
+			*channels = 4;
 			break;
 		case PNG_COLOR_TYPE_RGBA:
 			*format = PIXEL_RGBA;
@@ -143,12 +147,3 @@ dtex_png_read(const char* filepath, int* width, int* height, int* channels, int*
 
 	free(buf);
 }
-
-#else
-
-uint8_t* 
-dtex_png_read(const char* filepath, int* width, int* height, int* channels, int* format) {
-	return NULL;
-}
-
-#endif // EASY_EDITOR

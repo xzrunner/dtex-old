@@ -8,6 +8,8 @@
 #include "dtex_ej_utility.h"
 #include "dtex_c2_strategy.h"
 #include "dtex_res_path.h"
+#include "dtex_png.h"
+#include "dtex_gl.h"
 
 #include <fs_file.h>
 #include <logger.h>
@@ -442,6 +444,46 @@ dtex_load_file(const char* filepath, void (*unpack_func)(struct dtex_import_stre
 	_unpack_file(NULL, file, unpack_func, ud);
 
 	fs_close(file);
+}
+
+static void 
+_pre_muilti_alpha(uint8_t* pixels, int width, int height) {
+	int pos = 0;
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			float alpha = pixels[pos + 3] / 255.0f;
+			for (int i = 0; i < 3; ++i) {
+				pixels[pos + i] = (uint8_t)(pixels[pos + i] * alpha);
+			}
+			pos += 4;
+		}
+	}
+}
+
+struct dtex_texture* 
+dtex_load_image(const char* filepath) {
+	struct dtex_texture* tex = NULL;
+	if (strstr(filepath, ".png")) {
+		int w, h, c, f;
+		uint8_t* p = dtex_png_read(filepath, &w, &h, &c, &f);
+		if ( !p ) {
+			return NULL;
+		}
+	
+		_pre_muilti_alpha(p, w, h);
+		
+		int id = dtex_gl_create_texture(DTEX_TF_RGBA8, w, h, p, c, 0);
+		free(p);
+
+		tex = dtex_texture_create_raw(0);
+		tex->t.RAW.format = DTEX_PNG8;
+		tex->width = w;
+		tex->height = h;
+		tex->inv_width = 1.0f / w;
+		tex->inv_height= 1.0f / h;
+		tex->id = id;
+	}
+	return tex;
 }
 
 void 
