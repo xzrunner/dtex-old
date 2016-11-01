@@ -20,6 +20,7 @@ LOCAL_C_INCLUDES  := \
 	${LOGGER_SRC_PATH} \
 	${RG_ETC1_SRC_PATH} \
 	${ETCPACK_SRC_PATH} \
+	${LIBPNG_SRC_PATH} \
 
 LOCAL_SRC_FILES := \
 	$(subst $(LOCAL_PATH)/,,$(shell find $(LOCAL_PATH) -name "*.c" -print)) \
@@ -27,6 +28,7 @@ LOCAL_SRC_FILES := \
 LOCAL_STATIC_LIBRARIES := \
 	rg_etc1 \
 	etcpack \
+	libpng \
 
 include $(BUILD_STATIC_LIBRARY)	
 
