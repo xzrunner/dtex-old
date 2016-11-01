@@ -26,7 +26,7 @@ dtex_res_cache_create() {
 static inline void
 _release_texture_list(struct ds_array* tex_list) {
 	for (int i = 0, n = ds_array_size(tex_list); i < n; ++i) {
-		struct dtex_texture* texture = (struct dtex_texture*)ds_array_fetch(tex_list, i);
+		struct dtex_texture* texture = *(struct dtex_texture**)ds_array_fetch(tex_list, i);
 		dtex_texture_release(texture);
 	}
 	ds_array_release(tex_list);
@@ -71,7 +71,7 @@ dtex_res_cache_fetch_mid_texture(int width, int height) {
 void
 dtex_res_cache_return_mid_texture(struct dtex_texture* tex) {
 	if (tex->type == DTEX_TT_MID) {
-		ds_array_add(C.texture_list, tex);
+		ds_array_add(C.texture_list, (void*)(&tex));
 	}
 }
 
