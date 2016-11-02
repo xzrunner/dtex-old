@@ -91,10 +91,7 @@ dtex_c4_release(struct dtex_c4* c4) {
 	for (int i = 0; i < c4->max_tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
 
-		if (tex->ud) {
-			uint8_t* pixels = (uint8_t*)(tex->ud);
-			free(pixels);
-		}
+		assert(!tex->ud);
 
 		if (tex->tex->id != 0) {
 			dtex_gl_release_texture(tex->tex->id);
@@ -180,6 +177,8 @@ _on_load_finished(struct dtex_c4* c4) {
 		} else if (tex_type == DTEX_PNG8) {
 			tex->tex->id = dtex_gl_create_texture(DTEX_TF_RGBA8, tex->tex->width, tex->tex->height, pixels, 0, 0);
 		}
+		free(pixels);
+		tex->ud = NULL;
 	}
 	c4->tex_count += c4->used_count;	
 }
