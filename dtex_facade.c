@@ -178,7 +178,7 @@ dtexf_create(const char* cfg) {
 
 	dtex_res_cache_create();
 
-	dtex_texture_cache_init(2048 * 2048 * 0);
+	dtex_texture_cache_init(2048 * 2048 * 1);
 
 	dtex_c2_strategy_init(CFG.c2_max_no_update_count);
 
