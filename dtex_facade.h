@@ -13,6 +13,7 @@ extern "C"
 struct dtex_package;
 struct dtex_texture;
 struct dtex_tp_pos;
+struct dtex_c4;
 
 /************************************************************************/
 /* dtexf overall                                                        */
@@ -44,11 +45,15 @@ int dtexf_load_buf_sz();
 //struct ej_sprite* dtexf_create_sprite(const char* path);
 
 /************************************************************************/
+/* C4 native                                                            */
+/************************************************************************/
+void dtexf_c4_native_load(struct dtex_package* pkg);
+void dtexf_c4_native_load_end(bool async);
+
+/************************************************************************/
 /* C4                                                                   */
 /************************************************************************/
-void dtexf_c4_load(struct dtex_package* pkg);
-void dtexf_c4_load_end(bool async);
-void dtexf_c4_clear();
+void dtexf_c4_load_end(struct dtex_c4*, bool async);
 
 /************************************************************************/
 /* C3                                                                   */

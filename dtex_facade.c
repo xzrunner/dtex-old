@@ -178,7 +178,7 @@ dtexf_create(const char* cfg) {
 
 	dtex_res_cache_create();
 
-	dtex_texture_cache_init(2048 * 2048 * 1);
+	dtex_texture_cache_init(2048 * 2048 * 0);
 
 	dtex_c2_strategy_init(CFG.c2_max_no_update_count);
 
@@ -350,28 +350,30 @@ dtexf_load_buf_sz() {
 //}
 
 /************************************************************************/
-/* C4                                                                   */
+/* C4 native                                                            */
 /************************************************************************/
 
 void
-dtexf_c4_load(struct dtex_package* pkg) {
+dtexf_c4_native_load(struct dtex_package* pkg) {
 	if (C4) {
 		dtex_c4_load(C4, pkg);
 	}
 }
 
 void 
-dtexf_c4_load_end(bool async) {
+dtexf_c4_native_load_end(bool async) {
 	if (C4) {
 		dtex_c4_load_end(C4, LOADER, async);
 	}
 }
 
+/************************************************************************/
+/* C4                                                                   */
+/************************************************************************/
+
 void 
-dtexf_c4_clear() {
-	if (C4) {
-		dtex_c4_clear(C4);
-	}
+dtexf_c4_load_end(struct dtex_c4* c4, bool async) {
+	dtex_c4_load_end(c4, LOADER, async);
 }
 
 /************************************************************************/
@@ -806,9 +808,9 @@ dtexf_debug_draw() {
 	if (C2) {
 		dtex_c2_debug_draw(C2);
 	}
-// 	if (C3) {
-// 		dtex_c3_debug_draw(C3);
-// 	}
+	if (C3) {
+		dtex_c3_debug_draw(C3);
+	}
 // 	if (C4) {
 // 		dtex_c4_debug_draw(C4);
 // 	}

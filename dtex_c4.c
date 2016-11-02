@@ -29,8 +29,8 @@
 #include <string.h>
 #include <assert.h>
 
-#define MAX_NODE_COUNT		128
-#define MAX_PRELOAD_COUNT	128
+#define MAX_NODE_COUNT		512
+#define MAX_PRELOAD_COUNT	512
 
 struct dtex_c4 {
 	int tex_edge;
@@ -399,6 +399,10 @@ dtex_c4_load_end(struct dtex_c4* c4, struct dtex_loader* loader, bool async) {
 		return;
 	}
 
+	if (c4->prenode_size == 0) {
+		return;
+	}
+
 	struct dtex_cf_prenode* unique_set[c4->prenode_size];
 	int unique_sz = 0;
 	dtex_cf_unique_prenodes(c4->prenodes, c4->prenode_size, unique_set, &unique_sz);
@@ -411,5 +415,10 @@ dtex_c4_load_end(struct dtex_c4* c4, struct dtex_loader* loader, bool async) {
 
 void 
 dtex_c4_debug_draw(struct dtex_c4* c4) {
-	dtex_debug_draw(c4->textures[0].tex->id, 3);
+	if (c4->tex_count > 0) {
+		dtex_debug_draw(c4->textures[0].tex->id, 2);
+	}
+	if (c4->tex_count > 1) {
+		dtex_debug_draw(c4->textures[1].tex->id, 3);
+	}
 }

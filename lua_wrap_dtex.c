@@ -9,6 +9,7 @@
 #include "dtex_async_loader.h"
 #include "dtex_texture_cache.h"
 #include "dtex_texture.h"
+#include "dtex_c4.h"
 
 #include <string.h>
 #include <assert.h>
@@ -325,26 +326,104 @@ lc3_clear(lua_State* L) {
 /************************************************************************/
 
 static int
-lc4_load(lua_State* L) {
+lc4_native_load(lua_State* L) {
 	struct dtex_package* pkg = lua_touserdata(L, 1);
 	if (pkg) {
-		dtexf_c4_load(pkg);
+		dtexf_c4_native_load(pkg);
+	}
+	return 0;
+}
+
+static int
+lc4_native_load_end(lua_State* L) {
+	bool async = lua_toboolean(L, 1);
+	dtexf_c4_native_load_end(async);
+	return 0;
+}
+
+/************************************************************************/
+/* c4 no native                                                         */
+/************************************************************************/
+
+#define DTEX_C4_MT ("dtex_c4_mt")
+
+struct obj_wrapper {
+	void* obj_ptr;
+};
+
+static int
+_c4_gc(lua_State *L) {
+	struct obj_wrapper* obj = (struct obj_wrapper*)luaL_checkudata(L, 1, DTEX_C4_MT);
+	if (obj->obj_ptr) {
+		struct dtex_c4* c4 = (struct dtex_c4*)(obj->obj_ptr);
+		dtex_c4_release(c4);
+	}
+	return 0;
+}
+
+static int
+lc4_create(lua_State* L) {
+	int tex_size = lua_tointeger(L, 1);
+	int count = lua_tointeger(L, 2);
+	struct dtex_c4* c4 = dtex_c4_create(tex_size, count);
+
+	struct obj_wrapper* obj = lua_newuserdata(L, sizeof(*obj));
+	obj->obj_ptr = c4;
+	if (luaL_newmetatable(L, DTEX_C4_MT)) {
+		lua_pushcfunction(L, _c4_gc);
+		lua_setfield(L, -2, "__gc");
+	}
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+static int
+lc4_load(lua_State* L) {
+	struct obj_wrapper* obj = (struct obj_wrapper*)luaL_checkudata(L, 1, DTEX_C4_MT);
+	if (obj->obj_ptr) {
+		struct dtex_c4* c4 = (struct dtex_c4*)(obj->obj_ptr);
+		struct dtex_package* pkg = lua_touserdata(L, 2);
+		if (pkg) {
+			dtex_c4_load(c4, pkg);
+		}
 	}
 	return 0;
 }
 
 static int
 lc4_load_end(lua_State* L) {
-	bool async = lua_toboolean(L, 1);
-	dtexf_c4_load_end(async);
+	struct obj_wrapper* obj = (struct obj_wrapper*)luaL_checkudata(L, 1, DTEX_C4_MT);
+	if (obj->obj_ptr) {
+		struct dtex_c4* c4 = (struct dtex_c4*)(obj->obj_ptr);
+		bool async = lua_toboolean(L, 2);
+		dtexf_c4_load_end(c4, async);
+	}
 	return 0;
 }
 
 static int
 lc4_clear(lua_State* L) {
-	dtexf_c4_clear();
+	struct obj_wrapper* obj = (struct obj_wrapper*)luaL_checkudata(L, 1, DTEX_C4_MT);
+	if (obj->obj_ptr) {
+		struct dtex_c4* c4 = (struct dtex_c4*)(obj->obj_ptr);
+		dtex_c4_clear(c4);
+	}
 	return 0;
 }
+
+static int
+lc4_debug_draw(lua_State* L) {
+	struct obj_wrapper* obj = (struct obj_wrapper*)luaL_checkudata(L, 1, DTEX_C4_MT);
+	if (obj->obj_ptr) {
+		struct dtex_c4* c4 = (struct dtex_c4*)(obj->obj_ptr);
+		dtex_c4_debug_draw(c4);
+	}
+	return 0;
+}
+
+/************************************************************************/
+/* cs                                                                   */
+/************************************************************************/
 
 static int
 lcs1_bind(lua_State* L) {
@@ -437,10 +516,15 @@ luaopen_dtex_c(lua_State* L) {
 		{ "c3_load_end", lc3_load_end },
 		{ "c3_clear", lc3_clear },
 
+		// C4 native
+		{ "c4_native_load", lc4_native_load },
+		{ "c4_native_load_end", lc4_native_load_end },
 		// C4
+		{ "c4_create", lc4_create },
 		{ "c4_load", lc4_load },
 		{ "c4_load_end", lc4_load_end },
 		{ "c4_clear", lc4_clear },
+		{ "c4_debug_draw", lc4_debug_draw },
 
 		// CS
 		{ "cs1_bind", lcs1_bind },
