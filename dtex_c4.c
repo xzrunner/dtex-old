@@ -98,7 +98,11 @@ dtex_c4_release(struct dtex_c4* c4) {
 	for (int i = 0; i < c4->max_tex_count; ++i) {
 		struct dtex_cf_texture* tex = &c4->textures[i];
 
-		assert(!tex->ud);
+		if (tex->ud) {
+			uint8_t* pixels = (uint8_t*)(tex->ud);
+			free(pixels);
+			tex->ud = NULL;
+		}
 
 		if (tex->tex->id != 0) {
 			dtex_gl_release_texture(tex->tex->id);
