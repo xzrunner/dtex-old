@@ -13,6 +13,7 @@
 #include "dtex_c3_strategy.h"
 #include "dtex_debug.h"
 #include "dtex_shader.h"
+#include "dtex_hard_res.h"
 
 #include "dtex_facade.h"
 
@@ -59,6 +60,11 @@ struct dtex_c3 {
 
 struct dtex_c3* 
 dtex_c3_create(int texture_size, bool one_tex_mode) {
+	int max_sz = dtex_max_texture_size();
+	if (texture_size > max_sz) {
+		texture_size = max_sz;
+	}
+
 	size_t sz = sizeof(struct dtex_c3) + sizeof(struct dtex_cf_prenode) * MAX_PRELOAD_COUNT;
 	struct dtex_c3* c3 = (struct dtex_c3*)malloc(sz);
 	if (!c3) {

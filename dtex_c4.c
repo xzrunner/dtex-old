@@ -18,6 +18,7 @@
 #include "dtex_ej_utility.h"
 #include "dtex_gl.h"
 #include "dtex_bitmap.h"
+#include "dtex_hard_res.h"
 
 // todo
 #include "dtex_facade.h"
@@ -58,6 +59,12 @@ _get_tex_type() {
 
 struct dtex_c4* 
 dtex_c4_create(int tex_size, int tex_count) {
+	int max_sz = dtex_max_texture_size();
+	while (tex_size > max_sz) {
+		tex_size = tex_size >> 1;
+		tex_count = tex_count << 2;
+	}
+
 	size_t textures_sz = sizeof(struct dtex_cf_texture) * tex_count;
 	size_t prenodes_sz = sizeof(struct dtex_cf_prenode) * MAX_PRELOAD_COUNT;
 	size_t sz = sizeof(struct dtex_c4) + textures_sz + prenodes_sz;

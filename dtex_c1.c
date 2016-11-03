@@ -5,6 +5,7 @@
 #include "dtex_debug.h"
 #include "dtex_gl.h"
 #include "dtex_shader.h"
+#include "dtex_hard_res.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +17,11 @@ struct dtex_c1 {
 
 struct dtex_c1* 
 dtex_c1_create(int texture_size) {
+	int max_sz = dtex_max_texture_size();
+	if (texture_size > max_sz) {
+		texture_size = max_sz;
+	}
+
 	struct dtex_c1* c1 = (struct dtex_c1*)malloc(sizeof(struct dtex_c1));
 	memset(c1, 0, sizeof(struct dtex_c1));
 

@@ -13,6 +13,7 @@
 #include "dtex_cg.h"
 #include "dtex_gl.h"
 #include "dtex_shader.h"
+#include "dtex_hard_res.h"
 
 #include "ejoy2d.h"
 
@@ -159,6 +160,14 @@ static inline void clear_part_from_cg(void* ud) {
 
 struct dtex_c2* 
 dtex_c2_create(int width, int height, bool one_tex_mode, int static_count, bool open_cg, int src_extrude) {
+	int max_sz = dtex_max_texture_size();
+	if (width > max_sz) {
+		width = max_sz;
+	}
+	if (height > max_sz) {
+		height = max_sz;
+	}
+
 	SRC_EXTRUDE = src_extrude;
 
 	size_t sz = sizeof(struct dtex_c2) + sizeof(struct c2_prenode) * MAX_PRELOAD_COUNT;
