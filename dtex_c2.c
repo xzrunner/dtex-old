@@ -38,7 +38,7 @@
 
 #define CG_QUAD				2
 
-#define MAX_QUAD_SIZE		384
+#define MAX_QUAD_SIZE		768
 
 static int SRC_EXTRUDE = 0;
 
