@@ -7,6 +7,7 @@ extern "C"
 #define dynamic_texture_cache2_h
 
 #include <stdbool.h>
+#include <stdint.h>
 
 struct dtex_c2;
 struct dtex_loader;
@@ -29,6 +30,7 @@ void dtex_c2_set_static_quad(struct dtex_c2*, int quad);
 void dtex_c2_load_begin(struct dtex_c2*);
 void dtex_c2_load_spr(struct dtex_c2*, struct dtex_package* pkg, int spr_id);
 void dtex_c2_load_tex(struct dtex_c2*, int tex_id, int tex_width, int tex_height, int key);
+void dtex_c2_load_userdata(struct dtex_c2*, int tex_id, int tex_width, int tex_height, const struct dtex_rect* rect, uint32_t userdata);
 void dtex_c2_load_end(struct dtex_c2*, struct dtex_loader*);
 
 void dtex_c2_remove_tex(struct dtex_c2*, int key);
@@ -39,6 +41,7 @@ void dtex_c2_reload_end();
 
 float* dtex_c2_query_spr(struct dtex_c2*, int pkg_id, int spr_id, int quad_idx, int* out_texid);
 float* dtex_c2_query_tex(struct dtex_c2*, int key, int* out_texid);
+float* dtex_c2_query_userdata(struct dtex_c2*, uint32_t userdata, int* out_texid);
 void dtexc2_query_map_addr(struct dtex_c2*, int pkg_id, int spr_id, int quad_idx, struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos);
 
 struct dtex_cg* dtex_c2_get_cg(struct dtex_c2*);

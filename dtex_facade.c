@@ -434,6 +434,13 @@ dtexf_c2_load_tex(int tex_id, int tex_width, int tex_height, int key) {
 }
 
 void 
+dtexf_c2_load_userdata(int tex_id, int tex_width, int tex_height, const struct dtex_rect* rect, uint32_t userdata) {
+	if (C2) {
+		dtex_c2_load_userdata(C2, tex_id, tex_width, tex_height, rect, userdata);
+	}
+}
+
+void 
 dtexf_c2_load_end() {
 	if (C2) {
 		dtex_c2_load_end(C2, LOADER);
@@ -486,6 +493,15 @@ dtexf_c2_query_tex(int key, int* out_texid) {
 	}
 }
 
+float* 
+dtexf_c2_query_userdata(uint32_t userdata, int* out_texid) {
+	if (C2) {
+		return dtex_c2_query_userdata(C2, userdata, out_texid);
+	} else {
+		return NULL;
+	}
+}
+
 void 
 dtexf_c2_clear_from_cg() {
 	if (C2) {
@@ -517,13 +533,6 @@ dtexf_c2_clear() {
 /************************************************************************/
 /* C1                                                                   */
 /************************************************************************/
-
-void 
-dtexf_t0_clear(float xmin, float ymin, float xmax, float ymax) {
-	if (T0) {
-		dtex_c1_clear(T0, xmin, ymin, xmax, ymax);
-	}
-}
 
 void 
 dtexf_t0_bind() {
@@ -585,13 +594,6 @@ dtexf_t0_get_texture_size() {
 //   frame /= 2;
 //	return dtex_c1_draw_anim(C1, pkg, ani, action, frame, params);
 //}
-
-void 
-dtexf_t1_clear(float xmin, float ymin, float xmax, float ymax) {
-	if (T1) {
-		dtex_c1_clear(T1, xmin, ymin, xmax, ymax);
-	}
-}
 
 void 
 dtexf_t1_bind() {
@@ -808,12 +810,16 @@ dtexf_debug_draw() {
 	if (C2) {
 		dtex_c2_debug_draw(C2);
 	}
-	if (C3) {
-		dtex_c3_debug_draw(C3);
-	}
+// 	if (C3) {
+// 		dtex_c3_debug_draw(C3);
+// 	}
 // 	if (C4) {
 // 		dtex_c4_debug_draw(C4);
 // 	}
+
+	if (CS2) {
+		dtex_cs_debug_draw(CS2);
+	}
 }
 
 //void

@@ -14,6 +14,7 @@ struct dtex_package;
 struct dtex_texture;
 struct dtex_tp_pos;
 struct dtex_c4;
+struct dtex_rect;
 
 /************************************************************************/
 /* dtexf overall                                                        */
@@ -69,6 +70,7 @@ void dtexf_c2_set_static_quad(int quad);
 void dtexf_c2_load_begin();
 void dtexf_c2_load_spr(struct dtex_package* pkg, int spr_id);
 void dtexf_c2_load_tex(int tex_id, int tex_width, int tex_height, int key);
+void dtexf_c2_load_userdata(int tex_id, int tex_width, int tex_height, const struct dtex_rect* rect, uint32_t userdata);
 void dtexf_c2_load_end();
 
 void dtexf_c2_remove_tex(int key);
@@ -79,6 +81,7 @@ void dtexf_c2_reload_end();
 
 float* dtexf_c2_query_spr(int pkg_id, int spr_id, int quad_idx, int* dst_tex);
 float* dtexf_c2_query_tex(int key, int* out_texid);
+float* dtexf_c2_query_userdata(uint32_t userdata, int* out_texid);
 //void dtexf_c2_lookup_node(struct ej_texture* ori_tex, float* ori_vb, struct dtex_texture** out_tex, struct dtex_tp_pos** out_pos);
 
 void dtexf_c2_clear_from_cg();
@@ -87,7 +90,6 @@ void dtexf_c2_clear();
 /************************************************************************/
 /* C1                                                                   */
 /************************************************************************/
-void dtexf_t0_clear(float xmin, float ymin, float xmax, float ymax);
 void dtexf_t0_bind();
 void dtexf_t0_unbind();
 void dtexf_t0_draw(float src_w, float src_h, float dst_w, float dst_h);
@@ -98,7 +100,6 @@ uint32_t dtexf_t0_get_texture_size();
 //bool dtexf_t0_draw_anim(struct dtex_package* pkg, struct animation* ani, int action, 
 //	int frame, struct draw_params* params);
 
-void dtexf_t1_clear(float xmin, float ymin, float xmax, float ymax);
 void dtexf_t1_bind();
 void dtexf_t1_unbind();
 uint32_t dtexf_t1_get_texture_id();

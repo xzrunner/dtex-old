@@ -30,8 +30,8 @@
 #define MAX_NODE_COUNT		4096*2
 #define MAX_PRELOAD_COUNT	4096*2
 
-#define TEX_PKG_ID			4096
-#define TEX_QUAD_IDX		0
+#define DEFAULT_PKG_ID		4096
+#define DEFAULT_QUAD_IDX	0
 
 #define PADDING				0
 #define EXTRUDE				1
@@ -64,6 +64,7 @@ struct c2_node {
 enum C2_PRENODE_TYPE {
 	C2_PT_SPR = 0,
 	C2_PT_TEX,
+	C2_PT_USERDATA,
 };
 
 struct c2_prenode {
@@ -84,6 +85,13 @@ struct c2_prenode {
 			int id;
 			int w, h;
 		} TEX;
+
+		struct {
+			uint32_t userdata;
+			int tex_id;
+			int tex_w, tex_h;
+			struct dtex_rect rect;
+		} UD;
 	} t;
 };
 
@@ -128,7 +136,8 @@ struct dtex_c2 {
 static inline unsigned int 
 _hash_func(int hash_sz, void* key) {
 	struct hash_key* hk = (struct hash_key*)key;
-	return ((hk->pkg_id * 51439) ^ (hk->spr_id * 97) ^ hk->quad_idx) % hash_sz;
+	uint32_t hash = (hk->pkg_id * 51439) ^ (hk->spr_id * 97) ^ hk->quad_idx;
+	return hash % hash_sz;
 }
 
 static inline bool 
@@ -401,6 +410,24 @@ dtex_c2_load_tex(struct dtex_c2* c2, int tex_id, int tex_width, int tex_height, 
 	pn->t.TEX.h = tex_height;
 }
 
+void 
+dtex_c2_load_userdata(struct dtex_c2* c2, int tex_id, int tex_width, int tex_height, const struct dtex_rect* rect, uint32_t userdata) {
+	if (tex_id <= 0 || tex_width <= 0 || tex_height <= 0) {
+		return;
+	}
+	if (c2->prenode_size == MAX_PRELOAD_COUNT - 1) {
+		return;
+	}
+
+	struct c2_prenode* pn = &c2->prenodes[c2->prenode_size++];
+	pn->type = C2_PT_USERDATA;
+	pn->t.UD.userdata = userdata;
+	pn->t.UD.tex_id = tex_id;
+	pn->t.UD.tex_w = tex_width;
+	pn->t.UD.tex_h = tex_height;
+	pn->t.UD.rect = *rect;
+}
+
 static inline int 
 _compare_unique(const void *arg1, const void *arg2) {
 	struct c2_prenode *node1, *node2;
@@ -433,6 +460,8 @@ _compare_unique(const void *arg1, const void *arg2) {
 		return 0;
 	} else if (node1->type == C2_PT_TEX && node2->type == C2_PT_TEX) {
 		return node1->t.TEX.key < node2->t.TEX.key ? -1 : 1;
+	} else if (node1->type == C2_PT_USERDATA && node2->type == C2_PT_USERDATA) {
+		return node1->t.UD.userdata < node2->t.UD.userdata ? -1 : 1;
 	} else {
 		return node1->type == C2_PT_SPR ? -1 : 1;
 	}	
@@ -472,16 +501,24 @@ _compare_max_edge(const void *arg1, const void *arg2) {
 	if (node1->type == C2_PT_SPR) {
 		w1 = node1->t.SPR.rect.xmax - node1->t.SPR.rect.xmin;
 		h1 = node1->t.SPR.rect.ymax - node1->t.SPR.rect.ymin;
-	} else {
+	} else if (node1->type == C2_PT_TEX) {
 		w1 = node1->t.TEX.w;
 		h1 = node1->t.TEX.h;
+	} else {
+		assert(node1->type == C2_PT_USERDATA);
+		w1 = node1->t.UD.rect.xmax - node1->t.UD.rect.xmin;
+		h1 = node1->t.UD.rect.ymax - node1->t.UD.rect.ymin;
 	}
 	if (node2->type == C2_PT_SPR) {
 		w2 = node2->t.SPR.rect.xmax - node2->t.SPR.rect.xmin;
 		h2 = node2->t.SPR.rect.ymax - node2->t.SPR.rect.ymin;
-	} else {
+	} else if (node1->type == C2_PT_TEX) {
 		w2 = node2->t.TEX.w;
 		h2 = node2->t.TEX.h;
+	} else {
+		assert(node2->type == C2_PT_USERDATA);
+		w2 = node2->t.UD.rect.xmax - node2->t.UD.rect.xmin;
+		h2 = node2->t.UD.rect.ymax - node2->t.UD.rect.ymin;
 	}
 
 	int16_t long1, long2, short1, short2;
@@ -730,7 +767,7 @@ _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 		int rotate_times = rotate ? 1 : 0;
 		_relocate_draw_vb(pn->t.SPR.ej_quad->texture_coord, &src_sz, &pn->t.SPR.rect, &dst_sz, &n->dst_pos->r, rotate_times, n->trans_vb);
 		_relocate_draw_texcoords(pn->t.SPR.ej_quad->texture_coord, &dst_sz, &n->dst_pos->r, rotate_times, n->dst_vb);
-	} else {
+	} else if (pn->type == C2_PT_TEX) {
 		struct dtex_rect* dst_rect = &n->dst_pos->r;
 		float dst_inv_w = n->dst_tex->inv_width,
 			  dst_inv_h = n->dst_tex->inv_height;
@@ -747,6 +784,41 @@ _set_rect_vb(struct c2_prenode* pn, struct c2_node* n, bool rotate) {
 		n->trans_vb[4] = vd_xmin; n->trans_vb[5] = vd_ymax; n->trans_vb[6] = 0; n->trans_vb[7] = 1;
 		n->trans_vb[8] = vd_xmax; n->trans_vb[9] = vd_ymax; n->trans_vb[10]= 1; n->trans_vb[11]= 1;
 		n->trans_vb[12]= vd_xmax; n->trans_vb[13]= vd_ymin; n->trans_vb[14]= 1; n->trans_vb[15]= 0;
+
+		n->dst_vb[0] = dst_xmin; n->dst_vb[1] = dst_ymin; 
+		n->dst_vb[2] = dst_xmin; n->dst_vb[3] = dst_ymax;
+		n->dst_vb[4] = dst_xmax; n->dst_vb[5] = dst_ymax; 
+		n->dst_vb[6] = dst_xmax; n->dst_vb[7] = dst_ymin; 
+		if (rotate) {
+			_rotate_trans_vb(n->trans_vb, false);
+			_rotate_dst_vb(n->dst_vb, false);
+		}
+	} else {
+		assert(pn->type == C2_PT_USERDATA);
+
+		// todo copy from C2_PT_TEX, except xmin xmax ymin ymax
+		
+		struct dtex_rect* dst_rect = &n->dst_pos->r;
+		float dst_inv_w = n->dst_tex->inv_width,
+			  dst_inv_h = n->dst_tex->inv_height;
+		float dst_xmin = dst_rect->xmin * dst_inv_w,
+			  dst_xmax = dst_rect->xmax * dst_inv_w,
+			  dst_ymin = dst_rect->ymin * dst_inv_h,
+			  dst_ymax = dst_rect->ymax * dst_inv_h;
+		float vd_xmin = dst_xmin * 2 - 1,
+			  vd_xmax = dst_xmax * 2 - 1,
+			  vd_ymin = dst_ymin * 2 - 1,
+			  vd_ymax = dst_ymax * 2 - 1;
+	
+		float xmin = (float)pn->t.UD.rect.xmin / pn->t.UD.tex_w,
+			  xmax = (float)pn->t.UD.rect.xmax / pn->t.UD.tex_w,
+			  ymin = (float)pn->t.UD.rect.ymin / pn->t.UD.tex_h,
+			  ymax = (float)pn->t.UD.rect.ymax / pn->t.UD.tex_h;
+
+		n->trans_vb[0] = vd_xmin; n->trans_vb[1] = vd_ymin; n->trans_vb[2] = xmin; n->trans_vb[3] = ymin;
+		n->trans_vb[4] = vd_xmin; n->trans_vb[5] = vd_ymax; n->trans_vb[6] = xmin; n->trans_vb[7] = ymax;
+		n->trans_vb[8] = vd_xmax; n->trans_vb[9] = vd_ymax; n->trans_vb[10]= xmax; n->trans_vb[11]= ymax;
+		n->trans_vb[12]= vd_xmax; n->trans_vb[13]= vd_ymin; n->trans_vb[14]= xmax; n->trans_vb[15]= ymin;
 
 		n->dst_vb[0] = dst_xmin; n->dst_vb[1] = dst_ymin; 
 		n->dst_vb[2] = dst_xmin; n->dst_vb[3] = dst_ymax;
@@ -976,9 +1048,14 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 		ip.w = pn->t.SPR.rect.xmax - pn->t.SPR.rect.xmin;
 		ip.h = pn->t.SPR.rect.ymax - pn->t.SPR.rect.ymin;
 		ip.can_clear = dtex_c2_insert_can_clear(pn->t.SPR.pkg->c2_stg);
-	} else {
+	} else if (pn->type == C2_PT_TEX) {
 		ip.w = pn->t.TEX.w;
 		ip.h = pn->t.TEX.h;
+		ip.can_clear = true;
+	} else {
+		assert(pn->type == C2_PT_USERDATA);
+		ip.w = pn->t.UD.rect.xmax - pn->t.UD.rect.xmin;
+		ip.h = pn->t.UD.rect.ymax - pn->t.UD.rect.ymin;
 		ip.can_clear = true;
 	}
 
@@ -1036,10 +1113,25 @@ _insert_node(struct dtex_c2* c2, struct dtex_loader* loader, struct c2_prenode* 
 		node->hk.spr_id = pn->t.SPR.spr_id;
 		node->hk.quad_idx = pn->t.SPR.quad_idx;
 		tex = *pn->t.SPR.ori_tex;
-	} else {
-		node->hk.pkg_id = TEX_PKG_ID;
+	} else if (pn->type == C2_PT_TEX) {
+		node->hk.pkg_id = DEFAULT_PKG_ID;
 		node->hk.spr_id = pn->t.TEX.key;
-		node->hk.quad_idx = TEX_QUAD_IDX;
+		node->hk.quad_idx = DEFAULT_QUAD_IDX;
+		tex.id = pn->t.TEX.id;
+		tex.width = pn->t.TEX.w;
+		tex.height = pn->t.TEX.h;
+		tex.inv_width = 1.0f / tex.width;
+		tex.inv_height = 1.0f / tex.height;
+		tex.uid = 0;
+		tex.type = DTEX_TT_RAW;
+		tex.t.RAW.id_alpha = 0;
+		tex.t.RAW.format = DTEX_PNG8;
+		tex.t.RAW.scale = tex.t.RAW.lod_scale = 1;
+	} else {
+		assert(pn->type == C2_PT_USERDATA);
+		node->hk.pkg_id = DEFAULT_PKG_ID;
+		node->hk.spr_id = pn->t.UD.userdata;
+		node->hk.quad_idx = DEFAULT_QUAD_IDX;
 		tex.id = pn->t.TEX.id;
 		tex.width = pn->t.TEX.w;
 		tex.height = pn->t.TEX.h;
@@ -1090,6 +1182,8 @@ _is_same_quad(struct c2_prenode* n0, struct c2_prenode* n1) {
 		}
 	} else if (n0->type == C2_PT_TEX) {
 		return n0->t.TEX.key == n1->t.TEX.key;
+	} else if (n0->type == C2_PT_USERDATA) {
+		return n0->t.UD.userdata = n1->t.UD.userdata;
 	} else {
 		return false;
 	}
@@ -1133,10 +1227,15 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 				curr_dst->hk.pkg_id = curr_src->t.SPR.pkg->id;
 				curr_dst->hk.spr_id = curr_src->t.SPR.spr_id;
 				curr_dst->hk.quad_idx = curr_src->t.SPR.quad_idx;
-			} else {
-				curr_dst->hk.pkg_id = TEX_PKG_ID;
+			} else if (curr_src->type == C2_PT_TEX) {
+				curr_dst->hk.pkg_id = DEFAULT_PKG_ID;
 				curr_dst->hk.spr_id = curr_src->t.TEX.key;
-				curr_dst->hk.quad_idx = TEX_QUAD_IDX;
+				curr_dst->hk.quad_idx = DEFAULT_QUAD_IDX;
+			} else {
+				assert(curr_src->type == C2_PT_USERDATA);
+				curr_dst->hk.pkg_id = DEFAULT_PKG_ID;
+				curr_dst->hk.spr_id = curr_src->t.UD.userdata;
+				curr_dst->hk.quad_idx = DEFAULT_QUAD_IDX;				
 			}
 			ds_hash_insert(curr_tp->hash, &curr_dst->hk, curr_dst, true);
 		} else {
@@ -1158,9 +1257,9 @@ dtex_c2_load_end(struct dtex_c2* c2, struct dtex_loader* loader) {
 void 
 dtex_c2_remove_tex(struct dtex_c2* c2, int key) {
 	struct hash_key hk;
-	hk.pkg_id = TEX_PKG_ID;
+	hk.pkg_id = DEFAULT_PKG_ID;
 	hk.spr_id = key;
-	hk.quad_idx = TEX_QUAD_IDX;
+	hk.quad_idx = DEFAULT_QUAD_IDX;
 	if (c2->one_tex_mode) {
 		for (int i = 0; i < 4; ++i) {
 			struct c2_node* ret = (struct c2_node*)ds_hash_query(c2->t.ONE.index[i].hash, &hk);
@@ -1187,7 +1286,7 @@ dtex_c2_reload_tex(struct dtex_c2* c2, int tex_id, int tex_width, int tex_height
 	}
 
 	struct tp_index* tp = NULL;
-	struct c2_node* node = _query_node(c2, TEX_PKG_ID, key, TEX_QUAD_IDX, &tp);
+	struct c2_node* node = _query_node(c2, DEFAULT_PKG_ID, key, DEFAULT_QUAD_IDX, &tp);
 	assert(node);
 
 	struct dtex_texture tex;
@@ -1226,7 +1325,7 @@ dtex_c2_query_spr(struct dtex_c2* c2, int pkg_id, int spr_id, int quad_idx, int*
 float* 
 dtex_c2_query_tex(struct dtex_c2* c2, int key, int* out_texid) {
 	struct tp_index* tp = NULL;
-	struct c2_node* node = _query_node(c2, TEX_PKG_ID, key, TEX_QUAD_IDX, &tp);
+	struct c2_node* node = _query_node(c2, DEFAULT_PKG_ID, key, DEFAULT_QUAD_IDX, &tp);
 	if (!node) {
 		return NULL;
 	}
@@ -1234,6 +1333,19 @@ dtex_c2_query_tex(struct dtex_c2* c2, int key, int* out_texid) {
 	*out_texid = node->dst_tex->id;
 
 	return node->dst_vb;
+}
+
+float* 
+dtex_c2_query_userdata(struct dtex_c2* c2, uint32_t userdata, int* out_texid) {
+	struct tp_index* tp = NULL;
+	struct c2_node* node = _query_node(c2, DEFAULT_PKG_ID, userdata, DEFAULT_QUAD_IDX, &tp);
+	if (!node) {
+		return NULL;
+	}
+
+	*out_texid = node->dst_tex->id;
+
+	return node->dst_vb;	
 }
 
 void 

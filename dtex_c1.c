@@ -37,11 +37,6 @@ dtex_c1_release(struct dtex_c1* c1) {
 }
 
 void 
-dtex_c1_clear(struct dtex_c1* c1, float xmin, float ymin, float xmax, float ymax) {
-	dtex_gl_clear_color2(xmin, ymin, xmax, ymax);
-}
-
-void 
 dtex_c1_bind(struct dtex_c1* c1) {
 	dtex_target_bind(c1->target);
 	dtex_target_bind_texture(c1->target, c1->texture->id);
