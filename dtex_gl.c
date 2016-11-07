@@ -32,7 +32,7 @@ static void (*CLEAR_COLOR)(float xmin, float ymin, float xmax, float ymax);
 
 static int (*TEXTURE_CREATE)(int type, int width, int height, const void* data, int channel, unsigned int id);
 static void (*TEXTURE_RELEASE)(int id);
-static void (*TEXTURE_UPDATE)(const void* pixels, int x, int y, int w, int h, unsigned int id);
+static void (*TEXTURE_UPDATE)(const void* pixels, int w, int h, unsigned int id);
 static  int (*TEXTURE_ID)(int id);
 
 void 
@@ -48,7 +48,7 @@ dtex_gl_clear_color2(float xmin, float ymin, float xmax, float ymax) {
 void 
 dtex_gl_texture_init(int (*texture_create)(int type, int width, int height, const void* data, int channel, unsigned int id),
 					 void (*texture_release)(int id),
-					 void (*texture_update)(const void* pixels, int x, int y, int w, int h, unsigned int id),
+					 void (*texture_update)(const void* pixels, int w, int h, unsigned int id),
 					 int (*texture_id)(int id)) {
 	TEXTURE_CREATE = texture_create;
 	TEXTURE_RELEASE = texture_release;
@@ -71,8 +71,8 @@ dtex_gl_release_texture(int id) {
 }
 
 void 
-dtex_gl_update_texture(const void* pixels, int x, int y, int w, int h, unsigned int id) {
-	TEXTURE_UPDATE(pixels, x, y, w, h, id);
+dtex_gl_update_texture(const void* pixels, int w, int h, unsigned int id) {
+	TEXTURE_UPDATE(pixels, w, h, id);
 }
 
 int 

@@ -86,6 +86,15 @@ dtex_cs_on_size(struct dtex_cs* cs, int width, int height) {
 		return;
 	}
 
+// 	uint32_t col = 0x66ffff00;
+// 	int ptr = 0;
+// 	for (int i = 0; i < width; ++i) {
+// 		for (int j = 0; j < height; ++j) {
+// 			memcpy(&empty_data[ptr], &col, 4);
+// 			ptr += 4;
+// 		}
+// 	}
+
 	memset(empty_data, 0x00, width*height*4);
 
 	int last_id = 0;
@@ -222,6 +231,6 @@ dtex_cs_get_texture_id(struct dtex_cs* cs) {
 void 
 dtex_cs_debug_draw(struct dtex_cs* cs) {
 	if (cs->texture) {
-		dtex_debug_draw(cs->texture->id, 2);
+		dtex_debug_draw(cs->texture->id, 1);
 	}
 }
