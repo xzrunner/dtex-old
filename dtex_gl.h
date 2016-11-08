@@ -14,11 +14,13 @@ void dtex_gl_clear_color2(float xmin, float ymin, float xmax, float ymax);
 void dtex_gl_texture_init(int (*texture_create)(int type, int width, int height, const void* data, int channel, unsigned int id),
 						  void (*texture_release)(int id),
 						  void (*texture_update)(const void* pixels, int w, int h, unsigned int id),
+						  void (*sub_tex_update)(const void* pixels, int x, int y, int w, int h, unsigned int id),
 						  int (*texture_id)(int id));
 
 int dtex_gl_create_texture(int type, int width, int height, const void* data, int channel, unsigned int id);
 void dtex_gl_release_texture(int id);
 void dtex_gl_update_texture(const void* pixels, int w, int h, unsigned int id);
+void dtex_gl_update_sub_tex(const void* pixels, int x, int y, int w, int h, unsigned int id);
 int dtex_gl_texture_id(int id);
 
 void dtex_gl_clear_color(float r, float g, float b, float a);

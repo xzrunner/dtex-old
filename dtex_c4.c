@@ -426,9 +426,9 @@ dtex_c4_load_end(struct dtex_c4* c4, struct dtex_loader* loader, bool async) {
 void 
 dtex_c4_debug_draw(struct dtex_c4* c4) {
 	if (c4->tex_count > 0) {
-		dtex_debug_draw(c4->textures[0].tex->id, 2);
+		dtex_debug_draw(c4->textures[0].tex->id, 3);
 	}
 	if (c4->tex_count > 1) {
-		dtex_debug_draw(c4->textures[1].tex->id, 3);
+		dtex_debug_draw(c4->textures[1].tex->id, 4);
 	}
 }

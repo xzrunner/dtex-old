@@ -15,7 +15,11 @@
 #include <string.h>
 #include <assert.h>
 
-#define BITMAP_EDGE     256
+#define BITMAP_HEIGHT   256
+#define BITMAP_WIDTH    512
+
+#define BUF_SZ          (128 * 128)
+
 #define MAX_BITMAP_NODE	1024
 #define MAX_GLYPH_NODE  1024
 
@@ -38,7 +42,11 @@ struct dtex_cg {
 	struct dtex_tp*      bitmap_tp;
 	struct dtex_texture* bitmap_tex;
 	struct bitmap_node   bitmap_nodes[MAX_BITMAP_NODE];
-	int                  bitmap_node_size;	
+	int                  bitmap_node_size;
+	struct dtex_rect	 dirty_rect;
+
+	// buffer
+	uint32_t*            buf;
 
 	// glyph
 	struct dtex_tp*      glyph_tp;
@@ -100,9 +108,11 @@ dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex,
 	struct dtex_cg* cg = (struct dtex_cg*)malloc(sz);
 	memset(cg, 0, sz);
 
-	cg->bitmap     = (uint32_t*)malloc(BITMAP_EDGE * BITMAP_EDGE * 4);
-	cg->bitmap_tp  = dtex_tp_create(BITMAP_EDGE, BITMAP_EDGE, 256);
-	cg->bitmap_tex = dtex_texture_create_mid(BITMAP_EDGE, BITMAP_EDGE);
+	cg->bitmap     = (uint32_t*)malloc(BITMAP_WIDTH * BITMAP_HEIGHT * 4);
+	cg->bitmap_tp  = dtex_tp_create(BITMAP_WIDTH, BITMAP_HEIGHT, 256);
+	cg->bitmap_tex = dtex_texture_create_mid(BITMAP_WIDTH, BITMAP_HEIGHT);
+
+	cg->buf        = (uint32_t*)malloc(BUF_SZ * sizeof(uint32_t));
 
 	cg->glyph_tp   = tp;
 	cg->glyph_tex  = tex;
@@ -120,13 +130,26 @@ dtex_cg_release(struct dtex_cg* cg) {
 	dtex_tp_release(cg->bitmap_tp);
 	dtex_res_cache_return_mid_texture(cg->bitmap_tex);
 
+	free(cg->buf);
+
 	ds_hash_release(cg->glyph_hash);
 
 	free(cg);
 }
 
 static void
+_glyph_clear(struct dtex_cg* cg) {
+	cg->glyph_node_size = 0;
+	ds_hash_clear(cg->glyph_hash);
+}
+
+static void
 _insert_bitmap(struct dtex_cg* cg, struct dtex_loader* loader, struct bitmap_node* bmp) {
+	if (cg->glyph_node_size >= MAX_GLYPH_NODE) {
+		_glyph_clear(cg);
+		return;
+	}
+
 	struct dtex_tp_pos* pos = dtex_tp_add(cg->glyph_tp, bmp->w + PADDING * 2, bmp->h + PADDING * 2, false);
 	if (!pos) {
 		dtexf_c2_clear_from_cg();
@@ -197,13 +220,35 @@ _compare_max_edge(const void* arg1, const void* arg2) {
 	}
 }
 
+static void
+_update_texture(struct dtex_cg* cg) {
+	struct dtex_rect* r = &cg->dirty_rect;
+	int x = r->xmin,
+		y = r->ymin;
+	int w = r->xmax - r->xmin,
+		h = r->ymax - r->ymin;
+ 	if (w * h <= BUF_SZ) {
+ 		int src = y * BITMAP_WIDTH + x,
+ 			dst = 0;
+ 		int line_sz = w * sizeof(uint32_t);
+ 		for (int i = 0; i < h; ++i) {
+ 			memcpy(&cg->buf[dst], &cg->bitmap[src], line_sz);
+ 			src += BITMAP_WIDTH;
+ 			dst += w;
+ 		}
+ 		dtex_gl_update_sub_tex(cg->buf, x, y, w, h, cg->bitmap_tex->id);
+ 	} else {
+		dtex_gl_update_texture(cg->bitmap, BITMAP_WIDTH, BITMAP_HEIGHT, cg->bitmap_tex->id);
+	}
+}
+
 void 
 dtex_cg_bitmap_flush(struct dtex_cg* cg, struct dtex_loader* loader) {
 	if (cg->bitmap_node_size == 0) {
 		return;
 	}
 
-	dtex_gl_update_texture(cg->bitmap, BITMAP_EDGE, BITMAP_EDGE, cg->bitmap_tex->id);
+	_update_texture(cg);
 
 	struct bitmap_node* sorted[cg->bitmap_node_size];
 	for (int i = 0; i < cg->bitmap_node_size; ++i) {
@@ -220,12 +265,14 @@ dtex_cg_bitmap_flush(struct dtex_cg* cg, struct dtex_loader* loader) {
 	dtex_shader_scissor(true);
 
 	cg->bitmap_node_size = 0;
+	cg->dirty_rect.xmin = BITMAP_WIDTH;
+	cg->dirty_rect.ymin = BITMAP_HEIGHT;
+	cg->dirty_rect.xmax = cg->dirty_rect.ymax = 0;
 }
 
 void 
 dtex_cg_clear(struct dtex_cg* cg) {
-	cg->glyph_node_size = 0;
-	ds_hash_clear(cg->glyph_hash);
+	_glyph_clear(cg);
 	cg->c2_clear_part(cg->ud);
 }
 
@@ -242,10 +289,13 @@ _is_glyph_equal(const struct dtex_glyph* g0, const struct dtex_glyph* g1) {
 
 static void
 _bitmap_clear(struct dtex_cg* cg) {
-	memset(cg->bitmap, 0, sizeof(BITMAP_EDGE * BITMAP_EDGE * 4));
+	memset(cg->bitmap, 0, sizeof(BITMAP_WIDTH, BITMAP_HEIGHT * 4));
 	dtex_tp_clear(cg->bitmap_tp);
 	dtex_texture_clear(cg->bitmap_tex);
 	cg->bitmap_node_size = 0;
+	cg->dirty_rect.xmin = BITMAP_WIDTH;
+	cg->dirty_rect.ymin = BITMAP_HEIGHT;
+	cg->dirty_rect.xmax = cg->dirty_rect.ymax = 0;
 }
 
 void 
@@ -257,8 +307,8 @@ dtex_cg_load_bmp(struct dtex_cg* cg, uint32_t* buf, int width, int height, struc
 	}
 
 	if (cg->glyph_node_size >= MAX_GLYPH_NODE) {
-		LOGW("%s", "dtex cg glyph nodes full.");
-		return;
+		_glyph_clear(cg);
+ 		return;
 	}
 
 	if (cg->bitmap_node_size > MAX_BITMAP_NODE) {	
@@ -285,16 +335,29 @@ dtex_cg_load_bmp(struct dtex_cg* cg, uint32_t* buf, int width, int height, struc
 			uint8_t g = (src >> 16) & 0xff;
 			uint8_t b = (src >> 8) & 0xff;
 			uint8_t a = src & 0xff;
-			int dst_ptr = (pos->r.ymin + PADDING + y) * BITMAP_EDGE + pos->r.xmin + PADDING + x;
+			int dst_ptr = (pos->r.ymin + PADDING + y) * BITMAP_WIDTH + pos->r.xmin + PADDING + x;
 			cg->bitmap[dst_ptr] = a << 24 | b << 16 | g << 8 | r;
 		}
+	}
+
+	if (pos->r.xmin < cg->dirty_rect.xmin) {
+		cg->dirty_rect.xmin = pos->r.xmin;
+	}
+	if (pos->r.ymin < cg->dirty_rect.ymin) {
+		cg->dirty_rect.ymin = pos->r.ymin;
+	}
+	if (pos->r.xmax > cg->dirty_rect.xmax) {
+		cg->dirty_rect.xmax = pos->r.xmax;
+	}
+	if (pos->r.ymax > cg->dirty_rect.ymax) {
+		cg->dirty_rect.ymax = pos->r.ymax;
 	}
 }
 
 float* 
 dtex_cg_load_user(struct dtex_cg* cg, struct dtex_glyph* glyph, float* (*query_and_load_c2)(void* ud, struct dtex_glyph* glyph), void* ud) {
 	if (cg->glyph_node_size >= MAX_GLYPH_NODE) {
-		LOGW("%s", "cg nodes empty.");
+		_glyph_clear(cg);
 		return NULL;
 	}
 	
@@ -343,5 +406,5 @@ dtex_cg_query(struct dtex_cg* cg, struct dtex_glyph* glyph, int* out_texid) {
 
 void
 dtex_cg_debug_draw(struct dtex_cg* cg) {
-	dtex_debug_draw(cg->bitmap_tex->id, 2);
+	dtex_debug_draw(cg->bitmap_tex->id, 3);
 }
