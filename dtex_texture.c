@@ -195,67 +195,72 @@ dtex_texture_clear(struct dtex_texture* tex) {
 	dtex_res_cache_return_target(target);
 }
 
-void 
-dtex_texture_clear_part(struct dtex_texture* tex, float xmin, float ymin, float xmax, float ymax) {
-	if (!tex) {
-		return;
-	}
-
-	xmin = xmin * 2 - 1;
-	xmax = xmax * 2 - 1;
-	ymin = ymin * 2 - 1;
-	ymax = ymax * 2 - 1;	
-
-	int x, y, w, h;
-	dtex_gl_get_viewport(&x, &y, &w, &h);
-	dtex_gl_set_viewport(0, 0, tex->width, tex->height);
-
-	struct dtex_target* target = dtex_res_cache_fetch_target();
-
-	dtex_target_bind(target);
-	dtex_target_bind_texture(target, tex->id);
-
-	dtex_gl_clear_color2(xmin, ymin, xmax, ymax);
-
-	dtex_target_unbind_texture(target);
-	dtex_target_unbind();
-
-	dtex_res_cache_return_target(target);
-
-	dtex_gl_set_viewport(x, y, w, h);
-}
-
 //void 
 //dtex_texture_clear_part(struct dtex_texture* tex, float xmin, float ymin, float xmax, float ymax) {
 //	if (!tex) {
 //		return;
 //	}
 //
-//	float scr_s, scr_w, scr_h;
-//	dtex_get_screen(&scr_w, &scr_h, &scr_s);
-//	dtex_gl_viewport(0, 0, tex->width, tex->height);
+//	xmin = xmin * 2 - 1;
+//	xmax = xmax * 2 - 1;
+//	ymin = ymin * 2 - 1;
+//	ymax = ymax * 2 - 1;	
 //
-//	dtex_gl_scissor(
-//		tex->width * xmin, 
-//		tex->height * ymin, 
-//		tex->width * (xmax - xmin), 
-//		tex->height * (ymax - ymin));
+//	int x, y, w, h;
+//	dtex_gl_get_viewport(&x, &y, &w, &h);
+//	dtex_gl_set_viewport(0, 0, tex->width, tex->height);
 //
 //	struct dtex_target* target = dtex_res_cache_fetch_target();
+//
 //	dtex_target_bind(target);
 //	dtex_target_bind_texture(target, tex->id);
 //
-//	glEnable(GL_SCISSOR_TEST);
-//	dtex_gl_clear_color(0, 0, 0, 0);
-//	glDisable(GL_SCISSOR_TEST);
+//	dtex_gl_clear_color2(xmin, ymin, xmax, ymax);
 //
 //	dtex_target_unbind_texture(target);
 //	dtex_target_unbind();
 //
 //	dtex_res_cache_return_target(target);
 //
-//	dtex_gl_viewport(0, 0, scr_w * scr_s, scr_h * scr_s);
+//	dtex_gl_set_viewport(x, y, w, h);
 //}
+
+void 
+dtex_texture_clear_part(struct dtex_texture* tex, float xmin, float ymin, float xmax, float ymax) {
+	if (!tex) {
+		return;
+	}
+
+// 	float scr_s, scr_w, scr_h;
+// 	dtex_get_screen(&scr_w, &scr_h, &scr_s);
+// 	dtex_gl_viewport(0, 0, tex->width, tex->height);
+	int x, y, w, h;
+	dtex_gl_get_viewport(&x, &y, &w, &h);
+	dtex_gl_set_viewport(0, 0, tex->width, tex->height);
+
+	dtex_gl_scissor(
+		tex->width * xmin, 
+		tex->height * ymin, 
+		tex->width * (xmax - xmin), 
+		tex->height * (ymax - ymin));
+
+	struct dtex_target* target = dtex_res_cache_fetch_target();
+	dtex_target_bind(target);
+	dtex_target_bind_texture(target, tex->id);
+
+	glEnable(GL_SCISSOR_TEST);
+	dtex_gl_clear_color(0, 0, 0, 0);
+	glDisable(GL_SCISSOR_TEST);
+
+	dtex_target_unbind_texture(target);
+	dtex_target_unbind();
+
+	dtex_res_cache_return_target(target);
+
+//	dtex_gl_viewport(0, 0, scr_w * scr_s, scr_h * scr_s);
+
+	dtex_gl_set_viewport(x, y, w, h);
+}
 
 //void 
 //dtex_texture_clear_part(struct dtex_texture* tex, float xmin, float ymin, float xmax, float ymax) {
