@@ -54,9 +54,6 @@ struct dtex_cg {
 	struct ds_hash*      glyph_hash;
 	struct glyph_node    glyph_nodes[MAX_GLYPH_NODE];
 	int                  glyph_node_size;
-
-	void (*c2_clear_part)(void* ud);
-	void* ud;
 };
 
 static inline unsigned int
@@ -102,8 +99,7 @@ _equal_func(void* key0, void* key1) {
 }
 
 struct dtex_cg* 
-dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex,
-			   void (*c2_clear_part)(void* ud), void* ud) {
+dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex) {
 	size_t sz = sizeof(struct dtex_cg);
 	struct dtex_cg* cg = (struct dtex_cg*)malloc(sz);
 	memset(cg, 0, sz);
@@ -117,9 +113,6 @@ dtex_cg_create(struct dtex_tp* tp, struct dtex_texture* tex,
 	cg->glyph_tp   = tp;
 	cg->glyph_tex  = tex;
 	cg->glyph_hash = ds_hash_create(MAX_GLYPH_NODE, MAX_GLYPH_NODE * 2, 0.5f, _hash_func, _equal_func);
-
-	cg->c2_clear_part = c2_clear_part;
-	cg->ud = ud;
 
 	return cg;
 }
@@ -273,7 +266,6 @@ dtex_cg_bitmap_flush(struct dtex_cg* cg, struct dtex_loader* loader) {
 void 
 dtex_cg_clear(struct dtex_cg* cg) {
 	_glyph_clear(cg);
-	cg->c2_clear_part(cg->ud);
 }
 
 static bool

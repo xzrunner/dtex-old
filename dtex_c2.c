@@ -160,13 +160,6 @@ _clear_tp_index(struct tp_index* index) {
 	}
 }
 
-static inline void clear_part_from_cg(void* ud) {
-	struct dtex_c2* c2 = (struct dtex_c2*)ud;
-	float xmin = 0, ymin = 0;
-	dtex_texture_clear_part(c2->t.ONE.texture, xmin, ymin, xmin+0.5f, ymin+0.5f);
-	_clear_tp_index(&c2->t.ONE.index[CG_QUAD]);
-}
-
 struct dtex_c2* 
 dtex_c2_create(int width, int height, bool one_tex_mode, int static_count, bool open_cg, int src_extrude) {
 	int max_sz = dtex_max_texture_size();
@@ -200,7 +193,7 @@ dtex_c2_create(int width, int height, bool one_tex_mode, int static_count, bool 
 		}
 		c2->t.ONE.cg = NULL;
 		if (open_cg) {
-			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[CG_QUAD].tp, c2->t.ONE.texture, clear_part_from_cg, c2);
+			c2->t.ONE.cg = dtex_cg_create(c2->t.ONE.index[CG_QUAD].tp, c2->t.ONE.texture);
 		}
 	} else {
 		struct dtex_texture* tex = dtex_res_cache_fetch_mid_texture(width, height);

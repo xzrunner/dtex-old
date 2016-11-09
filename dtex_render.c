@@ -14,6 +14,8 @@ struct render_state {
 	struct dtex_texture* dst;
 	struct dtex_target* target;
 
+	int vp_x, vp_y, vp_w, vp_h;
+
 	bool dirty;
 };
 
@@ -46,9 +48,7 @@ _after_all_draw() {
 	RS.dst = NULL;
 	RS.target = NULL;
 
-	float scr_w, scr_h, scr_s;
-	dtex_get_screen(&scr_w, &scr_h, &scr_s);
-	dtex_gl_viewport(0, 0, scr_w * scr_s, scr_h * scr_s);
+	dtex_gl_set_viewport(RS.vp_x, RS.vp_y, RS.vp_w, RS.vp_h);
 }
 
 static inline void
@@ -75,7 +75,8 @@ _before_target_draw(struct dtex_texture* src, struct dtex_texture* dst) {
 
 	dtex_target_bind_texture(RS.target, dst->id);
 
-	dtex_gl_viewport(0, 0, dst->width, dst->height);
+	dtex_gl_get_viewport(&RS.vp_x, &RS.vp_y, &RS.vp_w, &RS.vp_h);
+	dtex_gl_set_viewport(0, 0, dst->width, dst->height);
 
 	_before_draw(src);
 }

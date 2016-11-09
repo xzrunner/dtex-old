@@ -630,7 +630,7 @@ dtexf_t1_get_texture_size() {
 void 
 dtexf_c1_set_viewport() {
 	int sz = dtex_c1_get_texture_size(T0);
-	dtex_gl_viewport(0, 0, sz, sz);
+	dtex_gl_set_viewport(0, 0, sz, sz);
 }
 
 void 
@@ -718,7 +718,7 @@ void
 dtexf_cs_set_viewport() {
 	float w, h, s;
 	dtex_get_screen(&w, &h, &s);
-	dtex_gl_viewport(0, 0, w * s, h * s);
+	dtex_gl_set_viewport(0, 0, w * s, h * s);
 }
 
 /************************************************************************/

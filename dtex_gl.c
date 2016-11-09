@@ -10,6 +10,8 @@
 #include <logger.h>
 
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 
 #if !defined (VAO_DISABLE) && !defined (__ANDROID__)
 // If your platform doesn't support VAO, comment it out.
@@ -28,6 +30,13 @@
 #define COMPRESSED_RGBA_PVRTC_4BPPV1_IMG 4
 #define COMPRESSED_RGBA_PVRTC_2BPPV1_IMG 2
 
+struct viewport {
+	int x, y;
+	int w, h;
+};
+
+static struct viewport CURR_VP;
+
 static void (*CLEAR_COLOR)(float xmin, float ymin, float xmax, float ymax);
 
 static int (*TEXTURE_CREATE)(int type, int width, int height, const void* data, int channel, unsigned int id);
@@ -39,6 +48,8 @@ static  int (*TEXTURE_ID)(int id);
 void 
 dtex_gl_init(void (*clear_color)(float xmin, float ymin, float xmax, float ymax)) {
 	CLEAR_COLOR = clear_color;
+
+	memset(&CURR_VP, 0, sizeof(CURR_VP));
 }
 
 void 
@@ -95,8 +106,28 @@ dtex_gl_clear_color(float r, float g, float b, float a) {
 }
 
 void 
-dtex_gl_viewport(int x, int y, int w, int h) {
+dtex_gl_set_viewport(int x, int y, int w, int h) {
+	if (x == CURR_VP.x &&
+		y == CURR_VP.y &&
+		w == CURR_VP.w &&
+		h == CURR_VP.h) {
+		return;
+	}
+
 	glViewport(x, y, w, h);
+	
+	CURR_VP.x = x;
+	CURR_VP.y = y;
+	CURR_VP.w = w;
+	CURR_VP.h = h;
+}
+
+void 
+dtex_gl_get_viewport(int* x, int* y, int* w, int* h) {
+	*x = CURR_VP.x;
+	*y = CURR_VP.y;
+	*w = CURR_VP.w;
+	*h = CURR_VP.h;
 }
 
 void 
