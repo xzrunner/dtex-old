@@ -252,6 +252,7 @@ _clear(struct dtex_c2* c2, struct dtex_loader* loader) {
 			dtex_cg_clear(c2->t.ONE.cg);
 		}
 
+		dtex_shader_flush();
 		dtex_texture_clear_part(c2->t.ONE.texture, x, y, x+0.5f, y+0.5f);
 		_clear_tp_index(&c2->t.ONE.index[idx]);
 		c2->t.ONE.clear_idx = (idx + 1) % 4;
