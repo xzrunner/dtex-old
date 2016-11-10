@@ -815,10 +815,10 @@ dtexf_debug_draw() {
 	if (C2) {
 		dtex_c2_debug_draw(C2);
 
-		struct dtex_cg* cg = dtex_c2_get_cg(C2);
-		if (cg) {
-			dtex_cg_debug_draw(cg);
-		}
+// 		struct dtex_cg* cg = dtex_c2_get_cg(C2);
+// 		if (cg) {
+// 			dtex_cg_debug_draw(cg);
+// 		}
 	}
 // 	if (C3) {
 // 		dtex_c3_debug_draw(C3);
