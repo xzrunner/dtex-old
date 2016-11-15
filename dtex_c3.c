@@ -305,6 +305,10 @@ _relocate_nodes_cb(struct dtex_import_stream* is, void* ud) {
 	struct dtex_cf_node* node = (struct dtex_cf_node*)ud;
 	struct dtex_texture* tex = node->pkg->textures[node->src_tex_idx];
 
+	if (!tex) {
+		fault("%s", "_relocate_nodes_cb err tex, pkg is %d\n", node->pkg->name);
+	}
+
 	bool tex_loaded = false;
 	if (tex->id == 0) {
 		tex_loaded = false;
