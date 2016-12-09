@@ -163,13 +163,6 @@ _need_quit(pthread_mutex_t* mtx)
 }
 
 static inline void
-wait_dirty_event() {
-	pthread_mutex_lock(&DIRTY_LOCK);
-	pthread_cond_wait(&DIRTY_CV, &DIRTY_LOCK);
-	pthread_mutex_unlock(&DIRTY_LOCK);
-}
-
-static inline void
 trigger_dirty_event() {
 	pthread_mutex_lock(&DIRTY_LOCK);
 	pthread_cond_broadcast(&DIRTY_CV);
@@ -180,18 +173,21 @@ static void*
 _load_file(void* arg) {
 	pthread_mutex_t* mtx = arg;
 	while (1) {
-		wait_dirty_event();
+		pthread_mutex_lock(&DIRTY_LOCK);
 
-try_fetch_job:
 		if (_need_quit(mtx)) {
+			pthread_mutex_unlock(&DIRTY_LOCK);
 			break;
 		}
 
 		struct job* job = NULL;
 		DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
 		if (!job) {
+			pthread_cond_wait(&DIRTY_CV, &DIRTY_LOCK);
+			pthread_mutex_unlock(&DIRTY_LOCK);
 			continue;
 		}
+		pthread_mutex_unlock(&DIRTY_LOCK);
 
 		//logger_printf("async_load pop 2, job: %p", job);
 
@@ -203,8 +199,6 @@ try_fetch_job:
 
 		DTEX_ASYNC_QUEUE_PUSH(PARAMS_LOAD_QUEUE, params);
 		DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
-
-		goto try_fetch_job;
 	}
 	return NULL;
 }
