@@ -17,6 +17,8 @@
 	#include <errno.h>
 #endif
 
+#define THREAD_NUM 4
+
 struct job {
 	struct job* next;
 
@@ -40,7 +42,9 @@ static struct job_queue JOB_PARSE_QUEUE;
 static int VERSION;
 static pthread_mutex_t VERSION_LOCK;
 static pthread_mutex_t QUIT_LOCK;
-static pthread_t THREAD;
+static pthread_mutex_t DIRTY_LOCK;
+static pthread_cond_t  DIRTY_CV;
+static pthread_t THREAD[THREAD_NUM];
 
 enum JOB_TYPE {
 	JOB_INVALID = 0,
@@ -158,18 +162,34 @@ _need_quit(pthread_mutex_t* mtx)
 	return 1;
 }
 
+static inline void
+wait_dirty_event() {
+	pthread_mutex_lock(&DIRTY_LOCK);
+	pthread_cond_wait(&DIRTY_CV, &DIRTY_LOCK);
+	pthread_mutex_unlock(&DIRTY_LOCK);
+}
+
+static inline void
+trigger_dirty_event() {
+	pthread_mutex_lock(&DIRTY_LOCK);
+	pthread_cond_broadcast(&DIRTY_CV);
+	pthread_mutex_unlock(&DIRTY_LOCK);
+}
+
 static void*
 _load_file(void* arg) {
 	pthread_mutex_t* mtx = arg;
-	while (!_need_quit(mtx)) {
+	while (1) {
+		wait_dirty_event();
+
+try_fetch_job:
+		if (_need_quit(mtx)) {
+			break;
+		}
+
 		struct job* job = NULL;
 		DTEX_ASYNC_QUEUE_POP(JOB_LOAD_QUEUE, job);
 		if (!job) {
-#ifdef _WIN32
-		Sleep(100);
-#else
-		usleep(100);
-#endif
 			continue;
 		}
 
@@ -183,6 +203,8 @@ _load_file(void* arg) {
 
 		DTEX_ASYNC_QUEUE_PUSH(PARAMS_LOAD_QUEUE, params);
 		DTEX_ASYNC_QUEUE_PUSH(JOB_FREE_QUEUE, job);
+
+		goto try_fetch_job;
 	}
 	return NULL;
 }
@@ -201,7 +223,12 @@ dtex_async_loader_create() {
 	pthread_mutex_init(&QUIT_LOCK, NULL);
 	pthread_mutex_lock(&QUIT_LOCK);
 
-	pthread_create(&THREAD, NULL, _load_file, &QUIT_LOCK);
+	pthread_mutex_init(&DIRTY_LOCK, NULL);
+	pthread_cond_init(&DIRTY_CV, NULL);
+
+	for (int i = 0; i < THREAD_NUM; ++i) {
+		pthread_create(&THREAD[i], NULL, _load_file, &QUIT_LOCK);
+	}
 }
 
 static void
@@ -220,7 +247,15 @@ dtex_async_loader_release() {
 	DTEX_ASYNC_QUEUE_CLEAR2(PARAMS_PARSE_QUEUE, struct parse_params, _release_parse_params);
 
 	pthread_mutex_unlock(&QUIT_LOCK); 
-	pthread_join(THREAD, NULL);
+	trigger_dirty_event();
+	for (int i = 0; i < THREAD_NUM; ++i) {
+		pthread_join(THREAD[i], NULL);
+	}
+
+	pthread_mutex_destroy(&VERSION_LOCK);
+	pthread_mutex_destroy(&QUIT_LOCK);
+	pthread_mutex_destroy(&DIRTY_LOCK);
+	pthread_cond_destroy(&DIRTY_CV);
 }
 
 void
@@ -280,6 +315,8 @@ dtex_async_load_file(const char* filepath, void (*cb)(struct dtex_import_stream*
 	strcpy(job->desc, desc);
 	job->desc[strlen(job->desc)] = 0;
 	DTEX_ASYNC_QUEUE_PUSH(JOB_LOAD_QUEUE, job);
+
+	trigger_dirty_event();
 
 	//logger_printf("async_load push 1, job: %p", job);
 

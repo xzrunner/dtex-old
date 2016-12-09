@@ -35,8 +35,11 @@ extern "C"
 	pthread_rwlock_unlock(&(queue).lock); \
 } while (0)
 
-//#define DTEX_ASYNC_QUEUE_EMPTY(queue) \
-//	(pthread_rwlock_rdlock(&queue.lock), queue.head == NULL)
+/*
+#define DTEX_ASYNC_QUEUE_EMPTY(queue) \
+	(pthread_rwlock_rdlock(&queue.lock), queue.head == NULL)
+*/
+
 #define DTEX_ASYNC_QUEUE_EMPTY(queue) \
 	(queue.head == NULL)
 
