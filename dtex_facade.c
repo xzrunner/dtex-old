@@ -209,14 +209,9 @@ dtexf_create(const char* cfg) {
  		C2 = dtex_c2_create(CFG.c2_tex_width, CFG.c2_tex_height, true, 0, CFG.open_cg, CFG.src_extrude);
  	}
 	if (CFG.open_cs) {
-		float w, h, s;
-		dtex_get_screen(&w, &h, &s);
-
 		CS1 = dtex_cs_create();
-		dtex_cs_on_size(CS1, w * s, h * s);
-
 		CS2 = dtex_cs_create();
-		dtex_cs_on_size(CS2, w * s, h * s);
+		dtexf_cs_update_size();
 	}
 }
 
@@ -719,6 +714,20 @@ dtexf_cs_set_viewport() {
 	float w, h, s;
 	dtex_get_screen(&w, &h, &s);
 	dtex_gl_set_viewport(0, 0, w * s, h * s);
+}
+
+void
+dtexf_cs_update_size() {
+	float w, h, s;
+	dtex_get_screen(&w, &h, &s);
+
+	if (CS1) {
+		dtex_cs_on_size(CS1, w * s, h * s);
+	}
+
+	if (CS2) {
+		dtex_cs_on_size(CS2, w * s, h * s);
+	}
 }
 
 /************************************************************************/

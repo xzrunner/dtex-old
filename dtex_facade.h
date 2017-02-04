@@ -127,6 +127,7 @@ void dtexf_cs2_draw(float src_w, float src_h, float dst_w, float dst_h, void (*b
 int  dtexf_cs2_get_texture_id();
 
 void dtexf_cs_set_viewport();
+void dtexf_cs_update_size();
 
 //void dtexf_async_load_spr(const char* pkg_name, const char* spr_name, const char* path);
 

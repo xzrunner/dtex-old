@@ -475,6 +475,12 @@ lcs_set_viewport(lua_State* L) {
 	return 0;
 }
 
+static int
+lcs_update_size(lua_State* L) {
+	dtexf_cs_update_size();
+	return 0;
+}
+
 int
 luaopen_dtex_c(lua_State* L) {
 	luaL_Reg l[] = {
@@ -534,6 +540,7 @@ luaopen_dtex_c(lua_State* L) {
 		{ "cs2_unbind", lcs2_unbind },
 		{ "cs2_draw", lcs2_draw },
 		{ "cs_set_viewport", lcs_set_viewport },
+		{ "cs_update_size", lcs_update_size },
 
 		{ NULL, NULL },		
 	};
